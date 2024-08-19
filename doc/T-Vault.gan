@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?><project name="Untitled Gantt Project" company="" webLink="http://" view-date="2024-08-17" view-index="0" gantt-divider-location="502" resource-divider-location="300" version="3.3.3309" locale="fr_FR">
+<?xml version="1.0" encoding="UTF-8"?><project name="Untitled Gantt Project" company="" webLink="http://" view-date="2024-08-15" view-index="0" gantt-divider-location="502" resource-divider-location="300" version="3.3.3309" locale="fr_FR">
     <description/>
     <view zooming-state="default:2" id="gantt-chart">
         <field id="tpd15" name="Notes" width="20" order="0"/>
-        <field id="tpd3" name="Nom" width="187" order="0"/>
-        <field id="tpd4" name="Date de début" width="86" order="1"/>
-        <field id="tpd5" name="Date de fin" width="80" order="2"/>
-        <field id="tpd13" name="Ressources" width="148" order="3"/>
+        <field id="tpd3" name="Nom" width="242" order="0"/>
+        <field id="tpd4" name="Date de début" width="72" order="1"/>
+        <field id="tpd5" name="Date de fin" width="71" order="2"/>
+        <field id="tpd13" name="Ressources" width="116" order="3"/>
         <option id="filter.completedTasks" value="false"/>
         <option id="filter.dueTodayTasks" value="false"/>
         <option id="filter.overdueTasks" value="false"/>
@@ -20,7 +20,7 @@
         <day-types>
             <day-type id="0"/>
             <day-type id="1"/>
-            <default-week id="1" name="default" sun="0" mon="0" tue="0" wed="0" thu="0" fri="0" sat="0"/>
+            <default-week id="1" name="default" sun="1" mon="0" tue="0" wed="0" thu="0" fri="0" sat="1"/>
             <only-show-weekends value="false"/>
             <overriden-day-types/>
             <days/>
@@ -52,9 +52,14 @@
             <task id="6" uid="26aa278633cd4204bd22cdb06716ece0" name="Maquette" meeting="false" start="2024-08-20" duration="1" complete="0" expand="true"/>
             <task id="13" uid="1e30b3543033421b9863792b525c1edd" name="Revue conception" meeting="false" start="2024-08-21" duration="2" complete="0" expand="true"/>
         </task>
-        <task id="15" uid="9f673fafce54433c88e4d4c8d25bf90c" name="Développement" meeting="false" start="2024-08-23" duration="10" complete="0" expand="true"/>
-        <task id="8" uid="a61064e34196495aab5ade072abd3147" name="Rendu final" meeting="false" start="2024-09-02" duration="1" complete="0" expand="true"/>
-        <task id="9" uid="64eeaa3e97ef4e0aa29aa3ef1ead0e62" name="Présentation" meeting="false" start="2024-09-03" duration="1" complete="0" expand="true"/>
+        <task id="15" uid="9f673fafce54433c88e4d4c8d25bf90c" name="Développement" meeting="false" start="2024-08-23" duration="7" complete="0" expand="true">
+            <task id="18" uid="4017ce7a2a1a4cdda89d0ea711216c33" name="Mise en place de l'environnement" meeting="false" start="2024-08-23" duration="1" complete="0" expand="true"/>
+            <task id="8" uid="a61064e34196495aab5ade072abd3147" name="Rendu final" meeting="false" start="2024-09-02" duration="1" complete="0" expand="true"/>
+        </task>
+        <task id="9" uid="64eeaa3e97ef4e0aa29aa3ef1ead0e62" name="Présentation" meeting="false" start="2024-09-02" duration="2" complete="0" expand="true">
+            <task id="16" uid="a5ddaf01a3174569948964022aecbd83" name="Réalisation de la présentation" meeting="false" start="2024-09-02" duration="1" complete="0" expand="true"/>
+            <task id="17" uid="40503da5b6fd4198b6d6660f7c5d96f3" name="Présentation" meeting="false" start="2024-09-03" duration="1" complete="0" expand="true"/>
+        </task>
     </tasks>
     <resources>
         <resource id="0" name="Villarejo Maxime" function="Default:1" contacts="" phone=""/>
@@ -72,6 +77,8 @@
         <allocation task-id="11" resource-id="3" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="13" resource-id="3" function="Default:0" responsible="true" load="100.0"/>
         <allocation task-id="15" resource-id="3" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="9" resource-id="3" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="8" resource-id="3" function="Default:0" responsible="true" load="100.0"/>
     </allocations>
     <vacations/>
     <previous/>
