@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "t-vault",
-    "slug": "t-vault",
+    "name": "T-Vault",
+    "slug": "T-Vault",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
