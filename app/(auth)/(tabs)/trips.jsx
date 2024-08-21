@@ -1,9 +1,7 @@
-import React from 'react';
-import { SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
-import Header from '../../../components/Header';
-import { FontAwesome5 } from '@expo/vector-icons';
-import COLORS from '../../../styles/COLORS';
-import TripCard from '../../../components/TripCard';  // Import du composant TripCard
+import { View, Text, Button, Modal, TextInput, StyleSheet, Image, TouchableWithoutFeedback  } from 'react-native'
+import React, { useState } from 'react'
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function Trips() {
     const [image, setImage] = useState();
@@ -14,107 +12,162 @@ export default function Trips() {
     const [show, setShow] = useState(false);
     const [isStart, setIsStart] = useState(true);
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <Header
-        logoSource={require('../../../assets/logo_transparent_bg.png')}
-        title="MY TRIPS"
-        ButtonComponent={CustomButton}
-      />
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <TripCard
-          imageSource={require('../../../assets/trips/1.png')}
-          title="Montagne Hollandaise"
-          owner="My trip"
-          startDate="15.06.2024"
-          endDate="21.06.2024"
-          shared="user"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/2.png')}
-          title="Les Bahamas (blanchiment)"
-          owner="Trip shared by David_05"
-          startDate="05.07.2024"
-          endDate="12.07.2024"
-          shared="users"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/3.jpg')}
-          title="Ski en afrique"
-          owner="Trip shared by Eddy_14"
-          startDate="01.08.2024"
-          endDate="10.08.2024"
-          shared="users"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/4.jpg')}
-          title="Road trip en alaska"
-          owner="My trip (shared)"
-          startDate="01.08.2024"
-          endDate="10.08.2024"
-          shared="users"
-        />
-                <TripCard
-          imageSource={require('../../../assets/trips/1.png')}
-          title="Montagne Hollandaise"
-          owner="My trip"
-          startDate="15.06.2024"
-          endDate="21.06.2024"
-          shared="user"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/2.png')}
-          title="Les Bahamas (blanchiment)"
-          owner="Trip shared by David_05"
-          startDate="05.07.2024"
-          endDate="12.07.2024"
-          shared="users"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/3.jpg')}
-          title="Ski en afrique"
-          owner="Trip shared by Eddy_14"
-          startDate="01.08.2024"
-          endDate="10.08.2024"
-          shared="users"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/4.jpg')}
-          title="Road trip en alaska"
-          owner="My trip (shared)"
-          startDate="01.08.2024"
-          endDate="10.08.2024"
-          shared="users"
-        />
+    const uploadImage = async () => {
+        try {
+            await ImagePicker.requestMediaLibraryPermissionsAsync();
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 1,
+            });
 
-      </ScrollView>
-    </SafeAreaView>
-  );
-};
+            if (!result.cancelled) {
+                await saveImage(result.assets[0].uri);
+            }
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const saveImage = async (image) => {
+        try {
+            setImage(image);
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }
+
+    const onChange = (event, selectedDate) => {
+        setShow(false);
+        if (isStart) {
+            setStartDate(selectedDate || startDate);
+        } else {
+            setEndDate(selectedDate || endDate);
+        }
+    };
+
+    const showMode = (currentMode, start = true) => {
+        setShow(true);
+        setMode(currentMode);
+        setIsStart(start);
+    };
+
+    const showDatepicker = (start = true) => {
+        showMode('date', start);
+    };
+
+    const toggleModal = () => {
+        setModalVisible(!isModalVisible);
+    };
+
+    return (
+        <View style={{ flex: 1, alignItems: 'center ', justifyContent: 'center', backgroundColor: '#1E1E1E' }}>
+            <View style={styles.buttonContainer}>
+                <Button title="add" onPress={toggleModal} />
+            </View>
+            <Modal visible={isModalVisible} transparent={false} animationType="slide">
+            <TouchableWithoutFeedback onPress={toggleModal}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.text}>Let's add your trip!</Text>
+                        <View>
+                            <View style={styles.imageContainer}>
+                            <Image source={{ uri: image }} style={styles.image} />
+                            </View>
+                            <View style={styles.buttonContainer}>
+                                <Button title="Choose a picture" onPress={uploadImage} />
+                            </View>
+                        </View>
+                        <View>
+                            <View style={styles.buttonContainer}>
+                                <Button onPress={() => showDatepicker(true)} title="Start" />
+                            </View>
+                            <Text style={styles.text}>Start date: {startDate.toLocaleDateString()}</Text>
+                            <View style={styles.buttonContainer}>
+                                <Button onPress={() => showDatepicker(false)} title="Return" />
+                            </View>
+                            <Text style={styles.text}>Return date: {endDate.toLocaleDateString()}</Text>
+                            {show && (
+                                <DateTimePicker
+                                    testID="dateTimePicker"
+                                    value={isStart ? startDate : endDate}
+                                    mode={mode}
+                                    onChange={onChange}
+                                />
+                            )}
+                        </View>
+                        <View>
+                            <TextInput placeholderTextColor="white" placeholder="Destination" style={styles.input} />
+                        </View>
+                        <View style={styles.buttonContainer}>
+                            <Button title="Hide modal" onPress={toggleModal} />
+                        </View>
+                    </View>
+                </View>
+            </TouchableWithoutFeedback>
+            </Modal>
+        </View>
+    )
+}
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background_dark,
-  },
 
-  scrollContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    paddingBottom: 100,
-  },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#1E1E1E',
+    },
 
-  addButton: {
-    backgroundColor: COLORS.blue_dark,
-    padding: 5,
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 40,
-    height: 40,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-  },
+    modalContent: {
+        width: '90%',
+        height: '80%',
+        backgroundColor: '#1E1E1E',
+        borderRadius: 10,
+        padding: 20,
+        alignItems: 'center',
+
+        shadowColor: '#000',         
+        shadowOffset: { width: 0, height: 2 }, 
+        shadowOpacity: 0.8,           
+        shadowRadius: 10,             
+        elevation: 10,           
+    },
+
+    buttonContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: 10,
+    },
+
+    imageContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    image: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        borderWidth: 2,
+    },
+
+    input: {
+        borderWidth: 1,
+        borderColor: 'white',
+        padding: 10,
+        margin: 10,
+        color: 'white',
+        fontSize: 20,
+    },
+
+    text: {
+        color: 'white',
+        fontSize: 20,
+        font: 'Roboto',
+        borderColor: 'black',
+    },
 });
