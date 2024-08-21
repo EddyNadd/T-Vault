@@ -1,12 +1,11 @@
-import { View, Text } from 'react-native'
+import { View, Text, Button } from 'react-native'
+import { auth } from '../../../firebase.jsx'
 import React from 'react'
 
-const account = () => {
-  return (
-    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1E1E1E'}}>
-      <Text style={{color: 'white'}}>ACCOUNT PAGE</Text>
-    </View>
-  )
+export default function Account() {
+    return (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <Button title="Sign Out" onPress={() => auth.signOut()} />
+        </View>
+    )
 }
-
-export default account
