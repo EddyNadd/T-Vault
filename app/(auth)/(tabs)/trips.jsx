@@ -1,64 +1,115 @@
-import React from 'react';
-import { View, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from "react-native";
-import Header from '../../../components/Header';
-import { FontAwesome5 } from '@expo/vector-icons';
-import COLORS from '../../../styles/COLORS';
+import { View, Text, Button, Modal, TextInput, StyleSheet, Image} from 'react-native'
+import React, { useState } from 'react'
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
 
-const trips = () => {
-  const CustomButton = () => (
-    <TouchableOpacity style={styles.addButton} onPress={() => alert('Add trip')}>
-      <FontAwesome5 name="plus" size={20} color="white" />
-    </TouchableOpacity>
-  );
+export default function Trips() {
+    const [image, setImage] = useState();
+    const [isModalVisible, setModalVisible] = useState(false);
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date())
+    const [mode, setMode] = useState('date');
+    const [show, setShow] = useState(false);
+    const [isStart, setIsStart] = useState(true);
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <Header
-        logoSource={require('../../../assets/logo_transparent_bg.png')}
-        title="MY TRIPS"
-        ButtonComponent={CustomButton}
-      />
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {[...Array(10)].map((_, index) => (
-          <View
-            key={index}
-            style={[styles.color, { backgroundColor: COLORS.blue, opacity: 1 - index * 0.05 }]}
-          />
-        ))}
-      </ScrollView>
-    </SafeAreaView>
-  );
-};
+    const uploadImage = async () => {
+        try{
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+            let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
+
+        if (!result.cancelled) {
+            await saveImage(result.assets[0].uri);
+        }
+
+    } catch (error) {
+        console.log(error);
+    }
+    }
+
+    const saveImage = async (image) => {
+        try{
+            setImage(image);
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }
+
+    const onChange = (event, selectedDate) => {
+        setShow(false);
+        if (isStart) {
+            setStartDate(selectedDate || startDate);
+        } else {
+            setEndDate(selectedDate || endDate);
+        }
+    };
+
+    const showMode = (currentMode, start = true) => {
+        setShow(true);
+        setMode(currentMode);
+        setIsStart(start);
+    };
+
+    const showDatepicker = (start = true) => {
+        showMode('date', start);
+    };
+
+    const toggleModal = () => {
+        setModalVisible(!isModalVisible);
+    };
+
+    return (
+        <View>
+            <Button title="add" onPress={toggleModal} />
+            <Modal visible={isModalVisible} transparent={true} animationType="slide">
+                <View>
+                    
+                    <Text>Let's add your trip!</Text>
+                    <View>
+                    <Image source={{ uri: image }} style={styles.image}/>
+                    <Button title="Choose a picture" onPress={uploadImage} style={styles.button}/>
+                    </View>
+                    <View>
+                    <Button onPress={() => showDatepicker(true)} title="Start" style={styles.button}/>
+                    <Text>Start date: {startDate.toLocaleDateString()}</Text>
+                    <Button onPress={() => showDatepicker(false)} title="Return" style={styles.button} />
+                    <Text>Return date: {endDate.toLocaleDateString()}</Text>
+                    {show && (
+                        <DateTimePicker
+                            testID="dateTimePicker"
+                            value={isStart ? startDate : endDate}
+                            mode={mode}
+                            onChange={onChange}
+                        />
+                    )}
+                    </View>
+                    <View>
+                    <TextInput placeholder="Destination" style = {styles.input}/>
+                    </View>
+                    <Button title="Hide modal" onPress={toggleModal} />
+                </View>
+            </Modal>
+        </View>
+    )
+}
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background_dark,
-  },
-  scrollContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    paddingBottom: 100,
-  },
-  color: {
-    width: '100%',
-    height: 150,
-    borderRadius: 25,
-    marginBottom: 15,
-  },
-  addButton: {
-    backgroundColor: COLORS.blue_dark,
-    padding: 5,
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 40,
-    height: 40,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-  },
-});
+    image: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        borderWidth: 2,
+    },
 
-export default trips;
+    input: {
+        borderWidth: 1,
+        borderColor: 'black',
+        padding: 10,
+        margin: 10,
+    },
+});
