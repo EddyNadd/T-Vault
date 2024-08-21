@@ -5,12 +5,14 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import TripCard from '../../../components/TripCard';  // Import du composant TripCard
 
-const trips = () => {
-  const CustomButton = () => (
-    <TouchableOpacity style={styles.addButton} onPress={() => alert('Add trip')}>
-      <FontAwesome5 name="plus" size={20} color="white" />
-    </TouchableOpacity>
-  );
+export default function Trips() {
+    const [image, setImage] = useState();
+    const [isModalVisible, setModalVisible] = useState(false);
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date())
+    const [mode, setMode] = useState('date');
+    const [show, setShow] = useState(false);
+    const [isStart, setIsStart] = useState(true);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -116,5 +118,3 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
 });
-
-export default trips;
