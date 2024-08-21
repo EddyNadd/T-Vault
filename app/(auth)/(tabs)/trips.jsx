@@ -1,4 +1,4 @@
-import { View, Text, Button, Modal, TextInput, StyleSheet, Image, TouchableWithoutFeedback  } from 'react-native'
+import { View, Text, Button, Modal, TextInput, StyleSheet, Image, ScrollView, TouchableWithoutFeedback  } from 'react-native'
 import React, { useState } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
@@ -102,8 +102,12 @@ export default function Trips() {
                         <View>
                             <TextInput placeholderTextColor="white" placeholder="Destination" style={styles.input} />
                         </View>
+                        <View>
+                            <TextInput placeholderTextColor="white" placeholder="Commentaire" style={styles.input} />
+                        </View>       
+
                         <View style={styles.buttonContainer}>
-                            <Button title="Hide modal" onPress={toggleModal} />
+                            <Button title="Confirm" onPress={toggleModal} />
                         </View>
                     </View>
                 </View>
@@ -117,13 +121,13 @@ const styles = StyleSheet.create({
 
     modalContainer: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'flex-end',  
         alignItems: 'center',
-        backgroundColor: '#1E1E1E',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',  
     },
 
     modalContent: {
-        width: '90%',
+        width: '100%',
         height: '80%',
         backgroundColor: '#1E1E1E',
         borderRadius: 10,
@@ -134,7 +138,8 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 }, 
         shadowOpacity: 0.8,           
         shadowRadius: 10,             
-        elevation: 10,           
+        elevation: 10,     
+
     },
 
     buttonContainer: {
