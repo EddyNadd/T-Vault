@@ -1,10 +1,11 @@
-import { View, Text, Button, Modal, TextInput, StyleSheet, Image, ScrollView, TouchableWithoutFeedback } from 'react-native'
+import { View, Text, Button, TextInput, StyleSheet, Modal, Image, ScrollView, TouchableWithoutFeedback } from 'react-native'
 import React, { useState } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
-import { doc, getDocs, setDoc, collection, query, where, documentId } from "firebase/firestore";
-import { auth, db } from "../../../firebase.jsx";
-import firebase from 'firebase/compat/app';
+import { doc, setDoc} from "firebase/firestore";
+import { db } from "../../../firebase.jsx";
+
+
 
 export default function Trips() {
     const [image, setImage] = useState();
@@ -13,10 +14,9 @@ export default function Trips() {
     const [endDate, setEndDate] = useState(new Date())
     const [mode, setMode] = useState('date');
     const [show, setShow] = useState(false);
-    const [destination, setDestination] = useState('');
+    const [title, setTitle] = useState('');
     const [comment, setComment] = useState('');
     const [isStart, setIsStart] = useState(true);
-    const [trips, setTrips] = useState([]);
 
     const uploadImage = async () => {
         try {
@@ -74,31 +74,31 @@ export default function Trips() {
         toggleModal();
     }
     const addTrip = async () => {
-        if (destination && comment) {
+        if (title && comment) {
             const newTrip = {
                 image: image || '',
                 startDate: startDate,
                 endDate: endDate,
-                destination: destination,
+                title: title,
                 comment: comment,
             };
 
             try {
-                // Utiliser setDoc pour créer ou mettre à jour un document avec un ID spécifique (par exemple, basé sur la destination)
+                // Utiliser setDoc pour créer ou mettre à jour un document avec un ID spécifique (par exemple, basé sur la title)
                 //generate a unique 6 caracter id for the trip composed of 6 random caracter and digits
                 const id = Math.random().toString(36).substr(2, 6);
                 await setDoc(doc(db, "trips", id), newTrip);
                 console.log("Nouveau voyage ajouté ou mis à jour !");
                 
                 // Réinitialiser les champs après l'ajout
-                setDestination('');
+                setTitle('');
                 setComment('');
                 setImage(null);
             } catch (error) {
                 console.error("Erreur lors de l'ajout du document: ", error);
             }
         } else {
-            console.error("Les champs Destination et Commentaire sont requis.");
+            console.error("Les champs Title et Commentaire sont requis.");
         }
     };
 
@@ -140,7 +140,7 @@ export default function Trips() {
                                 )}
                             </View>
                             <View>
-                                <TextInput placeholderTextColor="white" placeholder="Destination" style={styles.input} value={destination} onChangeText={(text) => setDestination(text)}/>
+                                <TextInput placeholderTextColor="white" placeholder="Title" style={styles.input} value={title} onChangeText={(text) => setTitle(text)}/>
                             </View>
                             <View>
                                 <TextInput placeholderTextColor="white" placeholder="Commentaire" style={styles.input} value={comment} onChangeText={(text) => setComment(text)} />
