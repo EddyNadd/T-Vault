@@ -103,9 +103,9 @@ const styles = StyleSheet.create({
     },
 
     icon: {
-        width: 35, // Adjust size as needed
-        height: 35, // Adjust size as needed
-        resizeMode: 'contain', // Ensure the image fits within the given dimensions
+        width: 35,
+        height: 35,
+        resizeMode: 'contain',
     }
 })
 export default TabBar

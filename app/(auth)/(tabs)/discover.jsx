@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from "react-native";
+import { SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import Header from '../../../components/Header';
 import { FontAwesome5 } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
+import TripCard from '../../../components/TripCard';  // Import du composant TripCard
 
 const discover = () => {
   const CustomButton = () => (
@@ -19,12 +20,20 @@ const discover = () => {
         ButtonComponent={CustomButton}
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {[...Array(10)].map((_, index) => (
-          <View
-            key={index}
-            style={[styles.color, { backgroundColor: COLORS.blue, opacity: 1 - index * 0.05 }]}
-          />
-        ))}
+        <TripCard
+          imageSource={require('../../../assets/trips/1.png')}
+          title="Montagne Hollandaise"
+          owner="My trip"
+          startDate="15.06.2024"
+          endDate="21.06.2024"
+        />
+        <TripCard
+          imageSource={require('../../../assets/trips/2.png')}
+          title="Les Bahamas (blanchiment)"
+          owner="Trip shared by David_05"
+          startDate="05.07.2024"
+          endDate="12.07.2024"
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -35,17 +44,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background_dark,
   },
+
   scrollContainer: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     paddingBottom: 100,
   },
-  color: {
-    width: '100%',
-    height: 150,
-    borderRadius: 25,
-    marginBottom: 15,
-  },
+
   addButton: {
     backgroundColor: COLORS.blue_dark,
     padding: 5,
