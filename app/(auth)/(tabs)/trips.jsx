@@ -1,7 +1,10 @@
-import { View, Text, Button, Modal, TextInput, StyleSheet, Image, ScrollView, TouchableWithoutFeedback  } from 'react-native'
+import { View, Text, Button, Modal, TextInput, StyleSheet, Image, ScrollView, TouchableWithoutFeedback } from 'react-native'
 import React, { useState } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
+import { doc, getDocs, setDoc, collection, query, where, documentId } from "firebase/firestore";
+import { auth, db } from "../../../firebase.jsx";
+import firebase from 'firebase/compat/app';
 
 export default function Trips() {
     const [image, setImage] = useState();
@@ -10,7 +13,10 @@ export default function Trips() {
     const [endDate, setEndDate] = useState(new Date())
     const [mode, setMode] = useState('date');
     const [show, setShow] = useState(false);
+    const [destination, setDestination] = useState('');
+    const [comment, setComment] = useState('');
     const [isStart, setIsStart] = useState(true);
+    const [trips, setTrips] = useState([]);
 
     const uploadImage = async () => {
         try {
@@ -63,55 +69,89 @@ export default function Trips() {
         setModalVisible(!isModalVisible);
     };
 
+    const confirmData = () => {
+        addTrip();
+        toggleModal();
+    }
+    const addTrip = async () => {
+        if (destination && comment) {
+            const newTrip = {
+                image: image || '',
+                startDate: startDate,
+                endDate: endDate,
+                destination: destination,
+                comment: comment,
+            };
+
+            try {
+                // Utiliser setDoc pour créer ou mettre à jour un document avec un ID spécifique (par exemple, basé sur la destination)
+                //generate a unique 6 caracter id for the trip composed of 6 random caracter and digits
+                const id = Math.random().toString(36).substr(2, 6);
+                await setDoc(doc(db, "trips", id), newTrip);
+                console.log("Nouveau voyage ajouté ou mis à jour !");
+                
+                // Réinitialiser les champs après l'ajout
+                setDestination('');
+                setComment('');
+                setImage(null);
+            } catch (error) {
+                console.error("Erreur lors de l'ajout du document: ", error);
+            }
+        } else {
+            console.error("Les champs Destination et Commentaire sont requis.");
+        }
+    };
+
+
     return (
         <View style={{ flex: 1, alignItems: 'center ', justifyContent: 'center', backgroundColor: '#1E1E1E' }}>
             <View style={styles.buttonContainer}>
                 <Button title="add" onPress={toggleModal} />
             </View>
             <Modal visible={isModalVisible} transparent={false} animationType="slide">
-            <TouchableWithoutFeedback onPress={toggleModal}>
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.text}>Let's add your trip!</Text>
-                        <View>
-                            <View style={styles.imageContainer}>
-                            <Image source={{ uri: image }} style={styles.image} />
+                <TouchableWithoutFeedback onPress={toggleModal}>
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.text}>Let's add your trip!</Text>
+                            <View>
+                                <View style={styles.imageContainer}>
+                                    <Image source={{ uri: image }} style={styles.image} />
+                                </View>
+                                <View style={styles.buttonContainer}>
+                                    <Button title="Choose a picture" onPress={uploadImage} />
+                                </View>
                             </View>
-                            <View style={styles.buttonContainer}>
-                                <Button title="Choose a picture" onPress={uploadImage} />
+                            <View>
+                                <View style={styles.buttonContainer}>
+                                    <Button onPress={() => showDatepicker(true)} title="Start" />
+                                </View>
+                                <Text style={styles.text}>Start date: {startDate.toLocaleDateString()}</Text>
+                                <View style={styles.buttonContainer}>
+                                    <Button onPress={() => showDatepicker(false)} title="Return" />
+                                </View>
+                                <Text style={styles.text}>Return date: {endDate.toLocaleDateString()}</Text>
+                                {show && (
+                                    <DateTimePicker
+                                        testID="dateTimePicker"
+                                        value={isStart ? startDate : endDate}
+                                        mode={mode}
+                                        onChange={onChange}
+                                    />
+                                )}
                             </View>
-                        </View>
-                        <View>
-                            <View style={styles.buttonContainer}>
-                                <Button onPress={() => showDatepicker(true)} title="Start" />
+                            <View>
+                                <TextInput placeholderTextColor="white" placeholder="Destination" style={styles.input} value={destination} onChangeText={(text) => setDestination(text)}/>
                             </View>
-                            <Text style={styles.text}>Start date: {startDate.toLocaleDateString()}</Text>
-                            <View style={styles.buttonContainer}>
-                                <Button onPress={() => showDatepicker(false)} title="Return" />
+                            <View>
+                                <TextInput placeholderTextColor="white" placeholder="Commentaire" style={styles.input} value={comment} onChangeText={(text) => setComment(text)} />
                             </View>
-                            <Text style={styles.text}>Return date: {endDate.toLocaleDateString()}</Text>
-                            {show && (
-                                <DateTimePicker
-                                    testID="dateTimePicker"
-                                    value={isStart ? startDate : endDate}
-                                    mode={mode}
-                                    onChange={onChange}
-                                />
-                            )}
-                        </View>
-                        <View>
-                            <TextInput placeholderTextColor="white" placeholder="Destination" style={styles.input} />
-                        </View>
-                        <View>
-                            <TextInput placeholderTextColor="white" placeholder="Commentaire" style={styles.input} />
-                        </View>       
 
-                        <View style={styles.buttonContainer}>
-                            <Button title="Confirm" onPress={toggleModal} />
+                            <View style={styles.buttonContainer}>
+                                <Button title="Confirm" onPress={confirmData} />
+                            </View>
                         </View>
                     </View>
-                </View>
-            </TouchableWithoutFeedback>
+                </TouchableWithoutFeedback>
             </Modal>
         </View>
     )
@@ -121,9 +161,9 @@ const styles = StyleSheet.create({
 
     modalContainer: {
         flex: 1,
-        justifyContent: 'flex-end',  
+        justifyContent: 'flex-end',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',  
+        backgroundColor: '#1E1E1E',
     },
 
     modalContent: {
@@ -134,11 +174,11 @@ const styles = StyleSheet.create({
         padding: 20,
         alignItems: 'center',
 
-        shadowColor: '#000',         
-        shadowOffset: { width: 0, height: 2 }, 
-        shadowOpacity: 0.8,           
-        shadowRadius: 10,             
-        elevation: 10,     
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 10,
+        elevation: 10,
 
     },
 
