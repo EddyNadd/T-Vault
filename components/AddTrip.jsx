@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { doc, setDoc } from "firebase/firestore";
@@ -10,9 +10,18 @@ import {
     ActionsheetContent,
     ActionsheetDragIndicator,
     ActionsheetDragIndicatorWrapper,
-    ActionsheetItem,
-    ActionsheetItemText,
 } from '@/components/ui/actionsheet';
+import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
+import { Textarea, TextareaInput } from "@/components/ui/textarea"
+import {CalendarDaysIcon } from "@/components/ui/icon"
+import {
+    Avatar,
+    AvatarImage,
+} from "@/components/ui/avatar"
+import {
+    Button,
+    ButtonText,
+} from "@/components/ui/button"
 
 export default function AddTrip({ isOpen, onClose }) {
     const [image, setImage] = useState(null);
@@ -70,17 +79,17 @@ export default function AddTrip({ isOpen, onClose }) {
             try {
                 const id = Math.random().toString(36).substr(2, 6);
                 await setDoc(doc(db, "trips", id), newTrip);
-                console.log("Nouveau voyage ajouté ou mis à jour !");
-                
+                console.log("New Trip !");
+
                 setTitle('');
                 setComment('');
                 setImage(null);
                 onClose();
             } catch (error) {
-                console.error("Erreur lors de l'ajout du document: ", error);
+                console.error("Error while adding the document: ", error);
             }
         } else {
-            console.error("Les champs Title et Commentaire sont requis.");
+            console.error("Title and commentary are requiered.");
         }
     };
 
@@ -93,23 +102,55 @@ export default function AddTrip({ isOpen, onClose }) {
                 </ActionsheetDragIndicatorWrapper>
 
                 <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-                    <Text style={styles.text}>Let's add your trip!</Text>
 
-                    <View style={styles.imageContainer}>
-                        {image && <Image source={{ uri: image }} style={styles.image} />}
+                    <View style={styles.buttonContainer}>
+                        <Text style={styles.text}>ADD A TRIP</Text>
                     </View>
 
-                    <ActionsheetItem onPress={uploadImage}>
-                        <ActionsheetItemText>Choose a picture</ActionsheetItemText>
-                    </ActionsheetItem>
+                    <Input variant="rounded" size="lg" style={styles.input}>
+                        <InputField
+                            type="title"
+                            placeholder="Title"
+                            onChangeText={setTitle}
+                            value={title}
+                            autoCapitalize="none"
+                            style={styles.inputField}
+                        />
+                    </Input>
 
-                    <ActionsheetItem onPress={() => showDatepicker(true)}>
-                        <ActionsheetItemText>Start date: {startDate.toLocaleDateString()}</ActionsheetItemText>
-                    </ActionsheetItem>
+                    <View style={styles.date}>
+                        <Input variant="rounded" size="lg" style={styles.fullWidthInput}>
+                            <InputSlot>
+                                <InputIcon
+                                    as={CalendarDaysIcon}
+                                    className="text-typography-500 m-2 w-4 h-4"
+                                    onPress={() => showDatepicker(true)}
+                                />
+                            </InputSlot>
+                            <InputField
+                                placeholder="Departure date"
+                                value={startDate.toLocaleDateString()}
+                                editable={false}
+                                style={styles.inputField}
+                            />
+                        </Input>
 
-                    <ActionsheetItem onPress={() => showDatepicker(false)}>
-                        <ActionsheetItemText>Return date: {endDate.toLocaleDateString()}</ActionsheetItemText>
-                    </ActionsheetItem>
+                        <Input variant="rounded" size="lg" style={styles.fullWidthInput}>
+                            <InputSlot>
+                                <InputIcon
+                                    as={CalendarDaysIcon}
+                                    className="text-typography-500 m-2 w-4 h-4"
+                                    onPress={() => showDatepicker(false)}
+                                />
+                            </InputSlot>
+                            <InputField
+                                placeholder="Return date"
+                                value={endDate.toLocaleDateString()}
+                                editable={false}
+                                style={styles.inputField}
+                            />
+                        </Input>
+                    </View>
 
                     {showPicker && (
                         <DateTimePicker
@@ -120,25 +161,39 @@ export default function AddTrip({ isOpen, onClose }) {
                         />
                     )}
 
-                    <TextInput
-                        placeholderTextColor="white"
-                        placeholder="Title"
-                        style={styles.input}
-                        value={title}
-                        onChangeText={(text) => setTitle(text)}
-                    />
+                    <TouchableOpacity onPress={uploadImage} style={styles.avatarContainer}>
+                        <Avatar size="xl">
+                            {image ? (
+                                <AvatarImage source={{ uri: image }} />
+                            ) : (
+                                <Text style={styles.avatarPlaceholder}>Add Image</Text>
+                            )}
+                        </Avatar>
+                    </TouchableOpacity>
 
-                    <TextInput
-                        placeholderTextColor="white"
-                        placeholder="Commentaire"
-                        style={styles.input}
-                        value={comment}
-                        onChangeText={(text) => setComment(text)}
-                    />
+                    <View style={styles.textareacontainer}>
+                        <Textarea
+                            size="xl"
+                            isReadOnly={false}
+                            isInvalid={false}
+                            isDisabled={false}
+                            className="w-64"
+                            style={styles.textarea}
+                        >
+                            <TextareaInput
+                                onChangeText={setComment}
+                                placeholder='Comments'
+                                style={styles.textareaInput}
+                            />
+                        </Textarea>
+                    </View>
 
-                    <ActionsheetItem onPress={addTrip}>
-                        <ActionsheetItemText>Confirm</ActionsheetItemText>
-                    </ActionsheetItem>
+                    <View style={styles.buttonContainer}>
+                        <Button onPress={addTrip} size="md" variant="outline" action="primary">
+                            <ButtonText>Add</ButtonText>
+                        </Button>
+                    </View>
+
                 </ScrollView>
             </ActionsheetContent>
         </Actionsheet>
@@ -159,17 +214,67 @@ const styles = StyleSheet.create({
     },
 
     input: {
-        borderWidth: 1,
-        borderColor: 'white',
-        padding: 10,
+        marginBottom: 10,
+    },
+
+    fullWidthInput: {
+        flex: 1,
         margin: 10,
-        color: 'white',
-        fontSize: 20,
+    },
+
+    inputField: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        fontSize: 16,
     },
 
     text: {
         color: 'white',
-        fontSize: 20,
-        font: 'Roboto',
+        fontSize: 40,
+        font: 'Anton',
+        fontWeight: 'bold',
     },
+
+    textarea: {
+        width: '100%',
+        marginVertical: 10,
+    },
+
+    textareaInput: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        fontSize: 16,
+        textAlignVertical: 'top', 
+    },
+
+    textareacontainer: {
+        marginBottom: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    buttonContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: 10,
+    },
+
+    date: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+
+    avatarContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: 10,
+    },
+
+    avatarPlaceholder: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+
 });
