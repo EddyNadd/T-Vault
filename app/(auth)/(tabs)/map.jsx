@@ -14,6 +14,7 @@ const MapScreen = () => {
           longitudeDelta: 0.0421,
         }}
         showsUserLocation={true}
+        mapType='hybridFlyover'
         zoomEnabled={true}
         scrollEnabled={true}
       />

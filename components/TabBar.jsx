@@ -1,5 +1,6 @@
 import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native'
 import React from 'react'
+import COLORS from '../styles/COLORS'
 
 const TabBar = ({ state, descriptors, navigation }) => {
 
@@ -66,7 +67,7 @@ const TabBar = ({ state, descriptors, navigation }) => {
                             source={icons[route.name](isFocused)} 
                             style={styles.icon} 
                         />
-                        <Text style={{ color: isFocused ? '#17C0EB' : '#737373', fontSize: 10 }}>
+                        <Text style={{ color: isFocused ? COLORS.blue : COLORS.light_grey, fontSize: 10 }}>
                             {label}
                         </Text>
                     </TouchableOpacity>
@@ -83,12 +84,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#1E1E1E',
+        backgroundColor: COLORS.background_dark,
         marginHorizontal: 20,
         paddingVertical: 15,
         borderRadius: 25,
         borderCurve: 'continuous',
-        shadowColor: '#737373',
+        shadowColor: COLORS.light_grey,
         shadowOffset: { width: 0, height: 10 },
         shadowRadius: 10,
         shadowOpacity: 0.2,
