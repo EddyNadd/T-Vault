@@ -1,16 +1,28 @@
 import { StyleSheet, ActivityIndicator, Image, Button, KeyboardAvoidingView, SafeAreaView, View } from "react-native";
 import { auth } from "../firebase.jsx";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { router } from "expo-router";
 import { Input, InputField } from '@/components/ui/input';
-import { FormControl, FormControlLabel, FormControlLabelText, FormControlHelper, FormControlHelperText, FormControlError, FormControlErrorIcon, FormControlErrorText } from '@/components/ui/form-control';
+import { FormControl, FormControlLabel, FormControlLabelText, FormControlError, FormControlErrorIcon, FormControlErrorText } from '@/components/ui/form-control';
 
 export default function Signin() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
+    const [initializing, setInitializing] = useState(true);
+
+    const onAuthStateChanged = () => {
+        if (initializing) {
+            setInitializing(false);
+        }
+    }
+
+    useEffect(() => {
+        const subscriber = auth.onAuthStateChanged(onAuthStateChanged);
+        return subscriber; // unsubscribe on unmount
+    }, []);
 
     const signUp = async () => {
         router.replace('/Signup');
@@ -29,6 +41,19 @@ export default function Signin() {
         }
     }
 
+    if (initializing) {
+        return (
+            <View style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#1E1E1E"
+            }}>
+                <ActivityIndicator size="large" color="#ffffff" />
+            </View>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.main}>
             <KeyboardAvoidingView behavior="padding">
@@ -38,7 +63,7 @@ export default function Signin() {
                         <FormControlLabelText />
                     </FormControlLabel>
                     <View style={styles.textField}>
-                        <Input variant="rounded" size="lg" style={{marginBottom:10}}>
+                        <Input variant="rounded" size="lg" style={{ marginBottom: 10 }}>
                             <InputField type="email" placeholder="Email" onChangeText={setEmail} value={email} autoCapitalize="none" />
                         </Input>
                         <Input variant="rounded" size="lg">
