@@ -101,10 +101,10 @@ export default function Signin() {
                         </FormControlLabel>
                         <View style={styles.textField}>
                             <Input variant="rounded" size="xl" style={{ marginBottom: 20 }}>
-                                <InputField type="email" placeholder="Email" onChangeText={setEmail} value={email} autoCapitalize="none" onFocus={handleFocus} onBlur={handleBlur} />
+                                <InputField textContentType="oneTimeCode" type="email" placeholder="Email" onChangeText={setEmail} value={email} autoCapitalize="none" autoCorrect="false" spellCheck="false" onFocus={handleFocus} onBlur={handleBlur} />
                             </Input>
                             <Input variant="rounded" size="xl">
-                                <InputField type="password" placeholder="Password" onChangeText={setPassword} value={password} autoCapitalize="none" onFocus={handleFocus} onBlur={handleBlur} />
+                                <InputField textContentType="oneTimeCode" type="password" placeholder="Password" onChangeText={setPassword} value={password} autoCapitalize="none" onFocus={handleFocus} onBlur={handleBlur} />
                             </Input>
                         </View>
                         <View style={styles.errorContainer}>

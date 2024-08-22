@@ -128,21 +128,21 @@ export default function Signup() {
                         <View style={styles.textField} behavior="padding">
                             <Animated.View style={[styles.textField, { marginBottom: inputMargin }]}>
                                 <Input variant="rounded" size="xl">
-                                    <InputField type="email" placeholder="Username" onChangeText={setUsername} value={username} autoCapitalize="none" autoCorrect="false" spellCheck="fasle" onFocus={handleFocus} onBlur={handleBlur} />
+                                    <InputField textContentType="oneTimeCode" type="email" placeholder="Username" onChangeText={setUsername} value={username} autoCapitalize="none" autoCorrect="false" spellCheck="fasle" onFocus={handleFocus} onBlur={handleBlur} />
                                 </Input>
                             </Animated.View>
                             <Animated.View style={[styles.textField, { marginBottom: inputMargin }]}>
                                 <Input variant="rounded" size="xl">
-                                    <InputField type="email" placeholder="Email" onChangeText={setEmail} value={email} autoCapitalize="none" onFocus={handleFocus} onBlur={handleBlur} />
+                                    <InputField textContentType="oneTimeCode" type="email" placeholder="Email" onChangeText={setEmail} value={email} autoCapitalize="none" autoCorrect="false" spellCheck="false" onFocus={handleFocus} onBlur={handleBlur} />
                                 </Input>
                             </Animated.View>
                             <Animated.View style={[styles.textField, { marginBottom: inputMargin }]}>
                                 <Input variant="rounded" size="xl">
-                                    <InputField type="password" placeholder="Password" onChangeText={setPassword} value={password} autoCapitalize="none" onFocus={handleFocus} onBlur={handleBlur} />
+                                    <InputField textContentType="oneTimeCode" type="password" placeholder="Password" onChangeText={setPassword} value={password} autoCapitalize="none" onFocus={handleFocus} onBlur={handleBlur} />
                                 </Input>
                             </Animated.View>
                             <Input variant="rounded" size="xl">
-                                <InputField type="password" placeholder="Confirm password" onChangeText={setConfirmPassword} value={confirmPassword} autoCapitalize="none" onFocus={handleFocus} onBlur={handleBlur} />
+                                <InputField textContentType="oneTimeCode" type="password" placeholder="Confirm password" onChangeText={setConfirmPassword} value={confirmPassword} autoCapitalize="none" onFocus={handleFocus} onBlur={handleBlur} />
                             </Input>
                         </View>
                         <View style={styles.errorContainer}>
