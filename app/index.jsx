@@ -1,13 +1,16 @@
-import { StyleSheet, ActivityIndicator, TextInput, Button, KeyboardAvoidingView, Text } from "react-native";
+import { StyleSheet, ActivityIndicator, Image, Button, KeyboardAvoidingView, SafeAreaView, View } from "react-native";
 import { auth } from "../firebase.jsx";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import { router } from "expo-router";
+import { Input, InputField } from '@/components/ui/input';
+import { FormControl, FormControlLabel, FormControlLabelText, FormControlHelper, FormControlHelperText, FormControlError, FormControlErrorIcon, FormControlErrorText } from '@/components/ui/form-control';
 
 export default function Signin() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
 
     const signUp = async () => {
         router.replace('/Signup');
@@ -19,6 +22,7 @@ export default function Signin() {
             await signInWithEmailAndPassword(auth, email, password);
             alert("Signed in successfully!");
         } catch (error) {
+            setError(true);
             console.error("Failed to sign in:", error);
         } finally {
             setLoading(false);
@@ -26,41 +30,60 @@ export default function Signin() {
     }
 
     return (
-        <KeyboardAvoidingView style={styles.main} behavior="padding">
-            <Text>Sign In</Text>
-            <TextInput placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" autoComplete="email"/>
-            <TextInput placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry/>
-            {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
-            ) : (
-                <>
-                    <Button title="Sign In" onPress={signIn}/>
-                    <Button title="Sign Up" onPress={signUp}/>
-                </>
-            )}
-        </KeyboardAvoidingView>
+        <SafeAreaView style={styles.main}>
+            <KeyboardAvoidingView behavior="padding">
+                <Image source={require('../assets/logo_transparent_bg.png')} style={styles.image} resizeMode="contain" />
+                <FormControl isInvalid={error}>
+                    <FormControlLabel>
+                        <FormControlLabelText />
+                    </FormControlLabel>
+                    <View style={styles.textField}>
+                        <Input variant="rounded" size="lg" style={{marginBottom:10}}>
+                            <InputField type="email" placeholder="Email" onChangeText={setEmail} value={email} autoCapitalize="none" />
+                        </Input>
+                        <Input variant="rounded" size="lg">
+                            <InputField type="password" placeholder="Password" onChangeText={setPassword} value={password} autoCapitalize="none" />
+                        </Input>
+                    </View>
+                    <FormControlError>
+                        <FormControlErrorIcon />
+                        <FormControlErrorText>
+                            The email or password is incorrect
+                        </FormControlErrorText>
+                    </FormControlError>
+                </FormControl>
+                {loading ? (
+                    <ActivityIndicator size="large" color="#ffffff" />
+                ) : (
+                    <>
+                        <Button title="Sign In" onPress={signIn} />
+                        <Button title="Sign Up" onPress={signUp} />
+                    </>
+                )}
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 }
 
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: "center",
-        padding: 24,
-    },
     main: {
-        flex: 1,
+        display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
-        maxWidth: 960,
+        width: "90%",
+        height: "100%",
         marginHorizontal: "auto",
+        justifyContent: "space-around",
+        alignItems: "center"
     },
-    title: {
-        fontSize: 64,
-        fontWeight: "bold",
+    image: {
+        width: 200,
+        height: 200,
+        marginBottom: 20,
     },
-    subtitle: {
-        fontSize: 36,
-        color: "#38434D",
-    }
+    textField: {
+        width: '100%',
+        marginBottom: 10,
+    },
 });

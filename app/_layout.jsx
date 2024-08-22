@@ -1,4 +1,6 @@
 import { Stack, useSegments, useRouter } from "expo-router";
+import "@/global.css";
+import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { auth } from "../firebase.jsx";
@@ -36,21 +38,26 @@ export default function RootLayout() {
 
     if (initializing) {
         return (
-            <View style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-            }}>
-                <ActivityIndicator size="large" color="#0000ff" />
-            </View>
-        )
+            <GluestackUIProvider mode="dark">
+                <View style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "#1E1E1E"
+                }}>
+                    <ActivityIndicator size="large" color="#ffffff" />
+                </View>
+            </GluestackUIProvider>
+        );
     }
 
     return (
-        <Stack>
-            <Stack.Screen name="index" options={{ animation: "none", headerTitle:"Signin" }}/>
-            <Stack.Screen name="Signup" options={{ animation: "none" }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack>
+        <GluestackUIProvider mode="dark">
+            <Stack screenOptions={{ headerShown: false, animation: "none", contentStyle: { backgroundColor: "#1E1E1E" }}} >
+                <Stack.Screen name="index"/>
+                <Stack.Screen name="Signup" />
+                <Stack.Screen name="(auth)" />
+            </Stack>
+        </GluestackUIProvider>
     );
 }
