@@ -1,10 +1,12 @@
-import { StyleSheet, ActivityIndicator, Image, Button, KeyboardAvoidingView, SafeAreaView, View } from "react-native";
+import { StyleSheet, ActivityIndicator, KeyboardAvoidingView, SafeAreaView, View, Text, Animated } from "react-native";
 import { auth } from "../firebase.jsx";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { router } from "expo-router";
 import { Input, InputField } from '@/components/ui/input';
-import { FormControl, FormControlLabel, FormControlLabelText, FormControlError, FormControlErrorIcon, FormControlErrorText } from '@/components/ui/form-control';
+import { FormControl, FormControlLabel, FormControlLabelText, FormControlError, FormControlErrorText, FormControlHelper } from '@/components/ui/form-control';
+import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
+import colors from "@/styles/COLORS.jsx";
 
 export default function Signin() {
     const [email, setEmail] = useState("");
@@ -12,6 +14,39 @@ export default function Signin() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
     const [initializing, setInitializing] = useState(true);
+
+    const imageScale = useRef(new Animated.Value(1)).current;
+    const signInMargin = useRef(new Animated.Value(0)).current;
+
+    const handleFocus = () => {
+        Animated.parallel([
+            Animated.timing(imageScale, {
+                toValue: 0.7,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+            Animated.timing(signInMargin, {
+                toValue: 50,
+                duration: 300,
+                useNativeDriver: false,
+            })
+        ]).start();
+    };
+
+    const handleBlur = () => {
+        Animated.parallel([
+            Animated.timing(imageScale, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+            Animated.timing(signInMargin, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: false,
+            })
+        ]).start();
+    };
 
     const onAuthStateChanged = () => {
         if (initializing) {
@@ -35,7 +70,6 @@ export default function Signin() {
             alert("Signed in successfully!");
         } catch (error) {
             setError(true);
-            console.error("Failed to sign in:", error);
         } finally {
             setLoading(false);
         }
@@ -55,36 +89,55 @@ export default function Signin() {
     }
 
     return (
-        <SafeAreaView style={styles.main}>
-            <KeyboardAvoidingView behavior="padding">
-                <Image source={require('../assets/logo_transparent_bg.png')} style={styles.image} resizeMode="contain" />
-                <FormControl isInvalid={error}>
-                    <FormControlLabel>
-                        <FormControlLabelText />
-                    </FormControlLabel>
-                    <View style={styles.textField}>
-                        <Input variant="rounded" size="lg" style={{ marginBottom: 10 }}>
-                            <InputField type="email" placeholder="Email" onChangeText={setEmail} value={email} autoCapitalize="none" />
-                        </Input>
-                        <Input variant="rounded" size="lg">
-                            <InputField type="password" placeholder="Password" onChangeText={setPassword} value={password} autoCapitalize="none" />
-                        </Input>
-                    </View>
-                    <FormControlError>
-                        <FormControlErrorIcon />
-                        <FormControlErrorText>
-                            The email or password is incorrect
-                        </FormControlErrorText>
-                    </FormControlError>
-                </FormControl>
-                {loading ? (
-                    <ActivityIndicator size="large" color="#ffffff" />
-                ) : (
-                    <>
-                        <Button title="Sign In" onPress={signIn} />
-                        <Button title="Sign Up" onPress={signUp} />
-                    </>
-                )}
+        <SafeAreaView>
+            <KeyboardAvoidingView behavior="padding" style={styles.main}>
+                <View style={styles.imageContainer}>
+                    <Animated.Image source={require('../assets/logo_transparent_bg.png')} style={[styles.image, { transform: [{ scale: imageScale }] }]} resizeMode="contain" />
+                </View>
+                <View style={styles.textFieldContainer}>
+                    <FormControl isInvalid={error} style={{ marginBottom: 5 }}>
+                        <FormControlLabel>
+                            <FormControlLabelText />
+                        </FormControlLabel>
+                        <View style={styles.textField}>
+                            <Input variant="rounded" size="xl" style={{ marginBottom: 20 }}>
+                                <InputField type="email" placeholder="Email" onChangeText={setEmail} value={email} autoCapitalize="none" onFocus={handleFocus} onBlur={handleBlur} />
+                            </Input>
+                            <Input variant="rounded" size="xl">
+                                <InputField type="password" placeholder="Password" onChangeText={setPassword} value={password} autoCapitalize="none" onFocus={handleFocus} onBlur={handleBlur} />
+                            </Input>
+                        </View>
+                        <View style={styles.errorContainer}>
+                            {error && (
+                                <FormControlError>
+                                    <FormControlErrorText>
+                                        The email or password is incorrect
+                                    </FormControlErrorText>
+                                </FormControlError>
+                            )}
+                        </View>
+                    </FormControl>
+                    {loading ? (
+                        <>
+                            <Button variant="outline" disabled={true}>
+                                <ButtonSpinner />
+                                <ButtonText> Please wait...</ButtonText>
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Button size="md" onPress={signIn} variant="outline" action="primary">
+                                <ButtonText>Sign In</ButtonText>
+                            </Button>
+                        </>
+                    )}
+                </View>
+                <Animated.View style={[styles.signUpContainer, { marginTop: signInMargin }]}>
+                    <Text style={{ color: "white", textAlign: 'center' }}>Don't have an account?</Text>
+                    <Button size="md" onPress={signUp} variant="link" action="primary" disabled={loading}>
+                        <ButtonText style={{ color: colors.blue_dark }}>Sign Up</ButtonText>
+                    </Button>
+                </Animated.View>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -105,10 +158,31 @@ const styles = StyleSheet.create({
     image: {
         width: 200,
         height: 200,
-        marginBottom: 20,
+        alignItems: 'center'
+    },
+    textFieldContainer: {
+        width: '100%',
+        flex: 2,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        zIndex: 2
     },
     textField: {
         width: '100%',
-        marginBottom: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
+    errorContainer: {
+        minHeight: 25,
+        justifyContent: 'center',
+    },
+    signUpContainer: {
+        flex: 1,
+        justifyContent: 'flex-end'
+    },
+    imageContainer: {
+        flex: 2,
+        alignItems: 'center',
+        justifyContent: 'center'
+    }
 });
