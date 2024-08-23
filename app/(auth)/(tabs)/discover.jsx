@@ -19,22 +19,6 @@ const discover = () => {
         title="DISCOVER"
         ButtonComponent={CustomButton}
       />
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <TripCard
-          imageSource={require('../../../assets/trips/1.png')}
-          title="Montagne Hollandaise"
-          owner="My trip"
-          startDate="15.06.2024"
-          endDate="21.06.2024"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/2.png')}
-          title="Les Bahamas (blanchiment)"
-          owner="Trip shared by David_05"
-          startDate="05.07.2024"
-          endDate="12.07.2024"
-        />
-      </ScrollView>
     </SafeAreaView>
   );
 };

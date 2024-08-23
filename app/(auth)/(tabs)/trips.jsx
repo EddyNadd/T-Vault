@@ -1,16 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import Header from '../../../components/Header';
 import { FontAwesome5 } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
-import TripCard from '../../../components/TripCard';  // Import du composant TripCard
+import TripCard from '../../../components/TripCard';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { auth, db } from '../../../firebase';
 
-const trips = () => {
+const Trips = () => {
+  const [trips, setTrips] = useState([]); // État pour stocker les voyages
+
   const CustomButton = () => (
     <TouchableOpacity style={styles.addButton} onPress={() => alert('Add trip')}>
       <FontAwesome5 name="plus" size={20} color="white" />
     </TouchableOpacity>
   );
+
+  useEffect(() => {
+    const requestTrip = async () => {
+      const ownerQuery = query(
+        collection(db, "trips"),
+        where('uid', '==', auth.currentUser.uid)
+      );
+      const requestedTrip = await getDocs(ownerQuery);
+      const ownerTrips = requestedTrip.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTrips(ownerTrips); // Mise à jour de l'état avec les voyages
+    };
+
+    requestTrip();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -20,71 +41,17 @@ const trips = () => {
         ButtonComponent={CustomButton}
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <TripCard
-          imageSource={require('../../../assets/trips/1.png')}
-          title="Montagne Hollandaise"
-          owner="My trip"
-          startDate="15.06.2024"
-          endDate="21.06.2024"
-          shared="user"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/2.png')}
-          title="Les Bahamas (blanchiment)"
-          owner="Trip shared by David_05"
-          startDate="05.07.2024"
-          endDate="12.07.2024"
-          shared="users"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/3.jpg')}
-          title="Ski en afrique"
-          owner="Trip shared by Eddy_14"
-          startDate="01.08.2024"
-          endDate="10.08.2024"
-          shared="users"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/4.jpg')}
-          title="Road trip en alaska"
-          owner="My trip (shared)"
-          startDate="01.08.2024"
-          endDate="10.08.2024"
-          shared="users"
-        />
-                <TripCard
-          imageSource={require('../../../assets/trips/1.png')}
-          title="Montagne Hollandaise"
-          owner="My trip"
-          startDate="15.06.2024"
-          endDate="21.06.2024"
-          shared="user"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/2.png')}
-          title="Les Bahamas (blanchiment)"
-          owner="Trip shared by David_05"
-          startDate="05.07.2024"
-          endDate="12.07.2024"
-          shared="users"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/3.jpg')}
-          title="Ski en afrique"
-          owner="Trip shared by Eddy_14"
-          startDate="01.08.2024"
-          endDate="10.08.2024"
-          shared="users"
-        />
-        <TripCard
-          imageSource={require('../../../assets/trips/4.jpg')}
-          title="Road trip en alaska"
-          owner="My trip (shared)"
-          startDate="01.08.2024"
-          endDate="10.08.2024"
-          shared="users"
-        />
-
+        {trips.map((trip) => (
+          <TripCard
+            key={trip.id}
+            imageSource={{ uri: trip.image }}
+            title={trip.title}
+            owner={trip.shared ? `Trip shared by ${trip.uid}` : "My trip"}
+            startDate={new Date(trip.startDate.seconds * 1000).toLocaleDateString()}
+            endDate={new Date(trip.endDate.seconds * 1000).toLocaleDateString()}
+            shared={trip.shared ? "users" : "user"}
+          />
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -95,13 +62,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background_dark,
   },
-
   scrollContainer: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     paddingBottom: 100,
   },
-
   addButton: {
     backgroundColor: COLORS.blue_dark,
     padding: 5,
@@ -117,4 +82,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default trips;
+export default Trips;
