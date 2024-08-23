@@ -4,11 +4,11 @@ import Header from '../../../components/Header';
 import { FontAwesome5 } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import TripCard from '../../../components/TripCard';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../../firebase';
 
 const Trips = () => {
-  const [trips, setTrips] = useState([]); // État pour stocker les voyages
+  const [trips, setTrips] = useState([]);
 
   const CustomButton = () => (
     <TouchableOpacity style={styles.addButton} onPress={() => alert('Add trip')}>
@@ -17,20 +17,39 @@ const Trips = () => {
   );
 
   useEffect(() => {
-    const requestTrip = async () => {
-      const ownerQuery = query(
-        collection(db, "trips"),
-        where('uid', '==', auth.currentUser.uid)
-      );
-      const requestedTrip = await getDocs(ownerQuery);
-      const ownerTrips = requestedTrip.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setTrips(ownerTrips); // Mise à jour de l'état avec les voyages
-    };
+    const ownerQuery = query(
+      collection(db, "trips"),
+      where('uid', '==', auth.currentUser.uid)
+    );
 
-    requestTrip();
+    const sharedQuery = query(
+      collection(db, "trips"),
+      where('canWrite', 'array-contains', auth.currentUser.uid)
+    );
+
+    const unsubscribeOwner = onSnapshot(ownerQuery, async (snapshot) => {
+      const tripsData = await Promise.all(snapshot.docs.map(async (doc) => {
+        const tripData = doc.data();
+        return {
+          id: doc.id,
+          ...tripData,
+        };
+      }));
+      setTrips((prevTrips) => [...prevTrips, ...tripsData]);
+    });
+
+    const unsubscribeShared = onSnapshot(sharedQuery, async (snapshot) => {
+      const tripsData = await Promise.all(snapshot.docs.map(async (doc) => {
+        const tripData = doc.data();
+        return {
+          id: doc.id,
+          ...tripData,
+        };
+      }));
+      setTrips((prevTrips) => [...prevTrips, ...tripsData]);
+    });
+
+    return () => {unsubscribeOwner(); unsubscribeShared()};
   }, []);
 
   return (
@@ -41,17 +60,27 @@ const Trips = () => {
         ButtonComponent={CustomButton}
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {trips.map((trip) => (
-          <TripCard
-            key={trip.id}
-            imageSource={{ uri: trip.image }}
-            title={trip.title}
-            owner={trip.shared ? `Trip shared by ${trip.uid}` : "My trip"}
-            startDate={new Date(trip.startDate.seconds * 1000).toLocaleDateString()}
-            endDate={new Date(trip.endDate.seconds * 1000).toLocaleDateString()}
-            shared={trip.shared ? "users" : "user"}
-          />
-        ))}
+        {trips.map((trip) => {
+          let ownerLabel = "My trip";
+          if (trip.shared) {
+            if (trip.uid === auth.currentUser.uid) {
+              ownerLabel = "My trip (shared)";
+            } else {
+              ownerLabel = `Trip shared by ${trip.username}`;
+            }
+          }
+          return (
+            <TripCard
+              key={trip.id}
+              imageSource={{ uri: trip.image }}
+              title={trip.title}
+              owner={ownerLabel}
+              startDate={new Date(trip.startDate.seconds * 1000).toLocaleDateString()}
+              endDate={new Date(trip.endDate.seconds * 1000).toLocaleDateString()}
+              shared={trip.shared ? "users" : "user"}
+            />
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );
