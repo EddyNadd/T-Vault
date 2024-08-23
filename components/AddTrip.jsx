@@ -113,6 +113,7 @@ export default function AddTrip({ isOpen, onClose }) {
                     title: title,
                     comment: comment,
                     uid: auth.currentUser.uid,
+                    username: auth.currentUser.displayName,
                     shared: false,
                     canRead: [],
                     canWrite: []
