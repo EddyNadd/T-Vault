@@ -12,7 +12,6 @@ import {CalendarDaysIcon } from "@/components/ui/icon"
 import { Avatar, AvatarImage } from "@/components/ui/avatar"
 import { Button, ButtonText } from "@/components/ui/button"
 
-
 export default function AddTrip({ isOpen, onClose }) {
     const [image, setImage] = useState(null);
     const [startDate, setStartDate] = useState(new Date());
@@ -265,7 +264,6 @@ export default function AddTrip({ isOpen, onClose }) {
         </Actionsheet>
     );
 }
-
 
 const styles = StyleSheet.create({
     imageContainer: {
