@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, SafeAreaView, Pressable, TouchableHighlight } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { doc, setDoc } from "firebase/firestore";
@@ -12,26 +12,20 @@ import {
     ActionsheetDragIndicatorWrapper,
 } from '@/components/ui/actionsheet';
 import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
-import { Textarea, TextareaInput } from "@/components/ui/textarea"
-import {CalendarDaysIcon } from "@/components/ui/icon"
-import {
-    Avatar,
-    AvatarImage,
-} from "@/components/ui/avatar"
-import {
-    Button,
-    ButtonText,
-} from "@/components/ui/button"
+import { Textarea, TextareaInput } from "@/components/ui/textarea";
+import { CalendarDaysIcon } from "@/components/ui/icon";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Button, ButtonText } from "@/components/ui/button";
 
 export default function AddTrip({ isOpen, onClose }) {
     const [image, setImage] = useState(null);
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
-    const [mode, setMode] = useState('date');
     const [showPicker, setShowPicker] = useState(false);
     const [title, setTitle] = useState('');
     const [comment, setComment] = useState('');
     const [isStart, setIsStart] = useState(true);
+    const [picked, setPicked] = useState(false);
 
     const uploadImage = async () => {
         try {
@@ -58,12 +52,12 @@ export default function AddTrip({ isOpen, onClose }) {
         } else {
             setEndDate(selectedDate || endDate);
         }
+        setPicked(true);
     };
 
     const showDatepicker = (start = true) => {
-        setShowPicker(true);
         setIsStart(start);
-        setMode('date');
+        setShowPicker(true);
     };
 
     const addTrip = async () => {
@@ -89,7 +83,7 @@ export default function AddTrip({ isOpen, onClose }) {
                 console.error("Error while adding the document: ", error);
             }
         } else {
-            console.error("Title and commentary are requiered.");
+            console.error("Title and commentary are required.");
         }
     };
 
@@ -119,47 +113,69 @@ export default function AddTrip({ isOpen, onClose }) {
                     </Input>
 
                     <View style={styles.date}>
-                        <Input variant="rounded" size="lg" style={styles.fullWidthInput}>
-                            <InputSlot>
-                                <InputIcon
-                                    as={CalendarDaysIcon}
-                                    className="text-typography-500 m-2 w-4 h-4"
-                                    onPress={() => showDatepicker(true)}
+                        <TouchableOpacity onPress={() => showDatepicker(true)} style={styles.fullWidthInput}>
+                            <Input variant="rounded" size="lg" style={styles.fullWidthInput}>
+                                <InputSlot>
+                                    <InputIcon
+                                        as={CalendarDaysIcon}
+                                        className="text-typography-500 m-2 w-4 h-4"
+                                    />
+                                </InputSlot>
+                                <InputField
+                                    value={picked ? startDate.toLocaleDateString() : 'Departure date'}
+                                    editable={false}
+                                    style={styles.inputField}
                                 />
-                            </InputSlot>
-                            <InputField
-                                placeholder="Departure date"
-                                value={startDate.toLocaleDateString()}
-                                editable={false}
-                                style={styles.inputField}
-                            />
-                        </Input>
-
-                        <Input variant="rounded" size="lg" style={styles.fullWidthInput}>
-                            <InputSlot>
-                                <InputIcon
-                                    as={CalendarDaysIcon}
-                                    className="text-typography-500 m-2 w-4 h-4"
-                                    onPress={() => showDatepicker(false)}
+                            </Input>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => showDatepicker(false)} style={styles.fullWidthInput}>
+                            <Input variant="rounded" size="lg" style={styles.fullWidthInput}>
+                                <InputSlot>
+                                    <InputIcon
+                                        as={CalendarDaysIcon}
+                                        className="text-typography-500 m-2 w-4 h-4"
+                                    />
+                                </InputSlot>
+                                <InputField
+                                    value={picked ? endDate.toLocaleDateString() : 'Return date'}
+                                    editable={false}
+                                    style={styles.inputField}
                                 />
-                            </InputSlot>
-                            <InputField
-                                placeholder="Return date"
-                                value={endDate.toLocaleDateString()}
-                                editable={false}
-                                style={styles.inputField}
-                            />
-                        </Input>
+                            </Input>
+                        </TouchableOpacity>
                     </View>
 
-                    {showPicker && (
-                        <DateTimePicker
-                            testID="dateTimePicker"
-                            value={isStart ? startDate : endDate}
-                            mode={mode}
-                            onChange={onChange}
-                        />
-                    )}
+                    <Modal
+                        transparent={true}
+                        animationType="slide"
+                        visible={showPicker}
+                        onRequestClose={() => setShowPicker(false)}
+                    >
+                        <SafeAreaView style={{ flex: 1 }}>
+                            <Pressable
+                                style={{ flex: 1, alignItems: 'flex-end', flexDirection: 'row' }}
+                                activeOpacity={1}
+                                onPress={() => setShowPicker(false)}
+                            >
+                                <TouchableHighlight
+                                    underlayColor="transparent"
+                                    style={{ flex: 1 }}
+                                >
+                                    <View style={{ backgroundColor: "#FFFFFF", overflow: 'hidden', borderTopLeftRadius: 25, borderTopRightRadius: 25 }}>
+                                        <View style={{ marginTop: 20, marginBottom: 20, backgroundColor: 'white' }}>
+                                            <DateTimePicker
+                                                display='spinner'
+                                                mode='date'
+                                                value={isStart ? startDate : endDate}
+                                                onChange={onChange}
+                                            />
+                                        </View>
+                                    </View>
+                                </TouchableHighlight>
+                            </Pressable>
+                        </SafeAreaView>
+                        <SafeAreaView style={{ flex: 0, backgroundColor: '#FFFFFF' }} />
+                    </Modal>
 
                     <TouchableOpacity onPress={uploadImage} style={styles.avatarContainer}>
                         <Avatar size="xl">
@@ -182,7 +198,7 @@ export default function AddTrip({ isOpen, onClose }) {
                         >
                             <TextareaInput
                                 onChangeText={setComment}
-                                placeholder='Comments'
+                                placeholder="Comments"
                                 style={styles.textareaInput}
                             />
                         </Textarea>
@@ -199,6 +215,7 @@ export default function AddTrip({ isOpen, onClose }) {
         </Actionsheet>
     );
 }
+
 
 const styles = StyleSheet.create({
     imageContainer: {
@@ -244,7 +261,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 5,
         fontSize: 16,
-        textAlignVertical: 'top', 
+        textAlignVertical: 'top',
     },
 
     textareacontainer: {
