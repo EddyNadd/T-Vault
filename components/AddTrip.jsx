@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, SafeAreaView, Pressable, TouchableHighlight } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Animated ,SafeAreaView, Pressable, TouchableHighlight, TouchableWithoutFeedback,  Keyboard } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { doc, setDoc } from "firebase/firestore";
@@ -11,6 +11,7 @@ import { Textarea, TextareaInput } from "@/components/ui/textarea"
 import {CalendarDaysIcon } from "@/components/ui/icon"
 import { Avatar, AvatarImage } from "@/components/ui/avatar"
 import { Button, ButtonText } from "@/components/ui/button"
+
 
 export default function AddTrip({ isOpen, onClose }) {
     const [image, setImage] = useState(null);
