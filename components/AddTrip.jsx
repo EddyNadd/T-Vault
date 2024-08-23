@@ -107,7 +107,7 @@ export default function AddTrip({ isOpen, onClose }) {
             try {
                 const imageUrl = await uploadImageToStorage(image);
                 const newTrip = {
-                    image: "imageUrl" || '',
+                    image: imageUrl || '',
                     startDate: startDate,
                     endDate: endDate,
                     title: title,
