@@ -1,27 +1,16 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { doc, setDoc } from "firebase/firestore";
-import { db } from "../firebase.jsx";
-import {
-    Actionsheet,
-    ActionsheetBackdrop,
-    ActionsheetContent,
-    ActionsheetDragIndicator,
-    ActionsheetDragIndicatorWrapper,
-} from '@/components/ui/actionsheet';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, auth, storage } from "../firebase.jsx";
+import { Actionsheet,  ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicator, ActionsheetDragIndicatorWrapper }from '@/components/ui/actionsheet';
 import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
 import { Textarea, TextareaInput } from "@/components/ui/textarea"
 import {CalendarDaysIcon } from "@/components/ui/icon"
-import {
-    Avatar,
-    AvatarImage,
-} from "@/components/ui/avatar"
-import {
-    Button,
-    ButtonText,
-} from "@/components/ui/button"
+import { Avatar, AvatarImage } from "@/components/ui/avatar"
+import { Button, ButtonText } from "@/components/ui/button"
 
 export default function AddTrip({ isOpen, onClose }) {
     const [image, setImage] = useState(null);
@@ -32,6 +21,53 @@ export default function AddTrip({ isOpen, onClose }) {
     const [title, setTitle] = useState('');
     const [comment, setComment] = useState('');
     const [isStart, setIsStart] = useState(true);
+    const animatedMargin = useRef(new Animated.Value(0)).current;
+
+    const dismissKeyboard = () => {
+        Keyboard.dismiss();
+    };
+
+    useEffect(() => {
+        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', handleKeyboardDidShow);
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', handleKeyboardDidHide);
+
+        return () => {
+            keyboardDidShowListener.remove();
+            keyboardDidHideListener.remove();
+        };
+    }, []);
+
+    const handleKeyboardDidShow = (event) => {
+        const height = event.endCoordinates.height;
+
+        Animated.timing(animatedMargin, {
+            toValue: height,
+            duration: 0,
+            useNativeDriver: false,
+        }).start();
+    };
+
+    const handleKeyboardDidHide = () => {
+        Animated.timing(animatedMargin, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: false,
+        }).start();
+    };
+
+    const uploadImageToStorage = async (imageUri) => {
+        try {
+            const response = await fetch(imageUri);
+            const blob = await response.blob();
+            const storageRef = ref(storage, `images/${new Date().toISOString()}`);
+            await uploadBytes(storageRef, blob);
+            const url = await getDownloadURL(storageRef);
+            return url;
+        } catch (error) {
+            console.log('Error uploading image: ', error);
+            throw error;
+        }
+    };
 
     const uploadImage = async () => {
         try {
@@ -40,7 +76,7 @@ export default function AddTrip({ isOpen, onClose }) {
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
                 aspect: [1, 1],
-                quality: 1,
+                quality: 0,
             });
 
             if (!result.cancelled) {
@@ -67,16 +103,20 @@ export default function AddTrip({ isOpen, onClose }) {
     };
 
     const addTrip = async () => {
-        if (title && comment) {
-            const newTrip = {
-                image: image || '',
-                startDate: startDate,
-                endDate: endDate,
-                title: title,
-                comment: comment,
-            };
-
+        if (title && comment && startDate && endDate && image) {
             try {
+                const imageUrl = await uploadImageToStorage(image);
+                const newTrip = {
+                    image: "imageUrl" || '',
+                    startDate: startDate,
+                    endDate: endDate,
+                    title: title,
+                    comment: comment,
+                    uid: auth.currentUser.uid,
+                    shared: false,
+                    canRead: [],
+                    canWrite: []
+                };
                 const id = Math.random().toString(36).substr(2, 6);
                 await setDoc(doc(db, "trips", id), newTrip);
                 console.log("New Trip !");
@@ -100,8 +140,9 @@ export default function AddTrip({ isOpen, onClose }) {
                 <ActionsheetDragIndicatorWrapper>
                     <ActionsheetDragIndicator />
                 </ActionsheetDragIndicatorWrapper>
+                <TouchableWithoutFeedback onPress={dismissKeyboard}>
 
-                <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+                <View contentContainerStyle={{ paddingBottom: 20 }}>
 
                     <View style={styles.buttonContainer}>
                         <Text style={styles.text}>ADD A TRIP</Text>
@@ -188,13 +229,14 @@ export default function AddTrip({ isOpen, onClose }) {
                         </Textarea>
                     </View>
 
-                    <View style={styles.buttonContainer}>
+                    <Animated.View style={[styles.buttonContainer, {marginBottom: animatedMargin}]}>
                         <Button onPress={addTrip} size="md" variant="outline" action="primary">
                             <ButtonText>Add</ButtonText>
                         </Button>
-                    </View>
+                    </Animated.View>
 
-                </ScrollView>
+                </View>
+                </TouchableWithoutFeedback>
             </ActionsheetContent>
         </Actionsheet>
     );
@@ -256,7 +298,7 @@ const styles = StyleSheet.create({
     buttonContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        margin: 10,
+        margin: 10
     },
 
     date: {
@@ -268,7 +310,7 @@ const styles = StyleSheet.create({
     avatarContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginVertical: 10,
+        marginVertical: 10
     },
 
     avatarPlaceholder: {
