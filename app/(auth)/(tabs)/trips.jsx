@@ -70,7 +70,7 @@ const Trips = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {trips.map((trip) => {
           let ownerLabel = "My trip";
-          if (trip.shared) {
+          if (trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) {
             if (trip.uid === auth.currentUser.uid) {
               ownerLabel = "My trip (shared)";
             } else {
