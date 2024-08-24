@@ -143,7 +143,7 @@ export default function AddTrip({ isOpen, onClose }) {
             setEndDate(currentDate);
             if (Platform.OS === 'android') {
                 toggleEndDatePicker();
-                setStartDateString(currentDate.toLocaleDateString());
+                setEndDateString(currentDate.toLocaleDateString());
                 setOldEndDate(currentDate);
                 setPickedEnd(true);
             }
