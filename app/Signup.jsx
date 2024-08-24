@@ -131,7 +131,7 @@ export default function Signup() {
                         <View style={styles.textField} behavior="padding">
                             <Animated.View style={[styles.textField, { marginBottom: inputMargin }]}>
                                 <Input variant="rounded" size="xl">
-                                    <InputField textContentType="oneTimeCode" type="email" placeholder="Username" onChangeText={setUsername} value={username} autoCapitalize="none" autoCorrect={false} spellCheck="false" onFocus={handleFocus} onBlur={handleBlur} />
+                                    <InputField textContentType="oneTimeCode" type="email" placeholder="Username" onChangeText={setUsername} value={username} autoCapitalize="none" autoCorrect={false} spellCheck="fasle" onFocus={handleFocus} onBlur={handleBlur} />
                                 </Input>
                             </Animated.View>
                             <Animated.View style={[styles.textField, { marginBottom: inputMargin }]}>
