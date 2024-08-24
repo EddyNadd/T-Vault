@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, View } from "react-native";
 import Header from '../../../components/Header';
-import AddTripActionSheet from '../../../components/AddTrip'; 
+import AddTripActionSheet from '../../../components/AddTrip';
 import { FontAwesome5 } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import TripCard from '../../../components/TripCard';
@@ -12,15 +12,15 @@ const Trips = () => {
   const [trips, setTrips] = useState([]);
   const [showActionsheet, setShowActionsheet] = useState(false);
 
-    const toggleActionSheet = () => {
-        setShowActionsheet(!showActionsheet);
-    };
+  const toggleActionSheet = () => {
+    setShowActionsheet(!showActionsheet);
+  };
 
-    const CustomButton = () => (
-        <TouchableOpacity style={styles.addButton} onPress={toggleActionSheet}>
-          <FontAwesome5 name="plus" size={20} color="white" />
-        </TouchableOpacity>
-      );
+  const CustomButton = () => (
+    <TouchableOpacity style={styles.addButton} onPress={toggleActionSheet}>
+      <FontAwesome5 name="plus" size={20} color="white" />
+    </TouchableOpacity>
+  );
 
   useEffect(() => {
     const ownerQuery = query(
@@ -34,28 +34,30 @@ const Trips = () => {
     );
 
     const unsubscribeOwner = onSnapshot(ownerQuery, async (snapshot) => {
-      const tripsData = await Promise.all(snapshot.docs.map(async (doc) => {
+      const ownerTrips = await Promise.all(snapshot.docs.map(async (doc) => {
         const tripData = doc.data();
         return {
           id: doc.id,
           ...tripData,
         };
       }));
-      setTrips((prevTrips) => [...prevTrips, ...tripsData]);
+
+      const unsubscribeShared = onSnapshot(sharedQuery, async (snapshot) => {
+        const sharedTrips = await Promise.all(snapshot.docs.map(async (doc) => {
+          const tripData = doc.data();
+          return {
+            id: doc.id,
+            ...tripData,
+          };
+        }));
+
+        setTrips([...ownerTrips, ...sharedTrips]);
+      });
+
+      return () => { unsubscribeShared(); };
     });
 
-    const unsubscribeShared = onSnapshot(sharedQuery, async (snapshot) => {
-      const tripsData = await Promise.all(snapshot.docs.map(async (doc) => {
-        const tripData = doc.data();
-        return {
-          id: doc.id,
-          ...tripData,
-        };
-      }));
-      setTrips((prevTrips) => [...prevTrips, ...tripsData]);
-    });
-
-    return () => {unsubscribeOwner(); unsubscribeShared()};
+    return () => { unsubscribeOwner(); };
   }, []);
 
   return (
@@ -89,8 +91,8 @@ const Trips = () => {
         })}
       </ScrollView>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1E1E1E' }}>
-            <AddTripActionSheet isOpen={showActionsheet} onClose={toggleActionSheet} />
-        </View>
+        <AddTripActionSheet isOpen={showActionsheet} onClose={toggleActionSheet} />
+      </View>
     </SafeAreaView>
   );
 };
