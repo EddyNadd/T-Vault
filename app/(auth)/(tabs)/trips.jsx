@@ -85,7 +85,7 @@ const Trips = () => {
               owner={ownerLabel}
               startDate={new Date(trip.startDate.seconds * 1000).toLocaleDateString()}
               endDate={new Date(trip.endDate.seconds * 1000).toLocaleDateString()}
-              shared={trip.shared ? "users" : "user"}
+              shared={(trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) ? "users" : "user"}
             />
           );
         })}
