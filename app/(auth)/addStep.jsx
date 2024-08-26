@@ -205,7 +205,8 @@ const styles = StyleSheet.create({
     },
     fullWidthInput: {
         flex: 1,
-        marginRight: 10,
+        marginRight: 5,
+        marginLeft: 5,
     },
     inputField: {
         color: '#ffffff',
