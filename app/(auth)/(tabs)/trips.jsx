@@ -83,8 +83,8 @@ const Trips = () => {
         
         const sortedTrips = [...ownerTrips, ...sharedTrips].sort((a, b) => b.startDate.seconds - a.startDate.seconds);
         const sortedInvit = invitQuery.sort((a, b) => b.startDate.seconds - a.startDate.seconds).filter((trip) => !trip.canWrite.includes(auth.currentUser.uid));
-        const uniqueTrips = Array.from(new Set([...sortedTrips, ...sortedInvit].map((trip) => trip.id)))
-          .map((id) => [...sortedTrips, ...sortedInvit].find((trip) => trip.id === id));
+        const uniqueTrips = Array.from(new Set([...sortedInvit, ...sortedTrips].map((trip) => trip.id)))
+          .map((id) => [...sortedInvit, ...sortedTrips ].find((trip) => trip.id === id));
 
         const userUids = Array.from(new Set(uniqueTrips.map((trip) => trip.uid)));
         await fetchUsers(userUids).then((users)=>{
