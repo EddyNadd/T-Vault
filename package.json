@@ -20,6 +20,8 @@
     "@gluestack-ui/modal": "^0.1.34",
     "@gluestack-ui/nativewind-utils": "^1.0.23",
     "@gluestack-ui/overlay": "^0.1.15",
+    "@gluestack-ui/radio": "^0.1.31",
+    "@gluestack-ui/switch": "^0.1.22",
     "@gluestack-ui/textarea": "^0.1.23",
     "@gluestack-ui/toast": "^1.0.7",
     "@legendapp/motion": "^2.4.0",
@@ -46,7 +48,8 @@
     "react-native-screens": "3.31.1",
     "react-native-svg": "15.2.0",
     "tailwindcss": "^3.4.10",
-    "typescript": "~5.3.3"
+    "typescript": "~5.3.3",
+    "expo-clipboard": "~6.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
