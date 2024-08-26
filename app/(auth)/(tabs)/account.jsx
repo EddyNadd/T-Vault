@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, StyleSheet, SafeAreaView, Alert } from "react-native";
+import { TouchableOpacity, StyleSheet, SafeAreaView, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import Header from '../../../components/Header';
 import { getAuth, updateProfile, updateEmail as updateFirebaseEmail, updatePassword as updateFirebasePassword, EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword } from "firebase/auth";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Input, InputField } from '@/components/ui/input';
+import { doc, deleteDoc, setDoc } from 'firebase/firestore';
+import { db } from "../../../firebase.jsx";
 
 const Account = () => {
   const auth = getAuth();
   const [username, setUsername] = useState(auth.currentUser.displayName || '');
+  const [oldUsername, setOldUsername] = useState(auth.currentUser.displayName || '');
   const [email, setEmail] = useState(auth.currentUser.email || '');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -38,6 +41,19 @@ const Account = () => {
       await updateProfile(auth.currentUser, {
         displayName: username,
       });
+
+      await deleteDoc(doc(db, 'Users', oldUsername));
+
+      await setDoc(doc(db, 'Users', username), {
+        uid: auth.currentUser.uid,
+      });
+
+      await setDoc(doc(db, 'UID', auth.currentUser.uid), {
+        username: username
+    });
+
+    setOldUsername(username);
+
       Alert.alert('Success', 'Username updated successfully');
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -66,6 +82,7 @@ const Account = () => {
       await reauthenticateWithCredential(user, credential);
       await updateFirebasePassword(user, newPassword);
       Alert.alert('Success', 'Password updated successfully');
+      setOldPassword(newPassword);
     } catch (error) {
       Alert.alert('Error', error.message);
     }
@@ -90,112 +107,119 @@ const Account = () => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <KeyboardAvoidingView
+      style={styles.safeArea}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <Header
         logoSource={require('../../../assets/logo_transparent_bg.png')}
         title="ACCOUNT"
         ButtonComponent={CustomButton}
       />
-      <SafeAreaView style={styles.info}>
-        <SafeAreaView style={styles.input}>
-          <Input>
-            <InputField
-              label="UserName"
-              value={username}
-              onChangeText={setUsername}
-            />
-          </Input>
-        </SafeAreaView>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
 
-        <SafeAreaView style={styles.button}>
-          <Button
-            size="md"
-            variant="outline"
-            action="primary"
-            isDisabled={!isUsernameButtonEnabled}
-            onPress={updateUsername}
-          >
-            <ButtonText>Edit Username</ButtonText>
-          </Button>
-        </SafeAreaView>
 
-        <SafeAreaView style={styles.input}>
-          <Input>
-            <InputField
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </Input>
-        </SafeAreaView>
+        <SafeAreaView style={styles.info}>
+          <SafeAreaView style={styles.input}>
+            <Input>
+              <InputField
+                label="UserName"
+                value={username}
+                onChangeText={setUsername}
+              />
+            </Input>
+          </SafeAreaView>
 
-        <SafeAreaView style={styles.button}>
-          <Button
-            size="md"
-            variant="outline"
-            action="primary"
-            isDisabled={!isEmailButtonEnabled}
-            onPress={() => {
-              if (email) { 
-                updateEmail();
-              } else {
-                Alert.alert('Error', 'Please fill in all fields.');
-              }
-            }}
-          >
-            <ButtonText>Edit Email</ButtonText>
-          </Button>
-        </SafeAreaView>
+          <SafeAreaView style={styles.button}>
+            <Button
+              size="md"
+              variant="outline"
+              action="primary"
+              isDisabled={!isUsernameButtonEnabled}
+              onPress={updateUsername}
+            >
+              <ButtonText>Edit Username</ButtonText>
+            </Button>
+          </SafeAreaView>
 
-        <SafeAreaView style={styles.input}>
-          <Input>
-            <InputField
-              label="Old Password"
-              placeholder='Old Password'
-              value={oldPassword}
-              onChangeText={setOldPassword}
-              secureTextEntry={true}
-            />
-          </Input>
-        </SafeAreaView>
+          <SafeAreaView style={styles.input}>
+            <Input>
+              <InputField
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+              />
+            </Input>
+          </SafeAreaView>
 
-        <SafeAreaView style={styles.input}>
-          <Input>
-            <InputField
-              label="New Password"
-              placeholder='New Password'
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry={true}
-            />
-          </Input>
-        </SafeAreaView>
+          <SafeAreaView style={styles.button}>
+            <Button
+              size="md"
+              variant="outline"
+              action="primary"
+              isDisabled={!isEmailButtonEnabled}
+              onPress={() => {
+                if (email) {
+                  updateEmail();
+                } else {
+                  Alert.alert('Error', 'Please fill in all fields.');
+                }
+              }}
+            >
+              <ButtonText>Edit Email</ButtonText>
+            </Button>
+          </SafeAreaView>
 
-        <SafeAreaView style={styles.input}>
-          <Input>
-            <InputField
-              label="Confirm Password"
-              placeholder='Confirm Password'
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={true}
-            />
-          </Input>
-        </SafeAreaView>
+          <SafeAreaView style={styles.input}>
+            <Input>
+              <InputField
+                label="Old Password"
+                placeholder='Old Password'
+                value={oldPassword}
+                onChangeText={setOldPassword}
+                secureTextEntry={true}
+              />
+            </Input>
+          </SafeAreaView>
 
-        <SafeAreaView style={styles.button}>
-          <Button
-            size="md"
-            variant="outline"
-            action="primary"
-            isDisabled={!isPasswordButtonEnabled}
-            onPress={updatePassword}
-          >
-            <ButtonText>Edit Password</ButtonText>
-          </Button>
+          <SafeAreaView style={styles.input}>
+            <Input>
+              <InputField
+                label="New Password"
+                placeholder='New Password'
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry={true}
+              />
+            </Input>
+          </SafeAreaView>
+
+          <SafeAreaView style={styles.input}>
+            <Input>
+              <InputField
+                label="Confirm Password"
+                placeholder='Confirm Password'
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={true}
+              />
+            </Input>
+          </SafeAreaView>
+
+          <SafeAreaView style={styles.button}>
+            <Button
+              size="md"
+              variant="outline"
+              action="primary"
+              isDisabled={!isPasswordButtonEnabled}
+              onPress={updatePassword}
+            >
+              <ButtonText>Edit Password</ButtonText>
+            </Button>
+          </SafeAreaView>
         </SafeAreaView>
-      </SafeAreaView>
-    </SafeAreaView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -220,6 +244,10 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginRight: 10,
     marginBottom: 5,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    alignItems: 'center',
   },
 });
 
