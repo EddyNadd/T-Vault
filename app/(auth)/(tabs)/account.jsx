@@ -50,9 +50,9 @@ const Account = () => {
 
       await setDoc(doc(db, 'UID', auth.currentUser.uid), {
         username: username
-    });
+      });
 
-    setOldUsername(username);
+      setOldUsername(username);
 
       Alert.alert('Success', 'Username updated successfully');
     } catch (error) {
@@ -107,18 +107,15 @@ const Account = () => {
   );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.safeArea}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    
+    <SafeAreaView style={styles.safeArea}>
       <Header
         logoSource={require('../../../assets/logo_transparent_bg.png')}
         title="ACCOUNT"
         ButtonComponent={CustomButton}
       />
+      <KeyboardAvoidingView behavior='padding'>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-
-
         <SafeAreaView style={styles.info}>
           <SafeAreaView style={styles.input}>
             <Input>
@@ -219,7 +216,8 @@ const Account = () => {
           </SafeAreaView>
         </SafeAreaView>
       </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
