@@ -49,7 +49,7 @@ const Account = () => {
       });
 
       await setDoc(doc(db, 'UID', auth.currentUser.uid), {
-        uid: username
+        username: username
     });
 
     setOldUsername(username);
