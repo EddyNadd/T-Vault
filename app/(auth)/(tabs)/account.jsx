@@ -82,6 +82,7 @@ const Account = () => {
       await reauthenticateWithCredential(user, credential);
       await updateFirebasePassword(user, newPassword);
       Alert.alert('Success', 'Password updated successfully');
+      setOldPassword(newPassword);
     } catch (error) {
       Alert.alert('Error', error.message);
     }
