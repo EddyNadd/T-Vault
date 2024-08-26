@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
+import { TouchableOpacity, StyleSheet, SafeAreaView, Alert } from "react-native";
 import Header from '../../../components/Header';
-import { auth } from '../../../firebase.jsx';
+import { getAuth, updateProfile, updateEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Input, InputField } from '@/components/ui/input';
 
 const Account = () => {
-  const [username, setUsername] = useState(auth.currentUser.displayName);
-  const [email, setEmail] = useState(auth.currentUser.email);
+  const auth = getAuth();
+  const [username, setUsername] = useState(auth.currentUser.displayName || '');
+  const [email, setEmail] = useState(auth.currentUser.email || '');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -31,6 +32,50 @@ const Account = () => {
       oldPassword !== '' || newPassword !== '' || confirmPassword !== ''
     );
   }, [oldPassword, newPassword, confirmPassword]);
+
+  const updateUsername = async () => {
+    try {
+      await updateProfile(auth.currentUser, {
+        displayName: username
+      });
+      Alert.alert('Success', 'Username updated successfully');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  const updateEmail = async () => {
+    try {
+      await updateEmail(auth.currentUser, email);
+      Alert.alert('Success', 'Email updated successfully');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  const updatePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Error', 'New passwords do not match');
+      return;
+    }
+    
+    try {
+      const user = auth.currentUser;
+      const credential = EmailAuthProvider.credential(user.email, oldPassword);
+      await reauthenticateWithCredential(user, credential);
+      
+      await updatePassword(user, newPassword);
+      Alert.alert('Success', 'Password updated successfully');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  const handleUpdate = () => {
+    if (isUsernameButtonEnabled) updateUsername();
+    if (isEmailButtonEnabled) updateEmail();
+    if (isPasswordButtonEnabled) updatePassword();
+  };
 
   const CustomButton = () => (
     <TouchableOpacity style={styles.addButton} onPress={() => auth.signOut()}>
@@ -62,6 +107,7 @@ const Account = () => {
             variant="outline"
             action="primary"
             isDisabled={!isUsernameButtonEnabled}
+            onPress={updateUsername}
           >
             <ButtonText>Edit Username</ButtonText>
           </Button>
@@ -83,6 +129,7 @@ const Account = () => {
             variant="outline"
             action="primary"
             isDisabled={!isEmailButtonEnabled}
+            onPress={updateEmail}
           >
             <ButtonText>Edit Email</ButtonText>
           </Button>
@@ -130,6 +177,7 @@ const Account = () => {
             variant="outline"
             action="primary"
             isDisabled={!isPasswordButtonEnabled}
+            onPress={updatePassword}
           >
             <ButtonText>Edit Password</ButtonText>
           </Button>
