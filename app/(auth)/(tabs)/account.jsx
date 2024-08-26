@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TouchableOpacity, StyleSheet, SafeAreaView, Alert } from "react-native";
 import Header from '../../../components/Header';
-import { getAuth, updateProfile, updateEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { getAuth, updateProfile, updateEmail as updateFirebaseEmail, updatePassword as updateFirebasePassword, EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword } from "firebase/auth";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -36,7 +36,7 @@ const Account = () => {
   const updateUsername = async () => {
     try {
       await updateProfile(auth.currentUser, {
-        displayName: username
+        displayName: username,
       });
       Alert.alert('Success', 'Username updated successfully');
     } catch (error) {
@@ -46,7 +46,8 @@ const Account = () => {
 
   const updateEmail = async () => {
     try {
-      await updateEmail(auth.currentUser, email);
+      const user = auth.currentUser;
+      await updateFirebaseEmail(user, email);
       Alert.alert('Success', 'Email updated successfully');
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -58,13 +59,12 @@ const Account = () => {
       Alert.alert('Error', 'New passwords do not match');
       return;
     }
-    
+
     try {
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(user.email, oldPassword);
       await reauthenticateWithCredential(user, credential);
-      
-      await updatePassword(user, newPassword);
+      await updateFirebasePassword(user, newPassword);
       Alert.alert('Success', 'Password updated successfully');
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -72,9 +72,15 @@ const Account = () => {
   };
 
   const handleUpdate = () => {
-    if (isUsernameButtonEnabled) updateUsername();
-    if (isEmailButtonEnabled) updateEmail();
-    if (isPasswordButtonEnabled) updatePassword();
+    if (isUsernameButtonEnabled) {
+      updateUsername();
+    }
+    if (isEmailButtonEnabled) {
+      updateEmail();
+    }
+    if (isPasswordButtonEnabled) {
+      updatePassword();
+    }
   };
 
   const CustomButton = () => (
@@ -117,7 +123,7 @@ const Account = () => {
           <Input>
             <InputField
               label="Email"
-              value={email} 
+              value={email}
               onChangeText={setEmail}
             />
           </Input>
@@ -129,7 +135,13 @@ const Account = () => {
             variant="outline"
             action="primary"
             isDisabled={!isEmailButtonEnabled}
-            onPress={updateEmail}
+            onPress={() => {
+              if (email) { 
+                updateEmail();
+              } else {
+                Alert.alert('Error', 'Please fill in all fields.');
+              }
+            }}
           >
             <ButtonText>Edit Email</ButtonText>
           </Button>
@@ -140,9 +152,9 @@ const Account = () => {
             <InputField
               label="Old Password"
               placeholder='Old Password'
-              value={oldPassword}  
+              value={oldPassword}
               onChangeText={setOldPassword}
-              secureTextEntry={true}  
+              secureTextEntry={true}
             />
           </Input>
         </SafeAreaView>
@@ -152,9 +164,9 @@ const Account = () => {
             <InputField
               label="New Password"
               placeholder='New Password'
-              value={newPassword}  
+              value={newPassword}
               onChangeText={setNewPassword}
-              secureTextEntry={true}  
+              secureTextEntry={true}
             />
           </Input>
         </SafeAreaView>
@@ -164,9 +176,9 @@ const Account = () => {
             <InputField
               label="Confirm Password"
               placeholder='Confirm Password'
-              value={confirmPassword}  
+              value={confirmPassword}
               onChangeText={setConfirmPassword}
-              secureTextEntry={true}  
+              secureTextEntry={true}
             />
           </Input>
         </SafeAreaView>
