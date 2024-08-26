@@ -22,15 +22,32 @@ const discover = () => {
       where('canRead', 'array-contains', auth.currentUser.uid)
     );
 
+    const invitQuery = query(
+      collection(db, "trips"),
+      where('invitRead', 'array-contains', auth.currentUser.uid)
+    );
+
     const unsubscribeShared = onSnapshot(sharedQuery, async (snapshot) => {
       const sharedTrips = snapshot.docs
         .map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }))
-        .filter((trip) => (!trip.canWrite.includes(auth.currentUser.uid) && trip.uid != auth.currentUser.uid));  // Exclude trips where the user is in canWrite
+        .filter((trip) => (!trip.canWrite.includes(auth.currentUser.uid) && trip.uid != auth.currentUser.uid));
 
-      setTrips(sharedTrips);
+      const unsubscribeInvit = onSnapshot(invitQuery, async (snapshot) => {
+        const invitTrips = snapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          .filter((trip) => (!trip.canWrite.includes(auth.currentUser.uid) && !trip.invitWrite.includes(auth.currentUser.uid) && trip.uid != auth.currentUser.uid));
+
+        const uniqueTrips = Array.from(new Set([...sharedTrips, ...invitTrips].map((trip) => trip.id)))
+          .map((id) => [...sharedTrips, ...invitTrips].find((trip) => trip.id === id));
+        setTrips(uniqueTrips);
+      });
+      return () => unsubscribeInvit();
     });
 
     return () => unsubscribeShared();
@@ -69,6 +86,9 @@ const discover = () => {
               startDate={new Date(trip.startDate.seconds * 1000).toLocaleDateString()}
               endDate={new Date(trip.endDate.seconds * 1000).toLocaleDateString()}
               shared={(trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) ? "users" : "user"}
+              isInvitation={trip.invitRead != null ? trip.invitRead.includes(auth.currentUser.uid) && !trip.canRead.includes(auth.currentUser.uid) : false}
+              tripCode={trip.id}
+              editableTrip={false}
             />
           );
         })}

@@ -51,10 +51,11 @@ const Trips = () => {
         const sharedTrips = await Promise.all(snapshot.docs.map(async (doc) => {
           const tripData = doc.data();
           return {
-            id: doc.id,
-            ...tripData,
+                id: doc.id,
+                ...tripData,
           };
-        }));
+        })
+      );
 
         const unsubscribeInvit = onSnapshot(invitQuery, async (snapshot) => {
           const invitQuery = await Promise.all(snapshot.docs.map(async (doc) => {
@@ -64,11 +65,13 @@ const Trips = () => {
               ...tripData,
             };
           }));
-
-        setTrips([ ...ownerTrips, ...sharedTrips ]);
+        
         const sortedTrips = [...ownerTrips, ...sharedTrips].sort((a, b) => b.startDate.seconds - a.startDate.seconds);
-        const sortedInvit = invitQuery.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
-        setTrips([ ...sortedInvit, ...sortedTrips ]);
+        const sortedInvit = invitQuery.sort((a, b) => b.startDate.seconds - a.startDate.seconds).filter((trip) => !trip.canWrite.includes(auth.currentUser.uid));
+        const uniqueTrips = Array.from(new Set([...sortedTrips, ...sortedInvit].map((trip) => trip.id)))
+          .map((id) => [...sortedTrips, ...sortedInvit].find((trip) => trip.id === id));
+
+        setTrips([ ...uniqueTrips ]);
       });
 
       return () => { unsubscribeInvit(); };
@@ -106,8 +109,9 @@ const Trips = () => {
               startDate={new Date(trip.startDate.seconds * 1000).toLocaleDateString()}
               endDate={new Date(trip.endDate.seconds * 1000).toLocaleDateString()}
               shared={(trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) ? "users" : "user"}
-              isInvitation={trip.invitWrite != null ? trip.invitWrite.includes(auth.currentUser.uid) : false}
+              isInvitation={trip.invitWrite != null ? trip.invitWrite.includes(auth.currentUser.uid) && !trip.canWrite.includes(auth.currentUser.uid) : false}
               tripCode={trip.id}
+              editableTrip={true}
             />
           );
         })}
