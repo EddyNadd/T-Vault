@@ -92,7 +92,6 @@ export default function Signup() {
             await setDoc(doc(db, "UID", auth.currentUser.uid), {
                 uid: username
             });
-            alert("Signed up successfully!");
         } catch (error) {
             if (error.code === 'auth/email-already-in-use') {
                 setErrorText("The email address is already in use by another account.");
