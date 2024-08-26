@@ -33,6 +33,11 @@ const Trips = () => {
       where('canWrite', 'array-contains', auth.currentUser.uid)
     );
 
+    const invitQuery = query(
+      collection(db, "trips"),
+      where('invitWrite', 'array-contains', auth.currentUser.uid)
+    );
+
     const unsubscribeOwner = onSnapshot(ownerQuery, async (snapshot) => {
       const ownerTrips = await Promise.all(snapshot.docs.map(async (doc) => {
         const tripData = doc.data();
@@ -51,8 +56,23 @@ const Trips = () => {
           };
         }));
 
-        setTrips([...ownerTrips, ...sharedTrips]);
+        const unsubscribeInvit = onSnapshot(invitQuery, async (snapshot) => {
+          const invitQuery = await Promise.all(snapshot.docs.map(async (doc) => {
+            const tripData = doc.data();
+            return {
+              id: doc.id,
+              ...tripData,
+            };
+          }));
+
+        setTrips([ ...ownerTrips, ...sharedTrips ]);
+        const sortedTrips = [...ownerTrips, ...sharedTrips].sort((a, b) => b.startDate.seconds - a.startDate.seconds);
+        const sortedInvit = invitQuery.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
+        setTrips([ ...sortedInvit, ...sortedTrips ]);
       });
+
+      return () => { unsubscribeInvit(); };
+    });
 
       return () => { unsubscribeShared(); };
     });
@@ -86,6 +106,8 @@ const Trips = () => {
               startDate={new Date(trip.startDate.seconds * 1000).toLocaleDateString()}
               endDate={new Date(trip.endDate.seconds * 1000).toLocaleDateString()}
               shared={(trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) ? "users" : "user"}
+              isInvitation={trip.invitWrite != null ? trip.invitWrite.includes(auth.currentUser.uid) : false}
+              tripCode={trip.id}
             />
           );
         })}

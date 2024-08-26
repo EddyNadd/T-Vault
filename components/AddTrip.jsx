@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, TouchableWithoutFeedback, Keyboard, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, TouchableWithoutFeedback, Keyboard, Platform, ActivityIndicator } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { doc, setDoc } from "firebase/firestore";
@@ -28,6 +28,7 @@ export default function AddTrip({ isOpen, onClose }) {
     const [pickedStart, setPickedStart] = useState(false);
     const [pickedEnd, setPickedEnd] = useState(false);
     const animatedMargin = useRef(new Animated.Value(0)).current;
+    const [loading, setLoading] = useState(false); // New loading state
 
     const dismissKeyboard = () => {
         Keyboard.dismiss();
@@ -44,6 +45,7 @@ export default function AddTrip({ isOpen, onClose }) {
             setEndDateString('Return date');
             setPickedStart(false);
             setPickedEnd(false);
+            setLoading(false); // Reset loading state
         }
     }, [isOpen]);
 
@@ -170,6 +172,7 @@ export default function AddTrip({ isOpen, onClose }) {
     const addTrip = async () => {
         if (title && comment && startDate && endDate && image) {
             try {
+                setLoading(true); // Start loading
                 const imageUrl = await uploadImageToStorage(image);
                 const newTrip = {
                     image: imageUrl || '',
@@ -192,6 +195,8 @@ export default function AddTrip({ isOpen, onClose }) {
                 onClose();
             } catch (error) {
                 console.error("Error while adding the document: ", error);
+            } finally {
+                setLoading(false); // Stop loading
             }
         } else {
             console.error("Title and commentary are required.");
@@ -320,11 +325,24 @@ export default function AddTrip({ isOpen, onClose }) {
                         </View>
 
                         <Animated.View style={[styles.buttonContainer, { marginBottom: animatedMargin }]}>
-                            <Button onPress={addTrip} size="md" variant="outline" action="primary">
-                                <ButtonText>Add</ButtonText>
+                            <Button 
+                                style={{ marginBottom: 20 }} 
+                                onPress={addTrip} 
+                                size="md" 
+                                variant="outline" 
+                                action="primary"
+                                disabled={loading} // Disable button while loading
+                            >
+                                {loading ? (
+                                    <>
+                                        <ActivityIndicator size="small" color="#fff" />
+                                        <ButtonText style={{ marginLeft: 10 }}>Please wait...</ButtonText>
+                                    </>
+                                ) : (
+                                    <ButtonText>Add</ButtonText>
+                                )}
                             </Button>
                         </Animated.View>
-
                     </View>
                 </TouchableWithoutFeedback>
             </ActionsheetContent>
@@ -388,7 +406,7 @@ const styles = StyleSheet.create({
     buttonContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        margin: 10
+        margin: 10,
     },
 
     date: {
