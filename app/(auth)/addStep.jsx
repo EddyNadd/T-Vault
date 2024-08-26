@@ -1,105 +1,111 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, TouchableWithoutFeedback, Keyboard, Platform, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
-import { doc, setDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, auth, storage } from "../../firebase.jsx";
 import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
-import { Textarea, TextareaInput } from "@/components/ui/textarea"
-import { CalendarDaysIcon } from "@/components/ui/icon"
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button"
-import { CloseCircleIcon, CheckCircleIcon} from '@/components/ui/icon';
+import { Textarea, TextareaInput } from "@/components/ui/textarea";
+import { CalendarDaysIcon } from "@/components/ui/icon";
+import { Button, ButtonText } from "@/components/ui/button";
+import { CloseCircleIcon, CheckCircleIcon } from '@/components/ui/icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 
 const AddStep = () => {
     const [startDateString, setStartDateString] = useState(new Date());
     const [startDate, setStartDate] = useState(new Date());
     const [endDateString, setEndDateString] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
-    const [oldStartDate, setOldStartDate] = useState(new Date());
-    const [oldEndDate, setOldEndDate] = useState(new Date());
     const [showStartPicker, setShowStartPicker] = useState(false);
     const [showEndPicker, setShowEndPicker] = useState(false);
     const [pickedStart, setPickedStart] = useState(false);
     const [pickedEnd, setPickedEnd] = useState(false);
+    const [components, setComponents] = useState([]);
 
     const toggleStartDatePicker = () => {
         setShowStartPicker(!showStartPicker);
-    }
+    };
 
     const toggleEndDatePicker = () => {
         setShowEndPicker(!showEndPicker);
-    }
+    };
 
     const onChangeStart = ({ type }, selectedDate) => {
-        if (type == "set") {
+        if (type === 'set') {
             const currentDate = selectedDate;
             setStartDate(currentDate);
             if (Platform.OS === 'android') {
                 toggleStartDatePicker();
                 setStartDateString(currentDate.toLocaleDateString());
-                setOldStartDate(currentDate);
                 setPickedStart(true);
             }
-        }
-        else {
+        } else {
             toggleStartDatePicker();
         }
     };
 
     const onChangeEnd = ({ type }, selectedDate) => {
-        if (type == "set") {
+        if (type === 'set') {
             const currentDate = selectedDate;
             setEndDate(currentDate);
             if (Platform.OS === 'android') {
                 toggleEndDatePicker();
                 setEndDateString(currentDate.toLocaleDateString());
-                setOldEndDate(currentDate);
                 setPickedEnd(true);
             }
-        }
-        else {
+        } else {
             toggleEndDatePicker();
         }
     };
 
-    const confirmIOSStartDate = () => {
-        setStartDateString(startDate.toLocaleDateString());
-        setPickedStart(true);
-        toggleStartDatePicker();
-        setOldStartDate(startDate);
-    }
+    const addComponent = () => {
+        setComponents([...components, { type: 'comment', id: components.length + 1 }]);
+    };
 
-    const confirmIOSEndDate = () => {
-        setEndDateString(endDate.toLocaleDateString());
-        setPickedEnd(true);
-        toggleEndDatePicker();
-        setOldEndDate(endDate);
-    }
+    const pickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsMultipleSelection: true,
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            const newImages = result.assets.map((asset) => ({
+                type: 'image',
+                uri: asset.uri,
+                id: components.length + 1
+            }));
+            setComponents([...components, ...newImages]);
+        }
+    };
 
     return (
-
         <SafeAreaView style={styles.container}>
             <View style={styles.button}>
-            <Button size="lg" variant="link" action="primary">
-                <ButtonIcon as={CloseCircleIcon}  size='xl'/>
-            </Button>
+                <Button size="lg" variant="link" action="primary">
+                    <CloseCircleIcon size="xl" />
+                </Button>
 
-            <Button size="lg" variant="link" action="primary">
-                <ButtonIcon as={CheckCircleIcon} size='xl'/>
-            </Button>
+                <Button size="lg" variant="link" action="primary">
+                    <CheckCircleIcon size="xl" />
+                </Button>
+            </View>
+
+            <View style={styles.title}>
+                <Input>
+                    <InputField placeholder="Title" style={styles.inputField} />
+                </Input>
+            </View>
+
+            <View style={styles.destination}>
+                <Input>
+                    <InputField placeholder="Destination" style={styles.inputField} />
+                </Input>
             </View>
 
             <View style={styles.date}>
-                <TouchableOpacity onPress={() => toggleStartDatePicker()} style={styles.fullWidthInput}>
+                <TouchableOpacity onPress={toggleStartDatePicker} style={styles.fullWidthInput}>
                     <Input variant="rounded" size="lg" pointerEvents="none">
                         <InputSlot>
-                            <InputIcon
-                                as={CalendarDaysIcon}
-                                className="text-typography-500 m-2 w-4 h-4"
-                            />
+                            <CalendarDaysIcon className="text-typography-500 m-2 w-4 h-4" />
                         </InputSlot>
                         <InputField
                             value={pickedStart ? startDateString : 'Departure date'}
@@ -108,13 +114,10 @@ const AddStep = () => {
                         />
                     </Input>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => toggleEndDatePicker()} style={styles.fullWidthInput}>
+                <TouchableOpacity onPress={toggleEndDatePicker} style={styles.fullWidthInput}>
                     <Input variant="rounded" size="lg" pointerEvents="none">
                         <InputSlot>
-                            <InputIcon
-                                as={CalendarDaysIcon}
-                                className="text-typography-500 m-2 w-4 h-4"
-                            />
+                            <CalendarDaysIcon className="text-typography-500 m-2 w-4 h-4" />
                         </InputSlot>
                         <InputField
                             value={pickedEnd ? endDateString : 'Return date'}
@@ -124,55 +127,54 @@ const AddStep = () => {
                     </Input>
                 </TouchableOpacity>
             </View>
+
             {showStartPicker && Platform.OS === 'android' && (
                 <DateTimePicker
-                    display='spinner'
-                    mode='date'
-                    value={oldStartDate}
+                    display="spinner"
+                    mode="date"
+                    value={startDate}
                     onChange={onChangeStart}
                 />
             )}
-            {showEndPicker && Platform.OS == 'android' && (
+            {showEndPicker && Platform.OS === 'android' && (
                 <DateTimePicker
-                    display='spinner'
-                    mode='date'
-                    value={oldEndDate}
+                    display="spinner"
+                    mode="date"
+                    value={endDate}
                     onChange={onChangeEnd}
                 />
             )}
-            {Platform.OS === 'ios' && (
-                <View>
-                    <DatePickerModal
-                        isOpen={showStartPicker}
-                        onClose={toggleStartDatePicker}
-                        onConfirm={confirmIOSStartDate}
-                        onCancel={toggleStartDatePicker}
-                        selectedDate={oldStartDate}
-                        onDateChange={onChangeStart}
-                    />
-                    <DatePickerModal
-                        isOpen={showEndPicker}
-                        onClose={toggleEndDatePicker}
-                        onConfirm={confirmIOSEndDate}
-                        onCancel={toggleEndDatePicker}
-                        selectedDate={oldEndDate}
-                        onDateChange={onChangeEnd}
-                    />
+
+            <ScrollView style={styles.scrollContainer}>
+                {components.map((component) => {
+                    if (component.type === 'image') {
+                        return <Image key={component.id} source={{ uri: component.uri }} style={styles.image} />;
+                    } else if (component.type === 'comment') {
+                        return (
+                            <Textarea key={component.id} variant="rounded" size="lg" style={styles.inputField} >
+                                <TextareaInput placeholder={`Comments`} />
+                            </Textarea>
+                        );
+                    }
+                    return null;
+                })}
+
+                <View style={styles.button}>
+                    <Button size="md" variant="outline" action="primary" onPress={pickImage}>
+                        <ButtonText>Add Image</ButtonText>
+                    </Button>
+
+                    <Button size="md" variant="outline" action="primary" onPress={addComponent}>
+                        <ButtonText>Add Comments</ButtonText>
+                    </Button>
                 </View>
-            )}
-            <View style={styles.button}>
-                <Button size="md" variant="outline" action="primary">
-                    <ButtonText>Add Image</ButtonText>
-                </Button>
+            </ScrollView>
 
-                <Button size="md" variant="outline" action="primary">
-                    <ButtonText>Add Comments</ButtonText>
-                </Button>
-            </View>
+
         </SafeAreaView>
-
     );
 };
+
 export default AddStep;
 
 const styles = StyleSheet.create({
@@ -181,7 +183,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#1E1E1E',
         paddingHorizontal: 20,
         paddingVertical: 10,
-        paddingBottom: 100,
     },
     title: {
         color: '#ffffff',
@@ -189,29 +190,41 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 20,
     },
-
-    destination : {
+    destination: {
         color: '#ffffff',
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 40,
     },
-
     date: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        width: '100%',
         marginBottom: 40,
     },
     fullWidthInput: {
         flex: 1,
+        marginRight: 10,
     },
     inputField: {
         color: '#ffffff',
-
+        marginBottom: 10,
+        marginTop: 10,
     },
     button: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 40,
+        marginTop: 20,
     },
-});    
+    scrollContainer: {
+        marginTop: 20,
+    },
+    image: {
+        width: '100%',
+        height: 200,
+        borderRadius: 10,
+        marginBottom: 10,
+        marginTop: 10,
+    },
+});
