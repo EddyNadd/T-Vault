@@ -87,7 +87,10 @@ export default function Signup() {
             await createUserWithEmailAndPassword(auth, email, password);
             updateProfile(auth.currentUser, { displayName: username })
             await setDoc(doc(db, "Users", username), {
-                user: username
+                uid: auth.currentUser.uid
+            });
+            await setDoc(doc(db, "UID", auth.currentUser.uid), {
+                uid: username
             });
             alert("Signed up successfully!");
         } catch (error) {
