@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Input, InputField } from '@/components/ui/input';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from "../../../firebase.jsx";
 
 const Account = () => {
@@ -41,13 +41,18 @@ const Account = () => {
       await updateProfile(auth.currentUser, {
         displayName: username,
       });
-      await updateDoc(doc(db, "Users", oldUsername), {
-        uid: auth.currentUser.uid
+
+      await deleteDoc(doc(db, 'Users', oldUsername));
+
+      await setDoc(doc(db, 'Users', username), {
+        uid: auth.currentUser.uid,
       });
-      
-      await updateDoc(doc(db, "UID", oldUsername), {
-        uid: auth.currentUser.uid
-      });
+
+      await setDoc(doc(db, 'UID', auth.currentUser.uid), {
+        uid: username
+    });
+
+    setOldUsername(username);
 
       Alert.alert('Success', 'Username updated successfully');
     } catch (error) {
