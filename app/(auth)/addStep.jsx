@@ -9,6 +9,7 @@ import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { CloseCircleIcon, CheckCircleIcon } from '@/components/ui/icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from "expo-router";
+import COLORS from '@/styles/COLORS';
 
 const AddStep = () => {
     const [startDateString, setStartDateString] = useState(new Date());
@@ -92,13 +93,13 @@ const AddStep = () => {
             </View>
 
             <View style={styles.title}>
-                <Input>
+                <Input variant='rounded'>
                     <InputField placeholder="Title" style={styles.inputField} />
                 </Input>
             </View>
 
             <View style={styles.destination}>
-                <Input>
+                <Input variant='rounded'>
                     <InputField placeholder="Destination" style={styles.inputField} />
                 </Input>
             </View>
@@ -162,11 +163,11 @@ const AddStep = () => {
                 })}
 
                 <View style={styles.button}>
-                    <Button size="md" variant="outline" action="primary" onPress={pickImage}>
+                    <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
                         <ButtonText>Add Image</ButtonText>
                     </Button>
 
-                    <Button size="md" variant="outline" action="primary" onPress={addComponent}>
+                    <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
                         <ButtonText>Add Comments</ButtonText>
                     </Button>
                 </View>
@@ -218,6 +219,13 @@ const styles = StyleSheet.create({
         marginBottom: 40,
         marginTop: 20,
     },
+
+    buttonStyle: {
+        width: '45%',
+        marginBottom: 50,
+        backgroundColor: COLORS.blue,
+        borderRadius: 25,
+      },
 
     scrollContainer: {
         marginTop: 20,
