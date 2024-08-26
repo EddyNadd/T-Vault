@@ -4,7 +4,7 @@ import { arrayRemove, arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 
-const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInvitation, tripCode }) => {
+const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInvitation, tripCode, editableTrip }) => {
 
     const [opacity, setOpacity] = useState(1);
     useEffect(() => {
@@ -18,10 +18,17 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
     const handleTickPress = async (tripCode) => {
         try {
             const tripRef = doc(db, "trips", tripCode);
-            await updateDoc(tripRef, {
-                canWrite: arrayUnion(auth.currentUser.uid),
-                invitWrite: arrayRemove(auth.currentUser.uid)
-            });
+            if(editableTrip) {
+                await updateDoc(tripRef, {
+                    canWrite: arrayUnion(auth.currentUser.uid),
+                    invitWrite: arrayRemove(auth.currentUser.uid)
+                });
+            } else {
+                await updateDoc(tripRef, {
+                    canRead: arrayUnion(auth.currentUser.uid),
+                    invitRead: arrayRemove(auth.currentUser.uid)
+                });
+            }
         } catch (error) {
             console.log("Error adding trip: ", error);
         }
@@ -30,9 +37,15 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
     const handleCrossPress = async (tripCode) => {
         try {
             const tripRef = doc(db, "trips", tripCode);
-            await updateDoc(tripRef, {
-                invitWrite: arrayRemove(auth.currentUser.uid)
-            });
+            if(editableTrip) {
+                await updateDoc(tripRef, {
+                    invitWrite: arrayRemove(auth.currentUser.uid)
+                });
+            } else {
+                await updateDoc(tripRef, {
+                    invitRead: arrayRemove(auth.currentUser.uid)
+                });
+            }
         } catch (error) {
             console.log("Error adding trip: ", error);
         }
