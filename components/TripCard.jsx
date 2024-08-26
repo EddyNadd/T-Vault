@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { ImageBackground, Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, Pressable } from "react-native";
 import { arrayRemove, arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInvitation, tripCode, editableTrip }) => {
 
+    const router = useRouter();
     const [opacity, setOpacity] = useState(1);
     useEffect(() => {
         if (isInvitation) {
@@ -53,6 +55,7 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
 
     return (
         <View style={styles.cardContainer}>
+            <Pressable onPress={() => router.push(`/(auth)/trip/${tripCode}`)}>
             <ImageBackground
                 source={imageSource}
                 style={[styles.tripComponents, { opacity: opacity }]}
@@ -82,6 +85,7 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
                     </TouchableOpacity>
                 </View>
             )}
+            </Pressable>
         </View>
     );
 };

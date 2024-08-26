@@ -5,7 +5,7 @@ import AddTripActionSheet from '../../../components/AddTrip';
 import { FontAwesome5 } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import TripCard from '../../../components/TripCard';
-import { collection, query, where, onSnapshot, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../../../firebase';
 
 const Trips = () => {
@@ -37,6 +37,21 @@ const Trips = () => {
       collection(db, "trips"),
       where('invitWrite', 'array-contains', auth.currentUser.uid)
     );
+
+    const fetchUsers = async (uids) => {
+      if (uids.length === 0) return {};
+      let users = {};
+      for (const uid of uids) {
+        const docRef = doc(db, 'UID', uid);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+          users[uid] = 'Unknown';
+        } else {
+          users[uid] = docSnap.data().username;
+        }
+      }
+      return users;
+    };
 
     const unsubscribeOwner = onSnapshot(ownerQuery, async (snapshot) => {
       const ownerTrips = await Promise.all(snapshot.docs.map(async (doc) => {
@@ -71,7 +86,14 @@ const Trips = () => {
         const uniqueTrips = Array.from(new Set([...sortedInvit, ...sortedTrips].map((trip) => trip.id)))
           .map((id) => [...sortedInvit, ...sortedTrips ].find((trip) => trip.id === id));
 
-        setTrips([ ...uniqueTrips ]);
+        const userUids = Array.from(new Set(uniqueTrips.map((trip) => trip.uid)));
+        await fetchUsers(userUids).then((users)=>{
+          const enrichedTrips = uniqueTrips.map((trip) => ({
+            ...trip,
+            username: users[trip.uid],
+          }));
+          setTrips([ ...enrichedTrips ]);
+        });
       });
 
       return () => { unsubscribeInvit(); };

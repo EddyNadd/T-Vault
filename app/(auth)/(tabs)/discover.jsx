@@ -5,7 +5,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import AddDiscoverTrip from '../../../components/AddDiscorverTrip'
 import TripCard from '../../../components/TripCard';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../../firebase';
 
 const discover = () => {
@@ -27,6 +27,21 @@ const discover = () => {
       where('invitRead', 'array-contains', auth.currentUser.uid)
     );
 
+    const fetchUsers = async (uids) => {
+      if (uids.length === 0) return {};
+      let users = {};
+      for (const uid of uids) {
+        const docRef = doc(db, 'UID', uid);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+          users[uid] = 'Unknown';
+        } else {
+          users[uid] = docSnap.data().username;
+        }
+      }
+      return users;
+    };
+
     const unsubscribeShared = onSnapshot(sharedQuery, async (snapshot) => {
       const sharedTrips = snapshot.docs
         .map((doc) => ({
@@ -46,6 +61,14 @@ const discover = () => {
         const uniqueTrips = Array.from(new Set([...sharedTrips, ...invitTrips].map((trip) => trip.id)))
           .map((id) => [...sharedTrips, ...invitTrips].find((trip) => trip.id === id));
         setTrips(uniqueTrips);
+        const userUids = Array.from(new Set(uniqueTrips.map((trip) => trip.uid)));
+        await fetchUsers(userUids).then((users)=>{
+          const enrichedTrips = uniqueTrips.map((trip) => ({
+            ...trip,
+            username: users[trip.uid],
+          }));
+          setTrips([ ...enrichedTrips ]);
+        });
       });
       return () => unsubscribeInvit();
     });
