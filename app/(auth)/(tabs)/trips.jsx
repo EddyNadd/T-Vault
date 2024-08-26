@@ -8,6 +8,8 @@ import TripCard from '../../../components/TripCard';
 import { collection, query, where, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../../../firebase';
 import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
+import {useRouter } from "expo-router";
+import {Button, ButtonText} from "@/components/ui/button";
 
 const Trips = () => {
   const [trips, setTrips] = useState([]);
@@ -18,6 +20,7 @@ const Trips = () => {
   const tripsSharedMap = useRef(new Map());
   const tripsInvitMap = useRef(new Map());
 
+  const router = useRouter();
   const toggleActionSheet = () => {
     setShowActionsheet(!showActionsheet);
   };
@@ -157,6 +160,10 @@ const Trips = () => {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1E1E1E' }}>
         <AddTripActionSheet isOpen={showActionsheet} onClose={toggleActionSheet} />
       </View>
+
+      <Button onPress={() => router.replace('../addStep')}>
+        <ButtonText>Add Step</ButtonText>
+      </Button>
     </SafeAreaView>
   );
 };
