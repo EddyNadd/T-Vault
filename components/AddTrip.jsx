@@ -28,7 +28,7 @@ export default function AddTrip({ isOpen, onClose }) {
     const [pickedStart, setPickedStart] = useState(false);
     const [pickedEnd, setPickedEnd] = useState(false);
     const animatedMargin = useRef(new Animated.Value(0)).current;
-    const [loading, setLoading] = useState(false); // New loading state
+    const [loading, setLoading] = useState(false);
 
     const dismissKeyboard = () => {
         Keyboard.dismiss();
@@ -45,7 +45,7 @@ export default function AddTrip({ isOpen, onClose }) {
             setEndDateString('Return date');
             setPickedStart(false);
             setPickedEnd(false);
-            setLoading(false); // Reset loading state
+            setLoading(false);
         }
     }, [isOpen]);
 
@@ -332,7 +332,7 @@ export default function AddTrip({ isOpen, onClose }) {
                                 size="md" 
                                 variant="outline" 
                                 action="primary"
-                                disabled={loading} // Disable button while loading
+                                disabled={loading}
                             >
                                 {loading ? (
                                     <>
