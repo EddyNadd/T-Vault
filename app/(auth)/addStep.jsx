@@ -107,7 +107,7 @@ const AddStep = () => {
                 <TouchableOpacity onPress={toggleStartDatePicker} style={styles.fullWidthInput}>
                     <Input variant="rounded" size="lg" pointerEvents="none">
                         <InputSlot>
-                            <CalendarDaysIcon className="text-typography-500 m-2 w-4 h-4" />
+                            <InputIcon as={CalendarDaysIcon} className="text-typography-500 m-2 w-4 h-4" />
                         </InputSlot>
                         <InputField
                             value={pickedStart ? startDateString : 'Departure date'}
@@ -119,7 +119,7 @@ const AddStep = () => {
                 <TouchableOpacity onPress={toggleEndDatePicker} style={styles.fullWidthInput}>
                     <Input variant="rounded" size="lg" pointerEvents="none">
                         <InputSlot>
-                            <CalendarDaysIcon className="text-typography-500 m-2 w-4 h-4" />
+                            <InputIcon as={CalendarDaysIcon} className="text-typography-500 m-2 w-4 h-4" />
                         </InputSlot>
                         <InputField
                             value={pickedEnd ? endDateString : 'Return date'}
