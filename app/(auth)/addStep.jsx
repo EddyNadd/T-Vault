@@ -5,9 +5,10 @@ import * as ImagePicker from 'expo-image-picker';
 import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { CalendarDaysIcon } from "@/components/ui/icon";
-import { Button, ButtonText } from "@/components/ui/button";
+import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { CloseCircleIcon, CheckCircleIcon } from '@/components/ui/icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from "expo-router";
 
 const AddStep = () => {
     const [startDateString, setStartDateString] = useState(new Date());
@@ -19,6 +20,7 @@ const AddStep = () => {
     const [pickedStart, setPickedStart] = useState(false);
     const [pickedEnd, setPickedEnd] = useState(false);
     const [components, setComponents] = useState([]);
+    const router = useRouter();
 
     const toggleStartDatePicker = () => {
         setShowStartPicker(!showStartPicker);
@@ -80,12 +82,12 @@ const AddStep = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.button}>
-                <Button size="lg" variant="link" action="primary">
-                    <CloseCircleIcon size="xl" />
+                <Button size="lg" variant="link" action="primary" onPress={() => router.replace('../(tabs)/trips')}>
+                    <ButtonIcon as={CloseCircleIcon} size="xl" />
                 </Button>
 
-                <Button size="lg" variant="link" action="primary">
-                    <CheckCircleIcon size="xl" />
+                <Button size="lg" variant="link" action="primary" onPress={() => router.replace('../(tabs)/trips')}>
+                    <ButtonIcon as={CheckCircleIcon} size="xl" />
                 </Button>
             </View>
 
@@ -169,8 +171,6 @@ const AddStep = () => {
                     </Button>
                 </View>
             </ScrollView>
-
-
         </SafeAreaView>
     );
 };
@@ -211,12 +211,14 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         marginTop: 10,
     },
+
     button: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 40,
         marginTop: 20,
     },
+
     scrollContainer: {
         marginTop: 20,
     },
