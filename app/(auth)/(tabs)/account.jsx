@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Input, InputField } from '@/components/ui/input';
-import { doc, deleteDoc, setDoc } from 'firebase/firestore';
+import { doc, deleteDoc, setDoc, getDocs, query, collection, where, documentId } from 'firebase/firestore';
 import { db } from "../../../firebase.jsx";
 
 const Account = () => {
@@ -17,6 +17,7 @@ const Account = () => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [errorText, setErrorText] = useState("");
 
   const [isUsernameButtonEnabled, setIsUsernameButtonEnabled] = useState(false);
   const [isEmailButtonEnabled, setIsEmailButtonEnabled] = useState(false);
@@ -38,6 +39,11 @@ const Account = () => {
 
   const updateUsername = async () => {
     try {
+      requestedUser = await getDocs(query(collection(db, "Users"), where(documentId(), "==", username)));
+      if (!requestedUser.empty) {
+        throw new Error("Username already exists!");
+      }
+
       await updateProfile(auth.currentUser, { displayName: username });
 
       await deleteDoc(doc(db, 'Users', oldUsername));
@@ -46,11 +52,15 @@ const Account = () => {
 
       await setDoc(doc(db, 'UID', auth.currentUser.uid), { username: username });
 
-      setOldUsername(username);
-
       Alert.alert('Success', 'Username updated successfully');
+      setOldUsername(username);
+      setIsUsernameButtonEnabled(false);
     } catch (error) {
-      Alert.alert('Error', error.message);
+      if (error.message === "Username already taken!") {
+        setErrorText("Username already exists!");
+      } else {
+        Alert.alert('Error', error.message);
+      }
     }
   };
 
@@ -58,29 +68,49 @@ const Account = () => {
     try {
       const user = auth.currentUser;
       await updateFirebaseEmail(user, email);
+      setIsEmailButtonEnabled(false);
       Alert.alert('Success', 'Email updated successfully');
     } catch (error) {
-      Alert.alert('Error', error.message);
+      if (error.code === 'auth/email-already-in-use') {
+        setErrorText("The email address is already in use by another account.");
+      } else if (error.code === 'auth/invalid-email') {
+        setErrorText("The email address is badly formatted.");
+      }
+      else {
+        Alert.alert('Error', error.message);
+      }
     }
   };
 
   const updatePassword = async () => {
-    if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'New passwords do not match');
-      return;
-    }
-
     try {
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(user.email, oldPassword);
       await reauthenticateWithCredential(user, credential);
+      if (newPassword !== confirmPassword) {
+        throw new Error("Passwords do not match");
+      } else if (newPassword.length < 6) {
+        throw new Error("Password must be at least 6 characters long.");
+      }
       await updateFirebasePassword(user, newPassword);
       Alert.alert('Success', 'Password updated successfully');
       setOldPassword(newPassword);
+      setIsPasswordButtonEnabled(false);
     } catch (error) {
-      Alert.alert('Error', error.message);
-    }
-  };
+      if (error.code === 'auth/weak-password') {
+        setErrorText("Password must be at least 6 characters long.");
+      } else if (error.message === "Passwords do not match") {
+        setErrorText("Passwords do not match.");
+      } else {
+        Alert.alert('Error', error.message);
+      }
+    }finally{ 
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setIsPasswordButtonEnabled(false)}
+  }
+    ;
 
   const getButtonStyle = (isEnabled) => ({
     ...styles.button,
