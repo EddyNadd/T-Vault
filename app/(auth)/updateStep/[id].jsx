@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform, ActivityIndicator } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import DatePickerModal from '../../../components/DatePickerModal';
 import * as ImagePicker from 'expo-image-picker';
 import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
@@ -91,6 +92,20 @@ const AddStep = (isOpen, onClose) => {
             toggleEndDatePicker();
         }
     };
+
+    const confirmIOSStartDate = () => {
+        setStartDateString(startDate.toLocaleDateString());
+        setPickedStart(true);
+        toggleStartDatePicker();
+        setOldStartDate(startDate);
+    }
+
+    const confirmIOSEndDate = () => {
+        setEndDateString(endDate.toLocaleDateString());
+        setPickedEnd(true);
+        toggleEndDatePicker();
+        setOldEndDate(endDate);
+    }
 
     const addComponent = () => {
         setComponents([...components, { type: 'comment', id: generateUniqueId(), value: '' }]);
@@ -410,16 +425,18 @@ const styles = StyleSheet.create({
         marginVertical: 10,
     },
     textInput: {
-        height: 40,
-        borderColor: '#ccc',
+        height: 35,
         borderWidth: 1,
         paddingHorizontal: 10,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.background_dark,
+        borderRadius: 25,
+        color: "white",
+        borderColor: "#505050",
     },
     listView: {
         position: 'absolute',
         top: 40,
-        backgroundColor: '#fff',
+        backgroundColor: 'white',
         zIndex: 3,
     },
 });
