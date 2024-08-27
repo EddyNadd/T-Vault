@@ -20,7 +20,7 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
     const handleTickPress = async (tripCode) => {
         try {
             const tripRef = doc(db, "trips", tripCode);
-            if(editableTrip) {
+            if (editableTrip) {
                 await updateDoc(tripRef, {
                     canWrite: arrayUnion(auth.currentUser.uid),
                     invitWrite: arrayRemove(auth.currentUser.uid)
@@ -39,7 +39,7 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
     const handleCrossPress = async (tripCode) => {
         try {
             const tripRef = doc(db, "trips", tripCode);
-            if(editableTrip) {
+            if (editableTrip) {
                 await updateDoc(tripRef, {
                     invitWrite: arrayRemove(auth.currentUser.uid)
                 });
@@ -53,38 +53,44 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
         }
     };
 
+    const handleCardPress = () => {
+        if (!isInvitation) {
+            router.push(`/(auth)/trip/${tripCode}`);
+        }
+    }
+
     return (
         <View style={styles.cardContainer}>
-            <Pressable onPress={() => router.push(`/(auth)/trip/${tripCode}`)}>
-            <ImageBackground
-                source={imageSource}
-                style={[styles.tripComponents, { opacity: opacity }]}
-                imageStyle={{ borderRadius: 25 }}
-            >
-                <View style={styles.textContainer}>
-                    <Text style={styles.tripTitle}>{title}</Text>
-                    <Text style={styles.tripOwner}>{owner}</Text>
-                    <View style={styles.infosContainer}>
-                        <View style={styles.datesContainer}>
-                            <MaterialCommunityIcons style={{ transform: [{ rotate: '20deg' }] }} name="airplane" size={20} color="white" />
-                            <Text style={styles.tripDates}> {startDate}</Text>
-                            <MaterialCommunityIcons style={{ marginLeft: 25, transform: [{ rotate: '70deg' }] }} name="airplane" size={20} color="white" />
-                            <Text style={styles.tripDates}> {endDate}</Text>
+            <Pressable onPress={handleCardPress}>
+                <ImageBackground
+                    source={imageSource}
+                    style={[styles.tripComponents, { opacity: opacity }]}
+                    imageStyle={{ borderRadius: 25 }}
+                >
+                    <View style={styles.textContainer}>
+                        <Text style={styles.tripTitle}>{title}</Text>
+                        <Text style={styles.tripOwner}>{owner}</Text>
+                        <View style={styles.infosContainer}>
+                            <View style={styles.datesContainer}>
+                                <MaterialCommunityIcons style={{ transform: [{ rotate: '20deg' }] }} name="airplane" size={20} color="white" />
+                                <Text style={styles.tripDates}> {startDate}</Text>
+                                <MaterialCommunityIcons style={{ marginLeft: 25, transform: [{ rotate: '70deg' }] }} name="airplane" size={20} color="white" />
+                                <Text style={styles.tripDates}> {endDate}</Text>
+                            </View>
+                            <FontAwesome name={shared} size={20} color="white" />
                         </View>
-                        <FontAwesome name={shared} size={20} color="white" />
                     </View>
-                </View>
-            </ImageBackground>
-            {isInvitation && (
-                <View style={styles.overlayContainer}>
-                    <TouchableOpacity style={styles.tickButtonOverlay} onPress={() => handleTickPress(tripCode)}>
-                        <FontAwesome name="check" size={20} color="white" />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.crossButtonOverlay} onPress={() => handleCrossPress(tripCode)}>
-                        <FontAwesome name="times" size={20} color="white" />
-                    </TouchableOpacity>
-                </View>
-            )}
+                </ImageBackground>
+                {isInvitation && (
+                    <View style={styles.overlayContainer}>
+                        <TouchableOpacity style={styles.tickButtonOverlay} onPress={() => handleTickPress(tripCode)}>
+                            <FontAwesome name="check" size={20} color="white" />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.crossButtonOverlay} onPress={() => handleCrossPress(tripCode)}>
+                            <FontAwesome name="times" size={20} color="white" />
+                        </TouchableOpacity>
+                    </View>
+                )}
             </Pressable>
         </View>
     );
