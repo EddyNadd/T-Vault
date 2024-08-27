@@ -160,10 +160,6 @@ const Trips = () => {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1E1E1E' }}>
         <AddTripActionSheet isOpen={showActionsheet} onClose={toggleActionSheet} />
       </View>
-
-      <Button onPress={() => router.replace('../addStep')}>
-        <ButtonText>Add Step</ButtonText>
-      </Button>
     </SafeAreaView>
   );
 };
