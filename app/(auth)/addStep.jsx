@@ -21,7 +21,7 @@ const AddStep = () => {
     const [endDateString, setEndDateString] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [oldStartDate, setOldStartDate] = useState(new Date());
-    const [oldEndDate, setOldEndDate] = useState(new Date());
+    const [oldEndDate, setOldEndDate] = useState(new Date());   
     const [showStartPicker, setShowStartPicker] = useState(false);
     const [showEndPicker, setShowEndPicker] = useState(false);
     const [pickedStart, setPickedStart] = useState(false);
@@ -104,11 +104,11 @@ const AddStep = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.buttonContainer}>
-                <Button size="lg" variant="link" action="primary" onPress={() => router.replace('../(tabs)/trips')}>
+                <Button size="lg" variant="link" action="primary" onPress={() => router.back()}>
                     <ButtonIcon as={CloseCircleIcon} size="xl" />
                 </Button>
 
-                <Button size="lg" variant="link" action="primary" onPress={() => router.replace('../(tabs)/trips')}>
+                <Button size="lg" variant="link" action="primary" onPress={() => router.back()}>
                     <ButtonIcon as={CheckCircleIcon} size="xl" />
                 </Button>
             </View>
