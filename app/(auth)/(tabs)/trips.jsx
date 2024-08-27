@@ -14,6 +14,9 @@ const Trips = () => {
   const [showActionsheet, setShowActionsheet] = useState(false);
   const { listenersRef } = useFirestoreListeners();
   const currentListeners = useRef([]);
+  const tripsOwnedMap = useRef(new Map());
+  const tripsSharedMap = useRef(new Map());
+  const tripsInvitMap = useRef(new Map());
 
   const toggleActionSheet = () => {
     setShowActionsheet(!showActionsheet);
@@ -47,68 +50,72 @@ const Trips = () => {
       for (const uid of uids) {
         const docRef = doc(db, 'UID', uid);
         const docSnap = await getDoc(docRef);
-        if (!docSnap.exists()) {
-          users[uid] = 'Unknown';
-        } else {
-          users[uid] = docSnap.data().username;
-        }
+        users[uid] = docSnap.exists() ? docSnap.data().username : 'Unknown';
       }
       return users;
     };
 
-    const unsubscribeOwner = onSnapshot(ownerQuery, async (snapshot) => {
-      const ownerTrips = await Promise.all(snapshot.docs.map(async (doc) => {
-        const tripData = doc.data();
-        return {
-          id: doc.id,
-          ...tripData,
-        };
+    const updateTripsMap = (snapshot, type) => {
+      snapshot.docChanges().forEach((change) => {
+        const tripData = change.doc.data();
+        if (change.type === 'modified' || change.type === 'added') {
+          if (type === 'owner') {
+            tripsOwnedMap.current.set(change.doc.id, { id: change.doc.id, ...tripData });
+          } else if (type === 'shared') {
+            tripsSharedMap.current.set(change.doc.id, { id: change.doc.id, ...tripData });
+            // This delete is here to avoid duplicates in the final array
+            tripsInvitMap.current.delete(change.doc.id);
+          } else if (type === 'invit') {
+            tripsInvitMap.current.set(change.doc.id, { id: change.doc.id, ...tripData });
+          }
+        } else if (change.type === 'removed') {
+          if (type === 'owner') {
+            tripsOwnedMap.current.delete(change.doc.id);
+          } else if (type === 'shared') {
+            tripsSharedMap.current.delete(change.doc.id);
+          } else if (type === 'invit') {
+            tripsInvitMap.current.delete(change.doc.id);
+          }
+        }
+      });
+    };
+
+    const processTrips = async () => {
+      const invitArray = Array.from(tripsInvitMap.current.values());
+      const readArray = Array.from(tripsSharedMap.current.values()).concat(Array.from(tripsOwnedMap.current.values()));
+      invitArray.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
+      readArray.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
+      const allTrips = invitArray.concat(readArray);
+      const userUids = Array.from(new Set(allTrips.map((trip) => trip.uid)));
+      const users = await fetchUsers(userUids);
+
+      const enrichedTrips = allTrips.map((trip) => ({
+        ...trip,
+        username: users[trip.uid],
       }));
 
-      listenersRef.current.push(unsubscribeOwner);
-      currentListeners.current.push(unsubscribeOwner);
+      console.log(enrichedTrips.map((trip) => trip.title));
 
-      const unsubscribeShared = onSnapshot(sharedQuery, async (snapshot) => {
-        const sharedTrips = await Promise.all(snapshot.docs.map(async (doc) => {
-          const tripData = doc.data();
-          return {
-            id: doc.id,
-            ...tripData,
-          };
-        })
-        );
+      setTrips(enrichedTrips);
+    };
 
-        listenersRef.current.push(unsubscribeShared);
-        currentListeners.current.push(unsubscribeShared);
-
-        const unsubscribeInvit = onSnapshot(invitQuery, async (snapshot) => {
-          const invitQuery = await Promise.all(snapshot.docs.map(async (doc) => {
-            const tripData = doc.data();
-            return {
-              id: doc.id,
-              ...tripData,
-            };
-          }));
-
-          listenersRef.current.push(unsubscribeInvit);
-          currentListeners.current.push(unsubscribeInvit);
-
-          const sortedTrips = [...ownerTrips, ...sharedTrips].sort((a, b) => b.startDate.seconds - a.startDate.seconds);
-          const sortedInvit = invitQuery.sort((a, b) => b.startDate.seconds - a.startDate.seconds).filter((trip) => !trip.canWrite.includes(auth.currentUser.uid));
-          const uniqueTrips = Array.from(new Set([...sortedInvit, ...sortedTrips].map((trip) => trip.id)))
-            .map((id) => [...sortedInvit, ...sortedTrips].find((trip) => trip.id === id));
-
-          const userUids = Array.from(new Set(uniqueTrips.map((trip) => trip.uid)));
-          await fetchUsers(userUids).then((users) => {
-            const enrichedTrips = uniqueTrips.map((trip) => ({
-              ...trip,
-              username: users[trip.uid],
-            }));
-            setTrips([...enrichedTrips]);
-          });
-        });
-      });
+    const unsubscribeOwner = onSnapshot(ownerQuery, (snapshot) => {
+      updateTripsMap(snapshot, 'owner');
+      processTrips();
     });
+
+    const unsubscribeShared = onSnapshot(sharedQuery, (snapshot) => {
+      updateTripsMap(snapshot, 'shared');
+      processTrips();
+    });
+
+    const unsubscribeInvit = onSnapshot(invitQuery, (snapshot) => {
+      updateTripsMap(snapshot, 'invit');
+      processTrips();
+    });
+
+    listenersRef.current.push(unsubscribeOwner, unsubscribeShared, unsubscribeInvit);
+    currentListeners.current.push(unsubscribeOwner, unsubscribeShared, unsubscribeInvit);
 
     return () => {
       currentListeners.current.forEach((unsubscribe) => unsubscribe());
