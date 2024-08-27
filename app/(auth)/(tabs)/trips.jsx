@@ -94,8 +94,6 @@ const Trips = () => {
         username: users[trip.uid],
       }));
 
-      console.log(enrichedTrips.map((trip) => trip.title));
-
       setTrips(enrichedTrips);
     };
 
