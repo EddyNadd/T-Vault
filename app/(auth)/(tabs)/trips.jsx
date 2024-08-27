@@ -131,7 +131,7 @@ const Trips = () => {
               startDate={new Date(trip.startDate.seconds * 1000).toLocaleDateString()}
               endDate={new Date(trip.endDate.seconds * 1000).toLocaleDateString()}
               shared={(trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) ? "users" : "user"}
-              isInvitation={trip.invitWrite != null ? trip.invitWrite.includes(auth.currentUser.uid) && !trip.canWrite.includes(auth.currentUser.uid) : false}
+              isInvitation={trip.invitWrite != null ? trip.invitWrite.includes(auth.currentUser.uid) && !trip.canWrite.includes(auth.currentUser.uid) && trip.uid != auth.currentUser.uid : false}
               tripCode={trip.id}
               editableTrip={true}
             />
