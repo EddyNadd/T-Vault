@@ -4,6 +4,7 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { auth } from "../firebase.jsx";
+import { FirestoreListenersProvider } from "../components/FirestoreListenerContext.jsx";
 
 export default function RootLayout() {
     const [initializing, setInitializing] = useState(true);
@@ -53,11 +54,13 @@ export default function RootLayout() {
 
     return (
         <GluestackUIProvider mode="dark">
-            <Stack screenOptions={{ headerShown: false, animation: "none", contentStyle: { backgroundColor: "#1E1E1E" }}} >
-                <Stack.Screen name="index"/>
-                <Stack.Screen name="Signup" />
-                <Stack.Screen name="(auth)" />
-            </Stack>
+            <FirestoreListenersProvider>
+                <Stack screenOptions={{ headerShown: false, animation: "none", contentStyle: { backgroundColor: "#1E1E1E" } }} >
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="Signup" />
+                    <Stack.Screen name="(auth)" />
+                </Stack>
+            </FirestoreListenersProvider>
         </GluestackUIProvider>
     );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView, TouchableOpacity, StyleSheet, View, ScrollView } from "react-native";
 import Header from '../../../components/Header';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -7,10 +7,13 @@ import AddDiscoverTrip from '../../../components/AddDiscorverTrip'
 import TripCard from '../../../components/TripCard';
 import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../../firebase';
+import { useFirestoreListeners } from '@/components/FirestoreListenerContext';
 
 const discover = () => {
   const [showActionsheet, setShowActionsheet] = useState(false);
   const [trips, setTrips] = useState([]);
+  const currentListeners = useRef([]);
+  const { listenersRef } = useFirestoreListeners();
 
   const toggleActionSheet = () => {
     setShowActionsheet(!showActionsheet);
@@ -49,7 +52,8 @@ const discover = () => {
           ...doc.data(),
         }))
         .filter((trip) => (!trip.canWrite.includes(auth.currentUser.uid) && trip.uid != auth.currentUser.uid));
-
+        listenersRef.current.push(unsubscribeShared);
+        currentListeners.current.push(unsubscribeShared);
       const unsubscribeInvit = onSnapshot(invitQuery, async (snapshot) => {
         const invitTrips = snapshot.docs
           .map((doc) => ({
@@ -57,7 +61,8 @@ const discover = () => {
             ...doc.data(),
           }))
           .filter((trip) => (!trip.canWrite.includes(auth.currentUser.uid) && !trip.invitWrite.includes(auth.currentUser.uid) && trip.uid != auth.currentUser.uid));
-
+          listenersRef.current.push(unsubscribeInvit);
+          currentListeners.current.push(unsubscribeInvit);
         const uniqueTrips = Array.from(new Set([...sharedTrips, ...invitTrips].map((trip) => trip.id)))
           .map((id) => [...sharedTrips, ...invitTrips].find((trip) => trip.id === id));
         setTrips(uniqueTrips);
@@ -70,10 +75,11 @@ const discover = () => {
           setTrips([ ...enrichedTrips ]);
         });
       });
-      return () => unsubscribeInvit();
     });
-
-    return () => unsubscribeShared();
+    return () => {
+      currentListeners.current.forEach((unsubscribe) => unsubscribe());
+      currentListeners.current = [];
+    };
   }, []);
 
   const CustomButton = () => (
@@ -93,7 +99,7 @@ const discover = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {trips.map((trip) => {
           let ownerLabel = "My trip";
-          if (trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) {
+          if ((trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) && auth.currentUser != null) {
             if (trip.uid === auth.currentUser.uid) {
               ownerLabel = "My trip (shared)";
             } else {
@@ -109,7 +115,7 @@ const discover = () => {
               startDate={new Date(trip.startDate.seconds * 1000).toLocaleDateString()}
               endDate={new Date(trip.endDate.seconds * 1000).toLocaleDateString()}
               shared={(trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) ? "users" : "user"}
-              isInvitation={trip.invitRead != null ? trip.invitRead.includes(auth.currentUser.uid) && !trip.canRead.includes(auth.currentUser.uid) : false}
+              isInvitation={trip.invitRead != null && auth.currentUser != null ? trip.invitRead.includes(auth.currentUser.uid) && !trip.canRead.includes(auth.currentUser.uid) : false}
               tripCode={trip.id}
               editableTrip={false}
             />

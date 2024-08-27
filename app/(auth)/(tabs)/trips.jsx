@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, View } from "react-native";
 import Header from '../../../components/Header';
 import AddTripActionSheet from '../../../components/AddTrip';
@@ -7,10 +7,13 @@ import COLORS from '../../../styles/COLORS';
 import TripCard from '../../../components/TripCard';
 import { collection, query, where, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../../../firebase';
+import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
 
 const Trips = () => {
   const [trips, setTrips] = useState([]);
   const [showActionsheet, setShowActionsheet] = useState(false);
+  const { listenersRef } = useFirestoreListeners();
+  const currentListeners = useRef([]);
 
   const toggleActionSheet = () => {
     setShowActionsheet(!showActionsheet);
@@ -62,15 +65,21 @@ const Trips = () => {
         };
       }));
 
+      listenersRef.current.push(unsubscribeOwner);
+      currentListeners.current.push(unsubscribeOwner);
+
       const unsubscribeShared = onSnapshot(sharedQuery, async (snapshot) => {
         const sharedTrips = await Promise.all(snapshot.docs.map(async (doc) => {
           const tripData = doc.data();
           return {
-                id: doc.id,
-                ...tripData,
+            id: doc.id,
+            ...tripData,
           };
         })
-      );
+        );
+
+        listenersRef.current.push(unsubscribeShared);
+        currentListeners.current.push(unsubscribeShared);
 
         const unsubscribeInvit = onSnapshot(invitQuery, async (snapshot) => {
           const invitQuery = await Promise.all(snapshot.docs.map(async (doc) => {
@@ -80,29 +89,31 @@ const Trips = () => {
               ...tripData,
             };
           }));
-        
-        const sortedTrips = [...ownerTrips, ...sharedTrips].sort((a, b) => b.startDate.seconds - a.startDate.seconds);
-        const sortedInvit = invitQuery.sort((a, b) => b.startDate.seconds - a.startDate.seconds).filter((trip) => !trip.canWrite.includes(auth.currentUser.uid));
-        const uniqueTrips = Array.from(new Set([...sortedInvit, ...sortedTrips].map((trip) => trip.id)))
-          .map((id) => [...sortedInvit, ...sortedTrips ].find((trip) => trip.id === id));
 
-        const userUids = Array.from(new Set(uniqueTrips.map((trip) => trip.uid)));
-        await fetchUsers(userUids).then((users)=>{
-          const enrichedTrips = uniqueTrips.map((trip) => ({
-            ...trip,
-            username: users[trip.uid],
-          }));
-          setTrips([ ...enrichedTrips ]);
+          listenersRef.current.push(unsubscribeInvit);
+          currentListeners.current.push(unsubscribeInvit);
+
+          const sortedTrips = [...ownerTrips, ...sharedTrips].sort((a, b) => b.startDate.seconds - a.startDate.seconds);
+          const sortedInvit = invitQuery.sort((a, b) => b.startDate.seconds - a.startDate.seconds).filter((trip) => !trip.canWrite.includes(auth.currentUser.uid));
+          const uniqueTrips = Array.from(new Set([...sortedInvit, ...sortedTrips].map((trip) => trip.id)))
+            .map((id) => [...sortedInvit, ...sortedTrips].find((trip) => trip.id === id));
+
+          const userUids = Array.from(new Set(uniqueTrips.map((trip) => trip.uid)));
+          await fetchUsers(userUids).then((users) => {
+            const enrichedTrips = uniqueTrips.map((trip) => ({
+              ...trip,
+              username: users[trip.uid],
+            }));
+            setTrips([...enrichedTrips]);
+          });
         });
       });
-
-      return () => { unsubscribeInvit(); };
     });
 
-      return () => { unsubscribeShared(); };
-    });
-
-    return () => { unsubscribeOwner(); };
+    return () => {
+      currentListeners.current.forEach((unsubscribe) => unsubscribe());
+      currentListeners.current = [];
+    };
   }, []);
 
   return (
@@ -115,7 +126,7 @@ const Trips = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {trips.map((trip) => {
           let ownerLabel = "My trip";
-          if (trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) {
+          if (trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) {
             if (trip.uid === auth.currentUser.uid) {
               ownerLabel = "My trip (shared)";
             } else {
@@ -130,8 +141,8 @@ const Trips = () => {
               owner={ownerLabel}
               startDate={new Date(trip.startDate.seconds * 1000).toLocaleDateString()}
               endDate={new Date(trip.endDate.seconds * 1000).toLocaleDateString()}
-              shared={(trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) ? "users" : "user"}
-              isInvitation={trip.invitWrite != null ? trip.invitWrite.includes(auth.currentUser.uid) && !trip.canWrite.includes(auth.currentUser.uid) && trip.uid != auth.currentUser.uid : false}
+              shared={(trip.canWrite.length > 0 || trip.canRead.length > 0 || trip.shared) ? "users" : "user"}
+              isInvitation={trip.invitWrite != null && auth.currentUser != null ? trip.invitWrite.includes(auth.currentUser.uid) && !trip.canWrite.includes(auth.currentUser.uid) && trip.uid != auth.currentUser.uid : false}
               tripCode={trip.id}
               editableTrip={true}
             />

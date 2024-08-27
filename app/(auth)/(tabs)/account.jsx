@@ -8,12 +8,13 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Input, InputField } from '@/components/ui/input';
 import { doc, deleteDoc, setDoc, getDocs, query, collection, where, documentId } from 'firebase/firestore';
 import { db } from "../../../firebase.jsx";
+import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
 
 const Account = () => {
   const auth = getAuth();
-  const [username, setUsername] = useState(auth.currentUser.displayName || '');
-  const [oldUsername, setOldUsername] = useState(auth.currentUser.displayName || '');
-  const [email, setEmail] = useState(auth.currentUser.email || '');
+  const [username, setUsername] = useState('');
+  const [oldUsername, setOldUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,6 +23,14 @@ const Account = () => {
   const [isUsernameButtonEnabled, setIsUsernameButtonEnabled] = useState(false);
   const [isEmailButtonEnabled, setIsEmailButtonEnabled] = useState(false);
   const [isPasswordButtonEnabled, setIsPasswordButtonEnabled] = useState(false);
+
+  const { unsubscribeAllListeners } = useFirestoreListeners();
+
+  useEffect(() => {
+    setUsername(auth.currentUser.displayName);
+    setOldUsername(auth.currentUser.displayName);
+    setEmail(auth.currentUser.email);
+  }, []);
 
   useEffect(() => {
     setIsUsernameButtonEnabled(username !== auth.currentUser.displayName);
@@ -94,7 +103,9 @@ const Account = () => {
       }
       await updateFirebasePassword(user, newPassword);
       Alert.alert('Success', 'Password updated successfully');
-      setOldPassword(newPassword);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
       setIsPasswordButtonEnabled(false);
     } catch (error) {
       if (error.code === 'auth/weak-password') {
@@ -117,8 +128,13 @@ const Account = () => {
     ...(isEnabled ? styles.buttonShadow : {}),
   });
 
+  const signOut = () => {
+    unsubscribeAllListeners();
+    auth.signOut();
+  };
+
   const CustomButton = () => (
-    <TouchableOpacity style={styles.addButton} onPress={() => auth.signOut()}>
+    <TouchableOpacity style={styles.addButton} onPress={() => signOut()}>
       <MaterialCommunityIcons name="logout" size={50} color={COLORS.blue} />
     </TouchableOpacity>
   );

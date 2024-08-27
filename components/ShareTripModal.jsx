@@ -10,6 +10,7 @@ import { getDoc, doc, setDoc, arrayUnion, arrayRemove, onSnapshot } from 'fireba
 import { db } from '@/firebase';
 import COLORS from '@/styles/COLORS';
 import * as Clipboard from 'expo-clipboard';
+import { useFirestoreListeners } from '@/components/FirestoreListenerContext';
 
 export default function ShareTripModal({
     isOpen,
@@ -27,6 +28,8 @@ export default function ShareTripModal({
     const [props, getCellOnLayoutHandler] = useClearByFocusCell({
         tripCode
     });
+    const { listenersRef } = useFirestoreListeners();
+    const currentListeners = React.useRef([]);
 
     const scrollViewMaxHeight = height * 0.3;
 
@@ -107,9 +110,13 @@ export default function ShareTripModal({
             }, (error) => {
                 console.error("Error retrieving trip: ", error);
             });
+            listenersRef.current.push(unsubscribe);
+            currentListeners.current.push(unsubscribe);
         }
-
-        return () => unsubscribe && unsubscribe();
+        return () => {
+            currentListeners.current.forEach((unsubscribe) => unsubscribe());
+            currentListeners.current = [];
+          };
     }, [isOpen, tripCode]);
 
     const copyCode = async () => {
