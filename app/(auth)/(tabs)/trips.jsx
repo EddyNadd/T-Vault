@@ -82,10 +82,10 @@ const Trips = () => {
 
     const processTrips = async () => {
       const invitArray = Array.from(tripsInvitMap.current.values());
-      const readArray = Array.from(tripsSharedMap.current.values()).concat(Array.from(tripsOwnedMap.current.values()));
+      const writeArray = Array.from(tripsSharedMap.current.values()).concat(Array.from(tripsOwnedMap.current.values()));
       invitArray.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
-      readArray.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
-      const allTrips = invitArray.concat(readArray);
+      writeArray.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
+      const allTrips = invitArray.concat(writeArray);
       const userUids = Array.from(new Set(allTrips.map((trip) => trip.uid)));
       const users = await fetchUsers(userUids);
 

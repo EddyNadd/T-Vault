@@ -14,6 +14,8 @@ const discover = () => {
   const [trips, setTrips] = useState([]);
   const currentListeners = useRef([]);
   const { listenersRef } = useFirestoreListeners();
+  const tripsSharedMap = useRef(new Map());
+  const tripsInvitMap = useRef(new Map());
 
   const toggleActionSheet = () => {
     setShowActionsheet(!showActionsheet);
@@ -36,46 +38,62 @@ const discover = () => {
       for (const uid of uids) {
         const docRef = doc(db, 'UID', uid);
         const docSnap = await getDoc(docRef);
-        if (!docSnap.exists()) {
-          users[uid] = 'Unknown';
-        } else {
-          users[uid] = docSnap.data().username;
-        }
+        users[uid] = docSnap.exists() ? docSnap.data().username : 'Unknown';
       }
       return users;
     };
 
-    const unsubscribeShared = onSnapshot(sharedQuery, async (snapshot) => {
-      const sharedTrips = snapshot.docs
-        .map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }))
-        .filter((trip) => (!trip.canWrite.includes(auth.currentUser.uid) && trip.uid != auth.currentUser.uid));
-        listenersRef.current.push(unsubscribeShared);
-        currentListeners.current.push(unsubscribeShared);
-      const unsubscribeInvit = onSnapshot(invitQuery, async (snapshot) => {
-        const invitTrips = snapshot.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
-          .filter((trip) => (!trip.canWrite.includes(auth.currentUser.uid) && !trip.invitWrite.includes(auth.currentUser.uid) && trip.uid != auth.currentUser.uid));
-          listenersRef.current.push(unsubscribeInvit);
-          currentListeners.current.push(unsubscribeInvit);
-        const uniqueTrips = Array.from(new Set([...sharedTrips, ...invitTrips].map((trip) => trip.id)))
-          .map((id) => [...sharedTrips, ...invitTrips].find((trip) => trip.id === id));
-        setTrips(uniqueTrips);
-        const userUids = Array.from(new Set(uniqueTrips.map((trip) => trip.uid)));
-        await fetchUsers(userUids).then((users)=>{
-          const enrichedTrips = uniqueTrips.map((trip) => ({
-            ...trip,
-            username: users[trip.uid],
-          }));
-          setTrips([ ...enrichedTrips ]);
-        });
+    const updateTripsMap = (snapshot, type) => {
+      snapshot.docChanges().forEach((change) => {
+        const tripData = change.doc.data();
+        if (change.type === 'modified' || change.type === 'added') {
+          if (type === 'shared') {
+            tripsSharedMap.current.set(change.doc.id, { id: change.doc.id, ...tripData });
+            // This delete is here to avoid duplicates in the final array
+            tripsInvitMap.current.delete(change.doc.id);
+          } else if (type === 'invit') {
+            tripsInvitMap.current.set(change.doc.id, { id: change.doc.id, ...tripData });
+          }
+        } else if (change.type === 'removed') {
+          if (type === 'shared') {
+            tripsSharedMap.current.delete(change.doc.id);
+          } else if (type === 'invit') {
+            tripsInvitMap.current.delete(change.doc.id);
+          }
+        }
       });
+    };
+
+    const processTrips = async () => {
+      const invitArray = Array.from(tripsInvitMap.current.values());
+      const readArray = Array.from(tripsSharedMap.current.values());
+      invitArray.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
+      readArray.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
+      const allTrips = invitArray.concat(readArray);
+      const userUids = Array.from(new Set(allTrips.map((trip) => trip.uid)));
+      const users = await fetchUsers(userUids);
+
+      const enrichedTrips = allTrips.map((trip) => ({
+        ...trip,
+        username: users[trip.uid],
+      }));
+
+      setTrips(enrichedTrips);
+    };
+
+    const unsubscribeShared = onSnapshot(sharedQuery, (snapshot) => {
+      updateTripsMap(snapshot, 'shared');
+      processTrips();
     });
+
+    const unsubscribeInvit = onSnapshot(invitQuery, (snapshot) => {
+      updateTripsMap(snapshot, 'invit');
+      processTrips();
+    });
+
+    listenersRef.current.push(unsubscribeShared, unsubscribeInvit);
+    currentListeners.current.push(unsubscribeShared, unsubscribeInvit);
+
     return () => {
       currentListeners.current.forEach((unsubscribe) => unsubscribe());
       currentListeners.current = [];
