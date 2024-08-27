@@ -6,7 +6,7 @@ export default function Layout() {
         <Stack screenOptions={{contentStyle: { backgroundColor: "#1E1E1E" }}}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="trip" options={{ headerShown: false }}/>
-            <Stack.Screen name="addStep" options={{ headerShown: false }}/>
+            <Stack.Screen name="updateStep" options={{ headerShown: false }}/>
         </Stack>
     );
 }

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform, ActivityIndicator } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
@@ -8,27 +8,53 @@ import { CalendarDaysIcon } from "@/components/ui/icon";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { CloseCircleIcon, CheckCircleIcon } from '@/components/ui/icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import COLORS from '@/styles/COLORS';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { GOOGLE_MAPS_API_KEY } from '../../map';
+import { GOOGLE_MAPS_API_KEY } from '../../../map.js';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, auth, storage } from "../../../firebase.jsx";
+import { doc, setDoc } from "firebase/firestore";
 
 const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
-const AddStep = () => {
+const AddStep = (isOpen, onClose) => {
+    const { id } = useLocalSearchParams();
+    const [title, setTitle] = useState('');
+    const [destination, setDestination] = useState('');
+    const [comment, setComment] = useState('');
+    const [image, setImage] = useState(null);
     const [startDateString, setStartDateString] = useState(new Date());
     const [startDate, setStartDate] = useState(new Date());
     const [endDateString, setEndDateString] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [oldStartDate, setOldStartDate] = useState(new Date());
-    const [oldEndDate, setOldEndDate] = useState(new Date());   
+    const [oldEndDate, setOldEndDate] = useState(new Date());
     const [showStartPicker, setShowStartPicker] = useState(false);
     const [showEndPicker, setShowEndPicker] = useState(false);
     const [pickedStart, setPickedStart] = useState(false);
     const [pickedEnd, setPickedEnd] = useState(false);
     const [components, setComponents] = useState([]);
     const [isInputActive, setIsInputActive] = useState(false);
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+
+    useEffect(() => {
+        if (isOpen) {
+            setTitle('');
+            setComment('');
+            setDestination('');
+            setImage(null);
+            setStartDate(new Date());
+            setEndDate(new Date());
+            setStartDateString('Departure date');
+            setEndDateString('Return date');
+            setPickedStart(false);
+            setPickedEnd(false);
+            setLoading(false);
+        }
+    }, [isOpen]);
 
     const toggleStartDatePicker = () => {
         setShowStartPicker(!showStartPicker);
@@ -67,7 +93,7 @@ const AddStep = () => {
     };
 
     const addComponent = () => {
-        setComponents([...components, { type: 'comment', id: generateUniqueId() }]);
+        setComponents([...components, { type: 'comment', id: generateUniqueId(), value: '' }]);
     };
 
     const pickImage = async () => {
@@ -87,6 +113,19 @@ const AddStep = () => {
         }
     };
 
+    const uploadImageToStorage = async (imageUri) => {
+        try {
+            const response = await fetch(imageUri);
+            const blob = await response.blob();
+            const storageRef = ref(storage, `images/${new Date().toISOString()}`);
+            await uploadBytes(storageRef, blob);
+            const url = await getDownloadURL(storageRef);
+            return url;
+        } catch (error) {
+            throw error;
+        }
+    };
+
     const handleDestinationFocus = () => {
         setIsInputActive(true);
     };
@@ -96,9 +135,70 @@ const AddStep = () => {
     };
 
     const handleDestinationSelect = (data, details = null) => {
-        console.log('Place data:', data);
-        console.log('Place details:', details);
+        if (!data || !details) {
+            console.error("Invalid destination data.");
+            return;
+        }
+        setDestination(data.description);
         setIsInputActive(false);
+    };
+
+    const addStep = async () => {
+        if (!id) {
+            console.error("Trip ID is missing.");
+            return;
+        }
+
+        if (title && destination && startDate && endDate) {
+            try {
+                setLoading(true);
+
+                const images = components
+                    .filter(component => component.type === 'image')
+                    .map(component => component.uri);
+
+                const comments = components
+                    .filter(component => component.type === 'comment')
+                    .map(component => component.value || '');  // Default to empty string if comment is undefined
+
+                // Upload images and get URLs
+                const imageUrls = await Promise.all(images.map(uri => uploadImageToStorage(uri)));
+
+                // Prepare the new step object
+                const newStep = {
+                    title: title || '',
+                    destination: destination || '',
+                    startDate: startDate || new Date(),
+                    endDate: endDate || new Date(),
+                    comments: comments || [],
+                    images: imageUrls || [],
+                };
+
+                const stepId = Math.random().toString(36).substr(2, 6);
+
+                await setDoc(doc(db, "trips", id, "steps", stepId), newStep);
+
+                // Clear the form and navigate back
+                setTitle('');
+                setDestination('');
+                setComponents([]);
+                setLoading(false);
+                router.back();
+            } catch (error) {
+                console.error("Error while adding the document: ", error);
+                setLoading(false);
+            }
+        } else {
+            console.error("Title, Destination, Start Date, and End Date are required.");
+        }
+    }
+
+    const handleCommentChange = (text, id) => {
+        setComponents(prevComponents =>
+            prevComponents.map(component =>
+                component.id === id ? { ...component, value: text } : component
+            )
+        );
     };
 
     return (
@@ -108,20 +208,33 @@ const AddStep = () => {
                     <ButtonIcon as={CloseCircleIcon} size="xl" />
                 </Button>
 
-                <Button size="lg" variant="link" action="primary" onPress={() => router.back()}>
-                    <ButtonIcon as={CheckCircleIcon} size="xl" />
+                <Button size="lg" variant="link" action="primary" onPress={addStep} disabled={loading}>
+                    {loading ? (
+                        <>
+                            <ActivityIndicator size="small" color="#fff" />
+                            <ButtonText style={{ marginLeft: 10 }}>Please wait...</ButtonText>
+                        </>
+                    ) : (
+                        <ButtonIcon as={CheckCircleIcon} size="xl" />
+                    )}
+
                 </Button>
             </View>
 
             <View style={styles.inputContainer}>
                 <Input variant='rounded'>
-                    <InputField placeholder="Title" style={styles.inputField} />
+                    <InputField
+                        placeholder="Title"
+                        style={styles.inputField}
+                        onChangeText={setTitle}
+                        value={title} />
                 </Input>
             </View>
 
             <View style={styles.destinationContainer}>
                 <GooglePlacesAutocomplete
                     placeholder="Destination"
+                    value={destination}
                     minLength={2}
                     fetchDetails={true}
                     onPress={handleDestinationSelect}
@@ -216,8 +329,15 @@ const AddStep = () => {
                                 return <Image key={component.id} source={{ uri: component.uri }} style={styles.image} />;
                             } else if (component.type === 'comment') {
                                 return (
-                                    <Textarea key={component.id} variant="rounded" size="lg" style={styles.inputField} >
-                                        <TextareaInput placeholder={`Comments`} />
+                                    <Textarea
+                                        key={component.id}
+                                        variant="rounded"
+                                        size="lg"
+                                        style={styles.inputField}
+                                    >
+                                        <TextareaInput placeholder={`Comments`}
+                                         onChangeText={(text) => handleCommentChange(text, component.id)}
+                                         value={component.value} />
                                     </Textarea>
                                 );
                             }
@@ -281,7 +401,7 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         marginTop: 20,
-        maxHeight: '40%',
+        maxHeight: '60%',
     },
     image: {
         width: '100%',
