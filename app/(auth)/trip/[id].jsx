@@ -10,6 +10,8 @@ import COLORS from '../../../styles/COLORS';
 import StepCard from '../../../components/StepCard';
 import ShareTripModal from '../../../components/ShareTripModal';
 import { Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { db } from '../../../firebase';
+import { setDoc, doc } from 'firebase/firestore';
 
 export default function DetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -123,6 +125,27 @@ export default function DetailsScreen() {
     );
   }
 
+  const handleAddStep = async () => {
+    try {
+      const newStep = {
+        title: '',
+        destination: '',
+        startDate: '',
+        endDate: '',
+        comments: [],
+        images: [],
+        tabOrder: []
+    };
+
+    const stepId = Math.random().toString(36).substr(2, 6);
+
+    await setDoc(doc(db, "trips", id, "steps", stepId), newStep);
+    router.push(`/(auth)/updateStep/${id}-${stepId}`);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return (
     <MenuProvider>
       <View style={styles.container}>
@@ -204,7 +227,7 @@ export default function DetailsScreen() {
                 endDate="21.06.2024"
                 isLast={!canEdit}
               />
-              {canEdit && <TouchableOpacity style={styles.addStepButton} onPress={() => console.log('Add step')}>
+              {canEdit && <TouchableOpacity style={styles.addStepButton} onPress={() => handleAddStep()}>
                 <Text style={styles.addStepText}>ADD STEP</Text>
               </TouchableOpacity>}
             </ScrollView>

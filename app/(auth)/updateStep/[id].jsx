@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform, ActivityIndicator } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DatePickerModal from '../../../components/DatePickerModal';
@@ -14,13 +14,14 @@ import COLORS from '@/styles/COLORS';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { GOOGLE_MAPS_API_KEY } from '../../../map.js';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, auth, storage } from "../../../firebase.jsx";
-import { doc, setDoc } from "firebase/firestore";
+import { db, storage } from "../../../firebase.jsx";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
-const AddStep = (isOpen, onClose) => {
+const UpdateStep = (isOpen, onClose) => {
     const { id } = useLocalSearchParams();
+    const [tripId, stepId] = id.split('-');
     const [title, setTitle] = useState('');
     const [destination, setDestination] = useState('');
     const [comment, setComment] = useState('');
@@ -38,10 +39,59 @@ const AddStep = (isOpen, onClose) => {
     const [components, setComponents] = useState([]);
     const [isInputActive, setIsInputActive] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [tabOrder, setTabOrder] = useState([]);
     const router = useRouter();
-
+    const useRefReact = useRef();
 
     useEffect(() => {
+        useRefReact.current?.setAddressText(destination);
+    }, [destination]);
+
+    useEffect(() => {
+        // get the trip data from the database
+        const getTripData = async () => {
+            try {
+                const docRef = doc(db, "trips", tripId, "steps", stepId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    setTitle(data.title);
+                    setDestination(data.destination);
+                    if (data.startDate) {
+                        const incomingStartDate = data.startDate?.toDate();
+                        setStartDate(incomingStartDate);
+                        if (incomingStartDate) {
+                            setPickedStart(true);
+                            setOldStartDate(incomingStartDate);
+                            setStartDateString(incomingStartDate.toLocaleDateString());
+                        }
+                    }
+                    if (data.endDate) {
+                        const incomingEndDate = data.endDate?.toDate();
+                        setEndDate(incomingEndDate);
+                        if (incomingEndDate) {
+                            setPickedEnd(true);
+                            setOldEndDate(incomingEndDate);
+                            setEndDateString(oldEndDate.toLocaleDateString());
+                        }
+                    }
+                    setTabOrder(data.tabOrder);
+                    setComponents(data.tabOrder.map((type) => {
+                        if (type === 'image') {
+                            return { type, uri: data.images.shift(), id: generateUniqueId() };
+                        } else if (type === 'comment') {
+                            return { type, id: generateUniqueId(), value: data.comments.shift() };
+                        }
+                    }
+                    ));
+                } else {
+                    console.error("No such document!");
+                }
+            } catch (error) {
+                console.error("Error getting document:", error);
+            }
+        };
+
         if (isOpen) {
             setTitle('');
             setComment('');
@@ -55,6 +105,7 @@ const AddStep = (isOpen, onClose) => {
             setPickedEnd(false);
             setLoading(false);
         }
+        getTripData();
     }, [isOpen]);
 
     const toggleStartDatePicker = () => {
@@ -109,13 +160,14 @@ const AddStep = (isOpen, onClose) => {
 
     const addComponent = () => {
         setComponents([...components, { type: 'comment', id: generateUniqueId(), value: '' }]);
+        setTabOrder([...tabOrder, 'comment']);
     };
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsMultipleSelection: true,
-            quality: 1,
+            quality: 0,
         });
 
         if (!result.canceled) {
@@ -125,6 +177,7 @@ const AddStep = (isOpen, onClose) => {
                 id: generateUniqueId()
             }));
             setComponents([...components, ...newImages]);
+            setTabOrder([...tabOrder, 'image']);
         }
     };
 
@@ -158,7 +211,7 @@ const AddStep = (isOpen, onClose) => {
         setIsInputActive(false);
     };
 
-    const addStep = async () => {
+    const updateStep = async () => {
         if (!id) {
             console.error("Trip ID is missing.");
             return;
@@ -187,11 +240,10 @@ const AddStep = (isOpen, onClose) => {
                     endDate: endDate || new Date(),
                     comments: comments || [],
                     images: imageUrls || [],
+                    tabOrder: tabOrder || [],
                 };
 
-                const stepId = Math.random().toString(36).substr(2, 6);
-
-                await setDoc(doc(db, "trips", id, "steps", stepId), newStep);
+                await setDoc(doc(db, "trips", tripId, "steps", stepId), newStep);
 
                 // Clear the form and navigate back
                 setTitle('');
@@ -219,183 +271,181 @@ const AddStep = (isOpen, onClose) => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.buttonContainer}>
-                <Button size="lg" variant="link" action="primary" onPress={() => router.back()}>
-                    <ButtonIcon as={CloseCircleIcon} size="xl" />
-                </Button>
+                    <Button size="lg" variant="link" action="primary" onPress={() => router.back()}>
+                        <ButtonIcon as={CloseCircleIcon} size="xl" />
+                    </Button>
 
-                <Button size="lg" variant="link" action="primary" onPress={addStep} disabled={loading}>
-                    {loading ? (
-                        <>
-                            <ActivityIndicator size="small" color="#fff" />
-                            <ButtonText style={{ marginLeft: 10 }}>Please wait...</ButtonText>
-                        </>
-                    ) : (
-                        <ButtonIcon as={CheckCircleIcon} size="xl" />
-                    )}
+                    <Button size="lg" variant="link" action="primary" onPress={updateStep} disabled={loading}>
+                        {loading ? (
+                            <>
+                                <ActivityIndicator size="small" color="#fff" />
+                                <ButtonText style={{ marginLeft: 10 }}>Please wait...</ButtonText>
+                            </>
+                        ) : (
+                            <ButtonIcon as={CheckCircleIcon} size="xl" />
+                        )}
 
-                </Button>
-            </View>
+                    </Button>
+                </View>
+            <ScrollView style={styles.scrollContainer}>
+                <View style={styles.inputContainer}>
+                    <Input variant='rounded'>
+                        <InputField
+                            placeholder="Title"
+                            style={styles.inputField}
+                            onChangeText={setTitle}
+                            value={title} />
+                    </Input>
+                </View>
 
-            <View style={styles.inputContainer}>
-                <Input variant='rounded'>
-                    <InputField
-                        placeholder="Title"
-                        style={styles.inputField}
-                        onChangeText={setTitle}
-                        value={title} />
-                </Input>
-            </View>
+                <View style={styles.destinationContainer}>
+                    <GooglePlacesAutocomplete
+                        ref={useRefReact}
+                        placeholder="Destination"
+                        value={destination}
+                        minLength={2}
+                        fetchDetails={true}
+                        onPress={handleDestinationSelect}
+                        onFocus={handleDestinationFocus}
+                        onBlur={handleDestinationBlur}
+                        query={{
+                            key: GOOGLE_MAPS_API_KEY,
+                            language: 'en',
+                        }}
+                        styles={{
+                            container: { flex: 1, zIndex: 2 },
+                            textInput: styles.textInput,
+                            listView: styles.listView,
+                        }}
+                        getDefaultValue={() => {
+                            return 'blabla'; // text input default value
+                        }}
+                    />
+                </View>
 
-            <View style={styles.destinationContainer}>
-                <GooglePlacesAutocomplete
-                    placeholder="Destination"
-                    value={destination}
-                    minLength={2}
-                    fetchDetails={true}
-                    onPress={handleDestinationSelect}
-                    onFocus={handleDestinationFocus}
-                    onBlur={handleDestinationBlur}
-                    query={{
-                        key: GOOGLE_MAPS_API_KEY,
-                        language: 'en',
-                    }}
-                    styles={{
-                        container: { flex: 1, zIndex: 2 },
-                        textInput: styles.textInput,
-                        listView: styles.listView,
-                    }}
-                />
-            </View>
-
-            {!isInputActive && (
-                <>
-                    <View style={styles.dateContainer}>
-                        <TouchableOpacity onPress={() => toggleStartDatePicker()} style={styles.fullWidthInput}>
-                            <Input variant="rounded" size="lg" pointerEvents="none">
-                                <InputSlot>
-                                    <InputIcon
-                                        as={CalendarDaysIcon}
-                                        className="text-typography-500 m-2 w-4 h-4"
-                                    />
-                                </InputSlot>
-                                <InputField
-                                    value={pickedStart ? startDateString : 'Departure date'}
-                                    editable={false}
-                                    style={styles.inputField}
+                <View style={styles.dateContainer}>
+                    <TouchableOpacity onPress={() => toggleStartDatePicker()} style={styles.fullWidthInput}>
+                        <Input variant="rounded" size="lg" pointerEvents="none">
+                            <InputSlot>
+                                <InputIcon
+                                    as={CalendarDaysIcon}
+                                    className="text-typography-500 m-2 w-4 h-4"
                                 />
-                            </Input>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => toggleEndDatePicker()} style={styles.fullWidthInput}>
-                            <Input variant="rounded" size="lg" pointerEvents="none">
-                                <InputSlot>
-                                    <InputIcon
-                                        as={CalendarDaysIcon}
-                                        className="text-typography-500 m-2 w-4 h-4"
-                                    />
-                                </InputSlot>
-                                <InputField
-                                    value={pickedEnd ? endDateString : 'Return date'}
-                                    editable={false}
-                                    style={styles.inputField}
+                            </InputSlot>
+                            <InputField
+                                value={pickedStart ? startDateString : 'Departure date'}
+                                editable={false}
+                                style={styles.inputField}
+                            />
+                        </Input>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => toggleEndDatePicker()} style={styles.fullWidthInput}>
+                        <Input variant="rounded" size="lg" pointerEvents="none">
+                            <InputSlot>
+                                <InputIcon
+                                    as={CalendarDaysIcon}
+                                    className="text-typography-500 m-2 w-4 h-4"
                                 />
-                            </Input>
-                        </TouchableOpacity>
+                            </InputSlot>
+                            <InputField
+                                value={pickedEnd ? endDateString : 'Return date'}
+                                editable={false}
+                                style={styles.inputField}
+                            />
+                        </Input>
+                    </TouchableOpacity>
+                </View>
+                {showStartPicker && Platform.OS === 'android' && (
+                    <DateTimePicker
+                        display='spinner'
+                        mode='date'
+                        value={oldStartDate}
+                        onChange={onChangeStart}
+                    />
+                )}
+                {showEndPicker && Platform.OS == 'android' && (
+                    <DateTimePicker
+                        display='spinner'
+                        mode='date'
+                        value={oldEndDate}
+                        onChange={onChangeEnd}
+                    />
+                )}
+                {Platform.OS === 'ios' && (
+                    <View>
+                        <DatePickerModal
+                            isOpen={showStartPicker}
+                            onClose={toggleStartDatePicker}
+                            onConfirm={confirmIOSStartDate}
+                            onCancel={toggleStartDatePicker}
+                            selectedDate={oldStartDate}
+                            onDateChange={onChangeStart}
+                        />
+                        <DatePickerModal
+                            isOpen={showEndPicker}
+                            onClose={toggleEndDatePicker}
+                            onConfirm={confirmIOSEndDate}
+                            onCancel={toggleEndDatePicker}
+                            selectedDate={oldEndDate}
+                            onDateChange={onChangeEnd}
+                        />
                     </View>
-                    {showStartPicker && Platform.OS === 'android' && (
-                        <DateTimePicker
-                            display='spinner'
-                            mode='date'
-                            value={oldStartDate}
-                            onChange={onChangeStart}
-                        />
-                    )}
-                    {showEndPicker && Platform.OS == 'android' && (
-                        <DateTimePicker
-                            display='spinner'
-                            mode='date'
-                            value={oldEndDate}
-                            onChange={onChangeEnd}
-                        />
-                    )}
-                    {Platform.OS === 'ios' && (
-                        <View>
-                            <DatePickerModal
-                                isOpen={showStartPicker}
-                                onClose={toggleStartDatePicker}
-                                onConfirm={confirmIOSStartDate}
-                                onCancel={toggleStartDatePicker}
-                                selectedDate={oldStartDate}
-                                onDateChange={onChangeStart}
-                            />
-                            <DatePickerModal
-                                isOpen={showEndPicker}
-                                onClose={toggleEndDatePicker}
-                                onConfirm={confirmIOSEndDate}
-                                onCancel={toggleEndDatePicker}
-                                selectedDate={oldEndDate}
-                                onDateChange={onChangeEnd}
-                            />
-                        </View>
-                    )}
+                )}
+                {components.map((component) => {
+                    if (component.type === 'image') {
+                        return <Image key={component.id} source={{ uri: component.uri }} style={styles.image} />;
+                    } else if (component.type === 'comment') {
+                        return (
+                            <Textarea
+                                key={component.id}
+                                variant="rounded"
+                                size="lg"
+                                style={styles.inputField}
+                            >
+                                <TextareaInput placeholder={`Comments`}
+                                    onChangeText={(text) => handleCommentChange(text, component.id)}
+                                    value={component.value} />
+                            </Textarea>
+                        );
+                    }
+                    return null;
+                })}
 
-                    <ScrollView style={styles.scrollContainer}>
-                        {components.map((component) => {
-                            if (component.type === 'image') {
-                                return <Image key={component.id} source={{ uri: component.uri }} style={styles.image} />;
-                            } else if (component.type === 'comment') {
-                                return (
-                                    <Textarea
-                                        key={component.id}
-                                        variant="rounded"
-                                        size="lg"
-                                        style={styles.inputField}
-                                    >
-                                        <TextareaInput placeholder={`Comments`}
-                                         onChangeText={(text) => handleCommentChange(text, component.id)}
-                                         value={component.value} />
-                                    </Textarea>
-                                );
-                            }
-                            return null;
-                        })}
+                <View style={styles.buttonContainer}>
+                    <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
+                        <ButtonText>Add Image</ButtonText>
+                    </Button>
 
-                        <View style={styles.buttonContainer}>
-                            <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
-                                <ButtonText>Add Image</ButtonText>
-                            </Button>
-
-                            <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
-                                <ButtonText>Add Comments</ButtonText>
-                            </Button>
-                        </View>
-                    </ScrollView>
-                </>
-            )}
+                    <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
+                        <ButtonText>Add Comments</ButtonText>
+                    </Button>
+                </View>
+            </ScrollView>
         </SafeAreaView>
     );
 };
 
 
-export default AddStep;
+export default UpdateStep;
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        display: 'flex',
         backgroundColor: '#1E1E1E',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
+        marginHorizontal: 20,
+        flex: 1
     },
     inputContainer: {
         marginBottom: 20,
     },
     destinationContainer: {
         zIndex: 2,
-        marginBottom: 90,
+        marginBottom: 13,
     },
     dateContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        marginBottom: 10,
     },
     fullWidthInput: {
         flex: 1,
@@ -403,11 +453,12 @@ const styles = StyleSheet.create({
     },
     inputField: {
         color: '#ffffff',
+        marginVertical: 10,
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginVertical: 20,
+        marginTop: 10
     },
     buttonStyle: {
         width: '45%',
@@ -415,8 +466,7 @@ const styles = StyleSheet.create({
         borderRadius: 25,
     },
     scrollContainer: {
-        marginTop: 20,
-        maxHeight: '60%',
+        flex: 2
     },
     image: {
         width: '100%',
@@ -431,7 +481,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.background_dark,
         borderRadius: 25,
         color: "white",
-        borderColor: "#505050",
+        borderColor: "#505050"
     },
     listView: {
         position: 'absolute',
