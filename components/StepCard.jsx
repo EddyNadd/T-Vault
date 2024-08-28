@@ -1,11 +1,12 @@
 import { Text, View, StyleSheet, Pressable } from "react-native";
 import { MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 import COLORS from '../styles/COLORS';
+import { useRouter } from 'expo-router';
 
-const StepCard = ({ title, startDate, endDate, isLast, destination, tripCode }) => {
-
+const StepCard = ({ title, startDate, endDate, isLast, destination, stepCode }) => {
+    const router = useRouter();
     const handleCardPress = () => {
-        // Code pour gérer la pression sur la carte
+        router.push(`/(auth)/step/${stepCode}`);
     };
 
     return (

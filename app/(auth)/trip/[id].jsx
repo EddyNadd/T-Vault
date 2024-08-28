@@ -251,6 +251,7 @@ export default function DetailsScreen() {
                   endDate={new Date(step.endDate.seconds * 1000).toLocaleDateString()}
                   destination={step.destination}
                   isLast={index === steps.length - 1 && !canEdit}
+                  stepCode={step.id}
                 />
               ))}
               {canEdit && <TouchableOpacity style={styles.addStepButton} onPress={() => handleAddStep()} disabled={isLoadingStep} >
