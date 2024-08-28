@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TouchableOpacity, StyleSheet, SafeAreaView, View, Alert, KeyboardAvoidingView, ScrollView } from "react-native";
 import Header from '../../../components/Header';
 import { getAuth, updateProfile, updateEmail as updateFirebaseEmail, updatePassword as updateFirebasePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
@@ -25,6 +25,7 @@ const Account = () => {
   const [isPasswordButtonEnabled, setIsPasswordButtonEnabled] = useState(false);
 
   const { unsubscribeAllListeners } = useFirestoreListeners();
+  const scrollViewRef = useRef(null);
 
   useEffect(() => {
     setUsername(auth.currentUser.displayName);
@@ -147,7 +148,14 @@ const Account = () => {
         ButtonComponent={CustomButton}
       />
       <KeyboardAvoidingView behavior='padding'>
-        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      <ScrollView 
+          ref={scrollViewRef} // Reference to ScrollView
+          contentContainerStyle={styles.scrollViewContent}
+          onScroll={() => {
+            if (scrollViewRef.current) {
+              scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: false });
+            }
+          }}>
           <View style={styles.info}>
             <View style={styles.input}>
               <Input variant='rounded'>
@@ -264,7 +272,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    width: '85%',
+    width: '90%',
     marginBottom: 50,
     backgroundColor: COLORS.blue_dark,
     borderRadius: 25,
@@ -273,10 +281,9 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   input: {
-    width: '85%',
+    width: '90%',
     marginBottom: 10,
   },
-
   buttonShadow: {
     elevation: 5,
     shadowColor: 'black',
@@ -284,7 +291,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 10,
     backgroundColor: COLORS.blue,
-  },
+  }
 });
 
 export default Account;
