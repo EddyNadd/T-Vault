@@ -6,8 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { CalendarDaysIcon } from "@/components/ui/icon";
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
-import { CloseCircleIcon, CheckCircleIcon } from '@/components/ui/icon';
+import { Button, ButtonText } from "@/components/ui/button";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from "expo-router";
 import COLORS from '@/styles/COLORS';
@@ -214,7 +213,7 @@ const UpdateStep = (isOpen, onClose) => {
         try {
             const response = await fetch(imageUri);
             const blob = await response.blob();
-            const storageRef = ref(storage, `images/${new Date().toISOString()}`);
+            const storageRef = ref(storage, `images/${new Date().toISOString()}_${generateUniqueId()}`);
             await uploadBytes(storageRef, blob);
             const url = await getDownloadURL(storageRef);
             return url;
