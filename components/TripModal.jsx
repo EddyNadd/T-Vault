@@ -43,6 +43,8 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
             setEndDate(currentEndDate || new Date());
             setStartDateString(currentStartDate ? currentStartDate.toLocaleDateString() : 'Departure date');
             setEndDateString(currentEndDate ? currentEndDate.toLocaleDateString() : 'Return date');
+            setOldStartDate(currentStartDate || new Date());
+            setOldEndDate(currentEndDate || new Date());
             setPickedStart(!!currentStartDate);
             setPickedEnd(!!currentEndDate);
             setLoading(false);
