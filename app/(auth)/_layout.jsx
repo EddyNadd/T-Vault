@@ -6,6 +6,7 @@ export default function Layout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="trip" options={{ headerShown: false }}/>
             <Stack.Screen name="updateStep" options={{ headerShown: false }}/>
+            <Stack.Screen name="step" options={{ headerShown: false }}/>
         </Stack>
     );
 }

@@ -2,9 +2,10 @@ import { useLocalSearchParams } from 'expo-router';
 import { View, Text, StyleSheet, Button, SafeAreaView, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from "../../../firebase.jsx";
 import { Modal, TouchableOpacity } from 'react-native';
+import { getStorage, ref, deleteObject } from 'firebase/storage';
 
 export default function DetailsScreen({ isOpen }) {
     const { id } = useLocalSearchParams();
@@ -75,6 +76,40 @@ export default function DetailsScreen({ isOpen }) {
         setModalVisible(true);
     };
 
+    const deleteStep = async () => {
+        try {
+            const stepRef = doc(db, 'trips', tripId, 'steps', stepId);
+            const stepSnap = await getDoc(stepRef);
+
+            if (!stepSnap.exists()) {
+                throw new Error('Step does not exist');
+            }
+
+            const stepData = stepSnap.data();
+            const images = stepData.images || [];
+
+            if (images.length > 0) {
+                const storage = getStorage();
+
+                // Log image URLs for verification
+                images.forEach((imageUrl) => {
+                    console.log('Deleting image:', imageUrl);
+                });
+
+                // Delete each image in the step
+                await Promise.all(images.map(async (imageUrl) => {
+                    const imageRef = ref(storage, imageUrl);
+                    await deleteObject(imageRef);
+                }));
+            }
+
+            // Delete the Firestore document after the images are deleted
+            await deleteDoc(stepRef);
+            router.back();
+        } catch (error) {
+            console.error('Error deleting step: ', error);
+        }
+    };
     if (loading) {
         return (
             <View style={styles.container}>
@@ -129,6 +164,7 @@ export default function DetailsScreen({ isOpen }) {
 
                 <Button title="Go back" onPress={() => router.back()} />
                 <Button title="Edit" onPress={() => router.push(`/(auth)/updateStep/${tripId}-${stepId}`)} />
+                <Button title="Delete" onPress={() => deleteStep()} />
 
                 {/* Modal to show full-screen image */}
                 <Modal
@@ -153,6 +189,7 @@ const styles = StyleSheet.create({
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
+        paddingHorizontal: 5,
     },
     contentContainer: {
         display: 'flex',
