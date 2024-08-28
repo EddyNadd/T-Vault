@@ -68,8 +68,8 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
                     imageStyle={{ borderRadius: 25 }}
                 >
                     <View style={styles.textContainer}>
-                        <Text style={styles.tripTitle}>{title}</Text>
-                        <Text style={styles.tripOwner}>{owner}</Text>
+                        <Text style={styles.tripTitle} ellipsizeMode='tail' numberOfLines={1}>{title}</Text>
+                        <Text style={styles.tripOwner} ellipsizeMode='tail' numberOfLines={1}>{owner}</Text>
                         <View style={styles.infosContainer}>
                             <View style={styles.datesContainer}>
                                 <MaterialCommunityIcons style={{ transform: [{ rotate: '20deg' }] }} name="airplane" size={20} color="white" />
@@ -137,11 +137,13 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 20,
         fontWeight: 'bold',
+        maxWidth: '75%',
     },
 
     tripOwner: {
         color: 'white',
         fontSize: 15,
+        maxWidth: '75%',
     },
 
     tripDates: {
