@@ -15,7 +15,7 @@ import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplet
 import { GOOGLE_MAPS_API_KEY } from '../../../map.js';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from "../../../firebase.jsx";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, GeoPoint } from "firebase/firestore";
 import { Feather, Entypo } from '@expo/vector-icons';
 
 const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
@@ -42,6 +42,7 @@ const UpdateStep = (isOpen, onClose) => {
     const [loading, setLoading] = useState(false);
     const [tabOrder, setTabOrder] = useState([]);
     const [inputWidth, setInputWidth] = useState(0);
+    const [geoPoint, setGeoPoint] = useState(null);
     const router = useRouter();
     const useRefReact = useRef();
 
@@ -59,6 +60,7 @@ const UpdateStep = (isOpen, onClose) => {
                     const data = docSnap.data();
                     setTitle(data.title);
                     setDestination(data.destination);
+                    setGeoPoint(data.geopoint);
                     if (data.startDate) {
                         const incomingStartDate = data.startDate?.toDate();
                         setStartDate(incomingStartDate);
@@ -216,6 +218,7 @@ const UpdateStep = (isOpen, onClose) => {
         }
         setDestination(data.description);
         setIsInputActive(false);
+        setGeoPoint(new GeoPoint(details.geometry.location.lat, details.geometry.location.lng));
     };
 
     const updateStep = async () => {
@@ -243,6 +246,7 @@ const UpdateStep = (isOpen, onClose) => {
                 const newStep = {
                     title: title || '',
                     destination: destination || '',
+                    geopoint: geoPoint|| '',
                     startDate: startDate || new Date(),
                     endDate: endDate || new Date(),
                     comments: comments || [],

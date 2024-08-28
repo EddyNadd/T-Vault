@@ -125,12 +125,14 @@ const Trips = () => {
   }, []);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
+      <SafeAreaView>
       <Header
         logoSource={require('../../../assets/logo_transparent_bg.png')}
         title="MY TRIPS"
         ButtonComponent={CustomButton}
       />
+      </SafeAreaView>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {trips.map((trip) => {
           let ownerLabel = "My trip";
@@ -160,7 +162,7 @@ const Trips = () => {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1E1E1E' }}>
         <TripModal isOpen={showActionsheet} onClose={toggleActionSheet} />
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
