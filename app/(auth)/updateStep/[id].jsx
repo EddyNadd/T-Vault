@@ -16,6 +16,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from "../../../firebase.jsx";
 import { doc, getDoc, setDoc, GeoPoint } from "firebase/firestore";
 import { Feather, Entypo } from '@expo/vector-icons';
+import {Icon} from "@/components/ui/icon";
 
 const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
@@ -350,6 +351,12 @@ const UpdateStep = (isOpen, onClose) => {
         );
     };
 
+    const removeComponent = (id) => {
+        setComponents(prevComponents => prevComponents.filter(component => component.id !== id));
+        setTabOrder(prevTabOrder => prevTabOrder.filter((_, index) => components[index]?.id !== id));
+    };
+
+
     return (
         <View style={styles.container}>
             <View style={styles.safeAreaView}>
@@ -474,35 +481,37 @@ const UpdateStep = (isOpen, onClose) => {
                             </View>
                         )}
                     </View>
-                </SafeAreaView>
+                )}
+                {components.map((component) => {
+                    return (
+                        <View key={component.id} style={styles.componentContainer}>
+                            <TouchableOpacity style={styles.deleteButton} onPress={() => removeComponent(component.id)}>
+                                <Icon  as={CloseCircleIcon} size="xl" />
+                            </TouchableOpacity>
+                            {component.type === 'image' ? (
+                                <Image source={{ uri: component.uri }} style={styles.image} />
+                            ) : component.type === 'comment' ? (
+                                <Textarea
+                                    variant="rounded"
+                                    size="lg"
+                                    style={styles.inputField}
+                                >
+                                    <TextareaInput
+                                        placeholder={`Comments`}
+                                        onChangeText={(text) => handleCommentChange(text, component.id)}
+                                        value={component.value}
+                                    />
+                                </Textarea>
+                            ) : null}
+                        </View>
+                    );
+                })}
 
-                <KeyboardAvoidingView style={styles.flexOne} behavior='padding'>
-                    <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                        {components.map((component) => {
-                            if (component.type === 'image') {
-                                return <Image key={component.id} source={{ uri: component.uri }} style={styles.image} />;
-                            } else if (component.type === 'comment') {
-                                return (
-                                    <Textarea
-                                        key={component.id}
-                                        variant="rounded"
-                                        size="xl"
-                                        style={styles.inputField}
-                                    >
-                                        <TextareaInput
-                                            placeholder={`Comments`}
-                                            onChangeText={(text) => handleCommentChange(text, component.id)}
-                                            value={component.value}
-                                        />
-                                    </Textarea>
-                                );
-                            }
-                            return null;
-                        })}
-                        <View style={[styles.buttonContainer, { marginTop: 10 }]}>
-                            <Button size="xl" variant="outline" action="primary" style={styles.buttonStyle} onPress={selectImage}>
-                                <ButtonText>Add Image</ButtonText>
-                            </Button>
+
+                <View style={styles.buttonContainer}>
+                    <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
+                        <ButtonText>Add Image</ButtonText>
+                    </Button>
 
                             <Button size="xl" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
                                 <ButtonText>Add Comments</ButtonText>
@@ -585,6 +594,33 @@ const styles = StyleSheet.create({
     },
     flexOne: {
         flex: 1,
+    componentContainer: {
+        position: 'relative',
+        marginBottom: 20,
+    },
+    deleteButton: {
+        position: 'absolute',
+        top: 15,
+        right: 5,
+        zIndex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 50,
+        padding: 5,
+    },
+    textInput: {
+        height: 35,
+        borderWidth: 1,
+        paddingHorizontal: 10,
+        backgroundColor: COLORS.background_dark,
+        borderRadius: 25,
+        color: "white",
+        borderColor: "#505050"
+    },
+    listView: {
+        position: 'absolute',
+        top: 40,
+        backgroundColor: 'white',
+        zIndex: 3,
     },
     header: {
         marginBottom: 10,
