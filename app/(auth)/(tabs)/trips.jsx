@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, View } from "react-native";
 import Header from '../../../components/Header';
-import AddTripActionSheet from '../../../components/AddTrip';
+import TripModal from '../../../components/TripModal';
 import { FontAwesome5 } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import TripCard from '../../../components/TripCard';
@@ -9,6 +9,7 @@ import { collection, query, where, onSnapshot, getDoc, doc } from 'firebase/fire
 import { auth, db } from '../../../firebase';
 import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
 import {useRouter } from "expo-router";
+import {Button, ButtonText} from "@/components/ui/button";
 
 const Trips = () => {
   const [trips, setTrips] = useState([]);
@@ -157,7 +158,7 @@ const Trips = () => {
         })}
       </ScrollView>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1E1E1E' }}>
-        <AddTripActionSheet isOpen={showActionsheet} onClose={toggleActionSheet} />
+        <TripModal isOpen={showActionsheet} onClose={toggleActionSheet} />
       </View>
     </SafeAreaView>
   );

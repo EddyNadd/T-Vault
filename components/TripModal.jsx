@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, TouchableWithoutFeedback, Keyboard, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, TouchableWithoutFeedback, Keyboard, Platform, ActivityIndicator, TextInput } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
-import { doc, setDoc } from "firebase/firestore";
+import { arrayUnion, doc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, auth, storage } from "../firebase.jsx";
 import { Actionsheet, ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicator, ActionsheetDragIndicatorWrapper } from '@/components/ui/actionsheet';
@@ -13,7 +13,7 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar"
 import { Button, ButtonText } from "@/components/ui/button"
 import DatePickerModal from './DatePickerModal.jsx';
 
-export default function AddTrip({ isOpen, onClose }) {
+export default function TripModal({ isOpen, onClose, currentTitle, currentComment, currentStartDate, currentEndDate, currentImage, currentTripId }) {
     const [image, setImage] = useState(null);
     const [startDateString, setStartDateString] = useState(new Date());
     const [startDate, setStartDate] = useState(new Date());
@@ -36,18 +36,18 @@ export default function AddTrip({ isOpen, onClose }) {
 
     useEffect(() => {
         if (isOpen) {
-            setTitle('');
-            setComment('');
-            setImage(null);
-            setStartDate(new Date());
-            setEndDate(new Date());
-            setStartDateString('Departure date');
-            setEndDateString('Return date');
-            setPickedStart(false);
-            setPickedEnd(false);
+            setTitle(currentTitle || '');
+            setComment(currentComment || '');
+            setImage(currentImage || null);
+            setStartDate(currentStartDate || new Date());
+            setEndDate(currentEndDate || new Date());
+            setStartDateString(currentStartDate ? currentStartDate.toLocaleDateString() : 'Departure date');
+            setEndDateString(currentEndDate ? currentEndDate.toLocaleDateString() : 'Return date');
+            setPickedStart(!!currentStartDate);
+            setPickedEnd(!!currentEndDate);
             setLoading(false);
         }
-    }, [isOpen]);
+    }, [isOpen, currentTitle, currentComment, currentStartDate, currentEndDate, currentImage]);
 
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', handleKeyboardDidShow);
@@ -172,7 +172,7 @@ export default function AddTrip({ isOpen, onClose }) {
     const addTrip = async () => {
         if (title && comment && startDate && endDate && image) {
             try {
-                setLoading(true); // Start loading
+                setLoading(true);
                 const imageUrl = await uploadImageToStorage(image);
                 const newTrip = {
                     image: imageUrl || '',
@@ -181,14 +181,14 @@ export default function AddTrip({ isOpen, onClose }) {
                     title: title,
                     comment: comment,
                     uid: auth.currentUser.uid,
-                    canRead: [],
-                    canWrite: [],
-                    invitWrite: [],
-                    invitRead: [],
+                    canRead: arrayUnion(),
+                    canWrite: arrayUnion(),
+                    invitWrite: arrayUnion(),
+                    invitRead: arrayUnion(),
                     shared: false
                 };
                 const id = Math.random().toString(36).substr(2, 6);
-                await setDoc(doc(db, "trips", id), newTrip);
+                await setDoc(doc(db, "trips", currentTripId ? currentTripId : id), newTrip);
 
                 setTitle('');
                 setComment('');
@@ -216,7 +216,11 @@ export default function AddTrip({ isOpen, onClose }) {
                     <View contentContainerStyle={{ paddingBottom: 20 }}>
 
                         <View style={styles.buttonContainer}>
-                            <Text style={styles.text}>ADD A TRIP</Text>
+                            {currentTripId ? (
+                                <Text style={styles.text}>EDIT TRIP</Text>
+                            ) : (
+                                <Text style={styles.text}>ADD A TRIP</Text>
+                            )}
                         </View>
 
                         <Input variant="rounded" size="lg" style={styles.input}>
@@ -225,7 +229,6 @@ export default function AddTrip({ isOpen, onClose }) {
                                 placeholder="Title"
                                 onChangeText={setTitle}
                                 value={title}
-                                autoCapitalize="none"
                                 style={styles.inputField}
                             />
                         </Input>
@@ -279,22 +282,22 @@ export default function AddTrip({ isOpen, onClose }) {
                         )}
                         {Platform.OS === 'ios' && (
                             <View>
-                            <DatePickerModal
-                                isOpen={showStartPicker}
-                                onClose={toggleStartDatePicker}
-                                onConfirm={confirmIOSStartDate}
-                                onCancel={toggleStartDatePicker}
-                                selectedDate={oldStartDate}
-                                onDateChange={onChangeStart}
-                            />
-                            <DatePickerModal
-                                isOpen={showEndPicker}
-                                onClose={toggleEndDatePicker}
-                                onConfirm={confirmIOSEndDate}
-                                onCancel={toggleEndDatePicker}
-                                selectedDate={oldEndDate}
-                                onDateChange={onChangeEnd}
-                            />
+                                <DatePickerModal
+                                    isOpen={showStartPicker}
+                                    onClose={toggleStartDatePicker}
+                                    onConfirm={confirmIOSStartDate}
+                                    onCancel={toggleStartDatePicker}
+                                    selectedDate={oldStartDate}
+                                    onDateChange={onChangeStart}
+                                />
+                                <DatePickerModal
+                                    isOpen={showEndPicker}
+                                    onClose={toggleEndDatePicker}
+                                    onConfirm={confirmIOSEndDate}
+                                    onCancel={toggleEndDatePicker}
+                                    selectedDate={oldEndDate}
+                                    onDateChange={onChangeEnd}
+                                />
                             </View>
                         )}
 
@@ -321,16 +324,17 @@ export default function AddTrip({ isOpen, onClose }) {
                                     onChangeText={setComment}
                                     placeholder="Comments"
                                     style={styles.textareaInput}
+                                    defaultValue={comment}
                                 />
                             </Textarea>
                         </View>
 
                         <Animated.View style={[styles.buttonContainer, { marginBottom: animatedMargin }]}>
-                            <Button 
-                                style={{ marginBottom: 20 }} 
-                                onPress={addTrip} 
-                                size="md" 
-                                variant="outline" 
+                            <Button
+                                style={{ marginBottom: 20 }}
+                                onPress={addTrip}
+                                size="md"
+                                variant="outline"
                                 action="primary"
                                 disabled={loading}
                             >
@@ -340,8 +344,11 @@ export default function AddTrip({ isOpen, onClose }) {
                                         <ButtonText style={{ marginLeft: 10 }}>Please wait...</ButtonText>
                                     </>
                                 ) : (
-                                    <ButtonText>Add</ButtonText>
-                                )}
+                                    currentTripId ? (
+                                        <ButtonText>Edit</ButtonText>
+                                    ) : (
+                                        <ButtonText>Add</ButtonText>
+                                    ))}
                             </Button>
                         </Animated.View>
                     </View>
@@ -396,6 +403,9 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
         fontSize: 16,
         textAlignVertical: 'top',
+        color: 'white',
+        width: '100%',
+        height: '100%',
     },
 
     textareacontainer: {

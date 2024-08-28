@@ -10,6 +10,7 @@ import COLORS from '../../../styles/COLORS';
 import StepCard from '../../../components/StepCard';
 import ShareTripModal from '../../../components/ShareTripModal';
 import { Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import TripModal from '@/components/TripModal';
 
 export default function DetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -22,6 +23,9 @@ export default function DetailsScreen() {
   const [image, setImage] = useState('');
   const [steps, setSteps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tripModal, setTripModal] = useState(false);
+  const [currentStartDate, setCurrentStartDate] = useState('');
+  const [currentEndDate, setCurrentEndDate] = useState('');
 
   const [canEdit, setCanEdit] = useState(false);
   const [canShare, setCanShare] = useState(false);
@@ -45,6 +49,11 @@ export default function DetailsScreen() {
           setEndDate(tripData.endDate.toDate().toLocaleDateString());
           setComment(tripData.comment);
           setImage(tripData.image);
+
+          const [startDay, startMonth, startYear] = tripData.startDate.toDate().toLocaleDateString().split('.').map(Number);
+          const [endDay, endMonth, endYear] = tripData.endDate.toDate().toLocaleDateString().split('.').map(Number);
+          setCurrentStartDate(new Date(startYear, startMonth - 1, startDay));
+          setCurrentEndDate(new Date(endYear, endMonth - 1, endDay));
 
           const userId = auth.currentUser.uid;
           if (userId === tripData.uid) {
@@ -208,7 +217,7 @@ export default function DetailsScreen() {
                   <View style={styles.menuDivider} />
                   <MenuOption
                     style={[styles.menuItems, { opacity: canEdit ? 1 : 0.5 }]}
-                    onSelect={canEdit ? () => console.log('Edit') : null}
+                    onSelect={canEdit ? () => { setTripModal(true) } : null}
                     disabled={!canEdit}
                   >
                     <Text style={styles.menuOptionText}>EDIT</Text>
@@ -256,16 +265,17 @@ export default function DetailsScreen() {
                 />
               ))}
               {canEdit && <TouchableOpacity style={styles.addStepButton} onPress={() => handleAddStep()} disabled={isLoadingStep} >
-              {isLoadingStep ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <Text style={styles.addStepText}>ADD STEP</Text>
-                  )}
-                </TouchableOpacity>
+                {isLoadingStep ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={styles.addStepText}>ADD STEP</Text>
+                )}
+              </TouchableOpacity>
               }
             </ScrollView>
           </ImageBackground>
         </View>
+        <TripModal isOpen={tripModal} onClose={() => setTripModal(false)} currentTripId={id} currentTitle={title} currentComment={comment} currentStartDate={currentStartDate} currentEndDate={currentEndDate} currentImage={image} />
       </View>
     </MenuProvider>
   );
