@@ -200,7 +200,7 @@ const UpdateStep = (isOpen, onClose) => {
                 quality: 0,
             });
 
-            if (!result.cancelled) {
+            if (!result.canceled) {
                 const newImages = result.assets.map((asset) => ({
                     type: 'image',
                     uri: asset.uri,

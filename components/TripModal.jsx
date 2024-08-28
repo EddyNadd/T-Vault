@@ -109,7 +109,7 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                 quality: 0,
             });
 
-            if (!result.cancelled) {
+            if (!result.canceled) {
                 setImage(result.assets[0].uri);
             }
         } catch (error) {
@@ -127,7 +127,7 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                 quality: 0,
             });
 
-            if (!result.cancelled) {
+            if (!result.canceled) {
                 setImage(result.assets[0].uri);
             }
         } catch (error) {
