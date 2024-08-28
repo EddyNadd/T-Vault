@@ -3,10 +3,10 @@ import { MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 import COLORS from '../styles/COLORS';
 import { useRouter } from 'expo-router';
 
-const StepCard = ({ title, startDate, endDate, isLast, destination, stepCode }) => {
+const StepCard = ({ title, startDate, endDate, isLast, destination, stepCode, tripCode }) => {
     const router = useRouter();
     const handleCardPress = () => {
-        router.push(`/(auth)/step/${stepCode}`);
+        router.push(`/(auth)/step/${tripCode}-${stepCode}`);
     };
 
     return (

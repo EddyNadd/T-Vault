@@ -270,6 +270,7 @@ export default function DetailsScreen() {
                   destination={step.destination}
                   isLast={index === steps.length - 1 && !canEdit}
                   stepCode={step.id}
+                  tripCode={id}
                 />
               ))}
               {canEdit && <TouchableOpacity style={styles.addStepButton} onPress={() => handleAddStep()} disabled={isLoadingStep} >
