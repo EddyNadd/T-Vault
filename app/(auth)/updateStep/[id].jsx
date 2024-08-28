@@ -44,7 +44,6 @@ const UpdateStep = (isOpen, onClose) => {
     const [inputWidth, setInputWidth] = useState(0);
     const router = useRouter();
     const useRefReact = useRef();
-    const titleInputRef = useRef(null);
 
     useEffect(() => {
         useRefReact.current?.setAddressText(destination);
