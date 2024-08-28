@@ -191,7 +191,33 @@ const UpdateStep = (isOpen, onClose) => {
         setTabOrder([...tabOrder, 'comment']);
     };
 
+    const takePhoto = async () => {
+        try {
+            await ImagePicker.requestCameraPermissionsAsync();
+            let result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: false,
+                quality: 0,
+            });
+
+            if (!result.cancelled) {
+                const newImages = result.assets.map((asset) => ({
+                    type: 'image',
+                    uri: asset.uri,
+                    id: generateUniqueId()
+                }));
+                setComponents([...components, ...newImages]);
+                setTabOrder([...tabOrder, 'image']);
+                setComponents([...components, ...newImages]);
+                setTabOrder([...tabOrder, 'image']);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const pickImage = async () => {
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsMultipleSelection: true,
@@ -207,6 +233,28 @@ const UpdateStep = (isOpen, onClose) => {
             setComponents([...components, ...newImages]);
             setTabOrder([...tabOrder, 'image']);
         }
+    };
+
+    const selectImage = () => {
+        Alert.alert(
+            'Select Image',
+            'Choose a method to add a photo',
+            [
+                {
+                    text: 'Take Photo',
+                    onPress: () => takePhoto(),
+                },
+                {
+                    text: 'Choose from Gallery',
+                    onPress: () => pickImage(),
+                },
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+            ],
+            { cancelable: true }
+        );
     };
 
     const uploadImageToStorage = async (imageUri) => {
@@ -448,7 +496,7 @@ const UpdateStep = (isOpen, onClose) => {
                             return null;
                         })}
                         <View style={[styles.buttonContainer, { marginTop: 10 }]}>
-                            <Button size="xl" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
+                            <Button size="xl" variant="outline" action="primary" style={styles.buttonStyle} onPress={selectImage}>
                                 <ButtonText>Add Image</ButtonText>
                             </Button>
 

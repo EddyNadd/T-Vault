@@ -117,6 +117,46 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         }
     };
 
+    const takePhoto = async () => {
+        try {
+            await ImagePicker.requestCameraPermissionsAsync();
+            let result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0,
+            });
+
+            if (!result.cancelled) {
+                setImage(result.assets[0].uri);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const selectImage = () => {
+        Alert.alert(
+            'Select Image',
+            'Choose a method to add a photo',
+            [
+                {
+                    text: 'Take Photo',
+                    onPress: () => takePhoto(),
+                },
+                {
+                    text: 'Choose from Gallery',
+                    onPress: () => uploadImage(),
+                },
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+            ],
+            { cancelable: true }
+        );
+    };
+
     const toggleStartDatePicker = () => {
         setShowStartPicker(!showStartPicker);
     }
@@ -319,7 +359,7 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                             </View>
                         )}
 
-                        <TouchableOpacity onPress={uploadImage} style={styles.avatarContainer}>
+                        <TouchableOpacity onPress={selectImage} style={styles.avatarContainer}>
                             <Avatar size="xl">
                                 {image ? (
                                     <AvatarImage source={{ uri: image }} />
