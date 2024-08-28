@@ -4,14 +4,12 @@ import { MenuProvider, Menu, MenuTrigger, MenuOptions, MenuOption } from 'react-
 import { useRouter } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
 import { db, auth } from '../../../firebase';
-import { doc, onSnapshot, updateDoc, arrayRemove, deleteDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, arrayRemove, deleteDoc, setDoc } from 'firebase/firestore';
 import { getStorage, ref, deleteObject } from 'firebase/storage';
 import COLORS from '../../../styles/COLORS';
 import StepCard from '../../../components/StepCard';
 import ShareTripModal from '../../../components/ShareTripModal';
 import { Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { db } from '../../../firebase';
-import { setDoc, doc } from 'firebase/firestore';
 
 export default function DetailsScreen() {
   const { id } = useLocalSearchParams();
