@@ -9,7 +9,6 @@ import { collection, query, where, onSnapshot, getDoc, doc } from 'firebase/fire
 import { auth, db } from '../../../firebase';
 import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
 import {useRouter } from "expo-router";
-import {Button, ButtonText} from "@/components/ui/button";
 
 const Trips = () => {
   const [trips, setTrips] = useState([]);
