@@ -153,7 +153,7 @@ const Account = () => {
           contentContainerStyle={styles.scrollViewContent}
           onScroll={() => {
             if (scrollViewRef.current) {
-              scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: false });
+              scrollViewRef.current.scrollTo({ x: 0, y: 150, animated: false });
             }
           }}>
           <View style={styles.info}>
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '90%',
-    marginBottom: 50,
+    marginBottom: 30,
     backgroundColor: COLORS.blue_dark,
     borderRadius: 25,
   },
