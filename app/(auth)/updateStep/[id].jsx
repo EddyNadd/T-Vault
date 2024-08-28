@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DatePickerModal from '../../../components/DatePickerModal';
 import * as ImagePicker from 'expo-image-picker';
@@ -269,25 +269,27 @@ const UpdateStep = (isOpen, onClose) => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.buttonContainer}>
-                    <Button size="lg" variant="link" action="primary" onPress={() => router.back()}>
-                        <ButtonIcon as={CloseCircleIcon} size="xl" />
-                    </Button>
+        <View style={styles.container}>
+            <SafeAreaView style={styles.safeAreaView}>
+                <View style={styles.header}>
+                    <View style={styles.buttons}>
+                        <Button size="lg" variant="link" action="primary" onPress={() => router.back()}>
+                            <ButtonIcon as={CloseCircleIcon} size="xl" />
+                        </Button>
 
-                    <Button size="lg" variant="link" action="primary" onPress={updateStep} disabled={loading}>
-                        {loading ? (
-                            <>
-                                <ActivityIndicator size="small" color="#fff" />
-                                <ButtonText style={{ marginLeft: 10 }}>Please wait...</ButtonText>
-                            </>
-                        ) : (
-                            <ButtonIcon as={CheckCircleIcon} size="xl" />
-                        )}
-
-                    </Button>
+                        <Button size="lg" variant="link" action="primary" onPress={updateStep} disabled={loading}>
+                            {loading ? (
+                                <>
+                                    <ActivityIndicator size="small" color="#fff" />
+                                    <ButtonText style={styles.loadingText}>Please wait...</ButtonText>
+                                </>
+                            ) : (
+                                <ButtonIcon as={CheckCircleIcon} size="xl" />
+                            )}
+                        </Button>
+                    </View>
                 </View>
-            <ScrollView style={styles.scrollContainer}>
+
                 <View style={styles.inputContainer}>
                     <Input variant='rounded'>
                         <InputField
@@ -296,9 +298,7 @@ const UpdateStep = (isOpen, onClose) => {
                             onChangeText={setTitle}
                             value={title} />
                     </Input>
-                </View>
 
-                <View style={styles.destinationContainer}>
                     <GooglePlacesAutocomplete
                         ref={useRefReact}
                         placeholder="Destination"
@@ -313,180 +313,184 @@ const UpdateStep = (isOpen, onClose) => {
                             language: 'en',
                         }}
                         styles={{
-                            container: { flex: 1, zIndex: 2 },
+                            container: { flex: 1, zIndex: 2, marginBottom: 35 },
                             textInput: styles.textInput,
                             listView: styles.listView,
                         }}
-                        getDefaultValue={() => {
-                            return 'blabla'; // text input default value
-                        }}
                     />
-                </View>
 
-                <View style={styles.dateContainer}>
-                    <TouchableOpacity onPress={() => toggleStartDatePicker()} style={styles.fullWidthInput}>
-                        <Input variant="rounded" size="lg" pointerEvents="none">
-                            <InputSlot>
-                                <InputIcon
-                                    as={CalendarDaysIcon}
-                                    className="text-typography-500 m-2 w-4 h-4"
+                    <View style={styles.dateContainer}>
+                        <TouchableOpacity onPress={toggleStartDatePicker} style={styles.dateInput}>
+                            <Input variant="rounded" size="lg" pointerEvents="none">
+                                <InputSlot>
+                                    <InputIcon as={CalendarDaysIcon} style={styles.icon} />
+                                </InputSlot>
+                                <InputField
+                                    value={pickedStart ? startDateString : 'Departure date'}
+                                    editable={false}
+                                    style={styles.inputField}
                                 />
-                            </InputSlot>
-                            <InputField
-                                value={pickedStart ? startDateString : 'Departure date'}
-                                editable={false}
-                                style={styles.inputField}
-                            />
-                        </Input>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => toggleEndDatePicker()} style={styles.fullWidthInput}>
-                        <Input variant="rounded" size="lg" pointerEvents="none">
-                            <InputSlot>
-                                <InputIcon
-                                    as={CalendarDaysIcon}
-                                    className="text-typography-500 m-2 w-4 h-4"
+                            </Input>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={toggleEndDatePicker} style={styles.dateInput}>
+                            <Input variant="rounded" size="lg" pointerEvents="none">
+                                <InputSlot>
+                                    <InputIcon as={CalendarDaysIcon} style={styles.icon} />
+                                </InputSlot>
+                                <InputField
+                                    value={pickedEnd ? endDateString : 'Return date'}
+                                    editable={false}
+                                    style={styles.inputField}
                                 />
-                            </InputSlot>
-                            <InputField
-                                value={pickedEnd ? endDateString : 'Return date'}
-                                editable={false}
-                                style={styles.inputField}
-                            />
-                        </Input>
-                    </TouchableOpacity>
-                </View>
-                {showStartPicker && Platform.OS === 'android' && (
-                    <DateTimePicker
-                        display='spinner'
-                        mode='date'
-                        value={oldStartDate}
-                        onChange={onChangeStart}
-                    />
-                )}
-                {showEndPicker && Platform.OS == 'android' && (
-                    <DateTimePicker
-                        display='spinner'
-                        mode='date'
-                        value={oldEndDate}
-                        onChange={onChangeEnd}
-                    />
-                )}
-                {Platform.OS === 'ios' && (
-                    <View>
-                        <DatePickerModal
-                            isOpen={showStartPicker}
-                            onClose={toggleStartDatePicker}
-                            onConfirm={confirmIOSStartDate}
-                            onCancel={toggleStartDatePicker}
-                            selectedDate={oldStartDate}
-                            onDateChange={onChangeStart}
-                        />
-                        <DatePickerModal
-                            isOpen={showEndPicker}
-                            onClose={toggleEndDatePicker}
-                            onConfirm={confirmIOSEndDate}
-                            onCancel={toggleEndDatePicker}
-                            selectedDate={oldEndDate}
-                            onDateChange={onChangeEnd}
-                        />
+                            </Input>
+                        </TouchableOpacity>
                     </View>
-                )}
-                {components.map((component) => {
-                    if (component.type === 'image') {
-                        return <Image key={component.id} source={{ uri: component.uri }} style={styles.image} />;
-                    } else if (component.type === 'comment') {
-                        return (
-                            <Textarea
-                                key={component.id}
-                                variant="rounded"
-                                size="lg"
-                                style={styles.inputField}
-                            >
-                                <TextareaInput placeholder={`Comments`}
-                                    onChangeText={(text) => handleCommentChange(text, component.id)}
-                                    value={component.value} />
-                            </Textarea>
-                        );
-                    }
-                    return null;
-                })}
 
-                <View style={styles.buttonContainer}>
-                    <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
-                        <ButtonText>Add Image</ButtonText>
-                    </Button>
+                    {showStartPicker && Platform.OS === 'android' && (
+                        <DateTimePicker
+                            display='spinner'
+                            mode='date'
+                            value={oldStartDate}
+                            onChange={onChangeStart}
+                        />
+                    )}
 
-                    <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
-                        <ButtonText>Add Comments</ButtonText>
-                    </Button>
+                    {showEndPicker && Platform.OS === 'android' && (
+                        <DateTimePicker
+                            display='spinner'
+                            mode='date'
+                            value={oldEndDate}
+                            onChange={onChangeEnd}
+                        />
+                    )}
+
+                    {Platform.OS === 'ios' && (
+                        <View>
+                            <DatePickerModal
+                                isOpen={showStartPicker}
+                                onClose={toggleStartDatePicker}
+                                onConfirm={confirmIOSStartDate}
+                                onCancel={toggleStartDatePicker}
+                                selectedDate={oldStartDate}
+                                onDateChange={onChangeStart}
+                            />
+                            <DatePickerModal
+                                isOpen={showEndPicker}
+                                onClose={toggleEndDatePicker}
+                                onConfirm={confirmIOSEndDate}
+                                onCancel={toggleEndDatePicker}
+                                selectedDate={oldEndDate}
+                                onDateChange={onChangeEnd}
+                            />
+                        </View>
+                    )}
                 </View>
-            </ScrollView>
-        </SafeAreaView>
+
+                <KeyboardAvoidingView style={styles.flexOne} behavior='padding'>
+                    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                        {components.map((component) => {
+                            if (component.type === 'image') {
+                                return <Image key={component.id} source={{ uri: component.uri }} style={styles.image} />;
+                            } else if (component.type === 'comment') {
+                                return (
+                                    <Textarea
+                                        key={component.id}
+                                        variant="rounded"
+                                        size="lg"
+                                        style={styles.inputField}
+                                    >
+                                        <TextareaInput
+                                            placeholder={`Comments`}
+                                            onChangeText={(text) => handleCommentChange(text, component.id)}
+                                            value={component.value}
+                                        />
+                                    </Textarea>
+                                );
+                            }
+                            return null;
+                        })}
+                        <View style={styles.buttonContainer}>
+                            <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
+                                <ButtonText>Add Image</ButtonText>
+                            </Button>
+
+                            <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
+                                <ButtonText>Add Comments</ButtonText>
+                            </Button>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </View>
     );
 };
 
-
-export default UpdateStep;
-
 const styles = StyleSheet.create({
     container: {
-        display: 'flex',
-        backgroundColor: '#1E1E1E',
-        marginHorizontal: 20,
-        flex: 1
+        flex: 1,
+        paddingHorizontal: 20,
     },
-    inputContainer: {
-        marginBottom: 20,
+    safeAreaView: {
+        flex: 1,
     },
-    destinationContainer: {
-        zIndex: 2,
-        marginBottom: 13,
+    buttons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    inputField: {
+        color: 'white',
     },
     dateContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 10,
+        justifyContent: 'space-between'
     },
-    fullWidthInput: {
-        flex: 1,
-        marginHorizontal: 5,
-    },
-    inputField: {
-        color: '#ffffff',
-        marginVertical: 10,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 10
-    },
-    buttonStyle: {
-        width: '45%',
-        backgroundColor: COLORS.blue,
-        borderRadius: 25,
-    },
-    scrollContainer: {
-        flex: 2
-    },
-    image: {
-        width: '100%',
-        height: 200,
-        borderRadius: 10,
-        marginVertical: 10,
+    dateInput: {
+        flex: 1
     },
     textInput: {
         height: 35,
         borderWidth: 1,
-        paddingHorizontal: 10,
         backgroundColor: COLORS.background_dark,
         borderRadius: 25,
         color: "white",
-        borderColor: "#505050"
+        borderColor: "#505050",
     },
     listView: {
         position: 'absolute',
         top: 40,
         backgroundColor: 'white',
         zIndex: 3,
+    },
+    scrollViewContent: {
+        paddingBottom: 20,
+    },
+    image: {
+        width: '100%',
+        height: 200,
+        marginVertical: 10,
+        borderRadius: 10,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between'
+    },
+    buttonStyle: {
+        width: '45%',
+        backgroundColor: COLORS.blue,
+        borderRadius: 25,
+    },
+    loadingText: {
+        marginLeft: 10,
+    },
+    icon: {
+        color: "#505050",
+    },
+    flexOne: {
+        flex: 1,
+    },
+    inputContainer: {
+        zIndex: 3
     },
 });
