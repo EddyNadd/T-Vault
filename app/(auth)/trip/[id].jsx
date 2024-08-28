@@ -4,7 +4,7 @@ import { MenuProvider, Menu, MenuTrigger, MenuOptions, MenuOption } from 'react-
 import { useRouter } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
 import { db, auth } from '../../../firebase';
-import { doc, onSnapshot, updateDoc, arrayRemove, deleteDoc, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, arrayRemove, deleteDoc, setDoc, collection, getDocs, getDoc } from 'firebase/firestore';
 import { getStorage, ref, deleteObject } from 'firebase/storage';
 import COLORS from '../../../styles/COLORS';
 import StepCard from '../../../components/StepCard';
@@ -20,6 +20,7 @@ export default function DetailsScreen() {
   const [endDate, setEndDate] = useState('');
   const [comment, setComment] = useState('');
   const [image, setImage] = useState('');
+  const [steps, setSteps] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [canEdit, setCanEdit] = useState(false);
@@ -27,9 +28,10 @@ export default function DetailsScreen() {
   const [canDelete, setCanDelete] = useState(false);
 
   const unsubscribeRef = useRef(null);
+  const stepsUnsubscribeRef = useRef(null);
 
   useEffect(() => {
-    const fetchTripDetails = () => {
+    const fetchTripDetails = async () => {
       const docRef = doc(db, 'trips', id);
 
       unsubscribeRef.current = onSnapshot(docRef, (docSnap) => {
@@ -49,14 +51,31 @@ export default function DetailsScreen() {
           } else if (tripData.canWrite.includes(userId)) {
             setCanEdit(true);
           }
+
+          fetchTripSteps();
         } else {
           console.log('No such document!');
+          setLoading(false);
         }
-        setLoading(false);
       }, (error) => {
         console.error('Error fetching trip details: ', error);
         setLoading(false);
       });
+    };
+
+    const fetchTripSteps = async () => {
+      try {
+        const stepsRef = collection(db, 'trips', id, 'steps');
+
+        stepsUnsubscribeRef.current = onSnapshot(stepsRef, (stepsSnapshot) => {
+          const fetchedSteps = stepsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })).sort((a, b) => a.startDate.seconds - b.startDate.seconds);
+          setSteps(fetchedSteps);
+          setLoading(false);
+        });
+      } catch (error) {
+        console.error('Error fetching steps: ', error);
+        setLoading(false);
+      }
     };
 
     if (id) {
@@ -66,6 +85,9 @@ export default function DetailsScreen() {
     return () => {
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
+      }
+      if (stepsUnsubscribeRef.current) {
+        stepsUnsubscribeRef.current();
       }
     };
   }, [id]);
@@ -133,12 +155,12 @@ export default function DetailsScreen() {
         comments: [],
         images: [],
         tabOrder: []
-    };
+      };
 
-    const stepId = Math.random().toString(36).substr(2, 6);
+      const stepId = Math.random().toString(36).substr(2, 6);
 
-    await setDoc(doc(db, "trips", id, "steps", stepId), newStep);
-    router.push(`/(auth)/updateStep/${id}-${stepId}`);
+      await setDoc(doc(db, "trips", id, "steps", stepId), newStep);
+      router.push(`/(auth)/updateStep/${id}-${stepId}`);
     } catch (error) {
       console.error(error);
     }
@@ -213,18 +235,16 @@ export default function DetailsScreen() {
         <View style={styles.scrollContainer}>
           <ImageBackground source={require('../../../assets/trip_images.png')} style={styles.tripImageBackground}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-              <StepCard
-                title="Grison"
-                startDate="15.06.2024"
-                endDate="21.06.2024"
-                isLast={false}
-              />
-              <StepCard
-                title="Grison"
-                startDate="15.06.2024"
-                endDate="21.06.2024"
-                isLast={!canEdit}
-              />
+              {steps.map((step, index) => (
+                <StepCard
+                  key={step.id}
+                  title={step.title}
+                  startDate={new Date(step.startDate.seconds * 1000).toLocaleDateString()}
+                  endDate={new Date(step.endDate.seconds * 1000).toLocaleDateString()}
+                  destination={step.destination}
+                  isLast={index === steps.length - 1 && !canEdit}
+                />
+              ))}
               {canEdit && <TouchableOpacity style={styles.addStepButton} onPress={() => handleAddStep()}>
                 <Text style={styles.addStepText}>ADD STEP</Text>
               </TouchableOpacity>}
@@ -271,9 +291,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // New Style for Title Container
   titleContainer: {
-    maxWidth: '70%', // Restrict the title width
+    maxWidth: '70%',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -285,9 +304,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 
-  // New Style for Comment Container
   commentContainer: {
-    maxHeight: 100, // Set a max height for the comment section
+    maxHeight: 100,
     marginHorizontal: 10,
   },
 

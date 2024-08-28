@@ -1,8 +1,8 @@
 import { Text, View, StyleSheet, Pressable } from "react-native";
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 import COLORS from '../styles/COLORS';
 
-const StepCard = ({ title, startDate, endDate, isLast, tripCode }) => {
+const StepCard = ({ title, startDate, endDate, isLast, destination, tripCode }) => {
 
     const handleCardPress = () => {
         // Code pour gérer la pression sur la carte
@@ -15,6 +15,10 @@ const StepCard = ({ title, startDate, endDate, isLast, tripCode }) => {
                 <Pressable onPress={handleCardPress}>
                     <View style={styles.cardContent}>
                         <Text style={styles.tripTitle}>{title}</Text>
+                        <View style={styles.destinationContainer}>
+                            <Entypo name="location-pin" size={20} color="white" />
+                            <Text style={styles.tripDestination}>{destination}</Text>
+                        </View>
                         <View style={styles.datesContainer}>
                             <MaterialCommunityIcons style={{ transform: [{ rotate: '20deg' }] }} name="airplane" size={20} color="white" />
                             <Text style={styles.tripDates}> {startDate}</Text>
@@ -59,6 +63,19 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         alignSelf: 'center',
+    },
+
+    tripDestination: {
+        color: 'white',
+        fontSize: 15,
+        alignSelf: 'center',
+    },
+
+    destinationContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 5,
     },
 
     datesContainer: {
