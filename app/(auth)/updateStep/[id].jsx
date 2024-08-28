@@ -16,6 +16,7 @@ import { GOOGLE_MAPS_API_KEY } from '../../../map.js';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from "../../../firebase.jsx";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { Feather, Entypo } from '@expo/vector-icons';
 
 const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
@@ -40,8 +41,10 @@ const UpdateStep = (isOpen, onClose) => {
     const [isInputActive, setIsInputActive] = useState(false);
     const [loading, setLoading] = useState(false);
     const [tabOrder, setTabOrder] = useState([]);
+    const [inputWidth, setInputWidth] = useState(0);
     const router = useRouter();
     const useRefReact = useRef();
+    const titleInputRef = useRef(null);
 
     useEffect(() => {
         useRefReact.current?.setAddressText(destination);
@@ -107,6 +110,11 @@ const UpdateStep = (isOpen, onClose) => {
         }
         getTripData();
     }, [isOpen]);
+
+    const handleTitleLayout = (event) => {
+        const { width } = event.nativeEvent.layout;
+        setInputWidth(width);
+    };
 
     const toggleStartDatePicker = () => {
         setShowStartPicker(!showStartPicker);
@@ -271,33 +279,34 @@ const UpdateStep = (isOpen, onClose) => {
     return (
         <View style={styles.container}>
             <View style={styles.safeAreaView}>
-                <SafeAreaView style={{marginBottom: -20}}>
+                <SafeAreaView style={{ marginBottom: -20, zIndex: 2 }}>
                     <View style={styles.header}>
                         <View style={styles.buttons}>
-                            <Button size="lg" variant="link" action="primary" onPress={() => router.back()}>
-                                <ButtonIcon as={CloseCircleIcon} size="xl" />
-                            </Button>
+                            <TouchableOpacity onPress={() => router.back()}>
+                                <Feather name="arrow-left" size={30} color="white" />
+                            </TouchableOpacity>
 
-                            <Button size="lg" variant="link" action="primary" onPress={updateStep} disabled={loading}>
-                                {loading ? (
+                            <TouchableOpacity onPress={() => updateStep()} disabled={loading}>
+                            {loading ? (
                                     <>
-                                        <ActivityIndicator size="small" color="#fff" />
-                                        <ButtonText style={styles.loadingText}>Please wait...</ButtonText>
+                                        <ActivityIndicator size="small" color="white" />
                                     </>
                                 ) : (
-                                    <ButtonIcon as={CheckCircleIcon} size="xl" />
+                                    <Entypo name="save" size={30} color="white" />
                                 )}
-                            </Button>
+                                
+                            </TouchableOpacity>
                         </View>
                     </View>
 
                     <View style={styles.inputContainer}>
-                        <Input variant='rounded' style={{marginBottom: 15}}>
+                        <Input variant='rounded' style={{ marginBottom: 15 }}>
                             <InputField
                                 placeholder="Title"
                                 style={styles.inputField}
                                 onChangeText={setTitle}
-                                value={title} />
+                                value={title}
+                                onLayout={handleTitleLayout} />
                         </Input>
 
                         <GooglePlacesAutocomplete
@@ -314,14 +323,18 @@ const UpdateStep = (isOpen, onClose) => {
                                 language: 'en',
                             }}
                             styles={{
-                                container: { flex: 1, zIndex: 2, marginBottom: 35 + 15 },
+                                container: { flex: 1, zIndex: 2, marginBottom: 35 + 15, borderRadius: 100 },
                                 textInput: styles.textInput,
                                 listView: styles.listView,
+                                row: { width: inputWidth, backgroundColor: COLORS.background_dark },
+                                poweredContainer: { backgroundColor: COLORS.background_dark },
+                                powered: { color: 'white' },
+                                description: { color: 'white' },
                             }}
                         />
 
                         <View style={styles.dateContainer}>
-                            <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, {marginRight: 20}]}>
+                            <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, { marginRight: 20 }]}>
                                 <Input variant="rounded" size="lg" pointerEvents="none">
                                     <InputSlot>
                                         <InputIcon as={CalendarDaysIcon} style={styles.icon} />
@@ -412,7 +425,7 @@ const UpdateStep = (isOpen, onClose) => {
                             }
                             return null;
                         })}
-                        <View style={[styles.buttonContainer, {marginTop: 10}]}>
+                        <View style={[styles.buttonContainer, { marginTop: 10 }]}>
                             <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
                                 <ButtonText>Add Image</ButtonText>
                             </Button>
@@ -463,8 +476,12 @@ const styles = StyleSheet.create({
     listView: {
         position: 'absolute',
         top: 40,
-        backgroundColor: 'white',
-        zIndex: 3,
+        backgroundColor: COLORS.background_dark,
+        width: '100%',
+        borderRadius: 10,
+        borderColor: '#131313',
+        borderWidth: 2,
+        color: 'white',
     },
     scrollViewContent: {
         paddingBottom: 20,
@@ -494,9 +511,9 @@ const styles = StyleSheet.create({
     flexOne: {
         flex: 1,
     },
-    inputContainer: {
-        zIndex: 3
-    },
+    header: {
+        marginBottom: 10,
+    }
 });
 
 export default UpdateStep;
