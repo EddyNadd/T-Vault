@@ -494,3 +494,4 @@ const styles = StyleSheet.create({
         zIndex: 3
     },
 });
+export default UpdateStep;
