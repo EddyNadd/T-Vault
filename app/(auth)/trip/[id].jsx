@@ -68,6 +68,7 @@ export default function DetailsScreen() {
         } else {
           console.log('No such document!');
           setLoading(false);
+          router.back();
         }
       }, (error) => {
         console.error('Error fetching trip details: ', error);
@@ -143,7 +144,6 @@ export default function DetailsScreen() {
       }
 
       await deleteDoc(tripRef);
-      router.back();
     } catch (error) {
       console.error('Error deleting trip: ', error);
     }
