@@ -87,9 +87,11 @@ export default function Signup() {
             await createUserWithEmailAndPassword(auth, email, password);
             updateProfile(auth.currentUser, { displayName: username })
             await setDoc(doc(db, "Users", username), {
-                user: username
+                uid: auth.currentUser.uid
             });
-            alert("Signed up successfully!");
+            await setDoc(doc(db, "UID", auth.currentUser.uid), {
+                username: username
+            });
         } catch (error) {
             if (error.code === 'auth/email-already-in-use') {
                 setErrorText("The email address is already in use by another account.");
@@ -128,12 +130,12 @@ export default function Signup() {
                         <View style={styles.textField} behavior="padding">
                             <Animated.View style={[styles.textField, { marginBottom: inputMargin }]}>
                                 <Input variant="rounded" size="xl">
-                                    <InputField textContentType="oneTimeCode" type="email" placeholder="Username" onChangeText={setUsername} value={username} autoCapitalize="none" autoCorrect="false" spellCheck="fasle" onFocus={handleFocus} onBlur={handleBlur} />
+                                    <InputField textContentType="oneTimeCode" type="email" placeholder="Username" onChangeText={setUsername} value={username} autoCapitalize="none" autoCorrect={false} spellCheck="fasle" onFocus={handleFocus} onBlur={handleBlur} />
                                 </Input>
                             </Animated.View>
                             <Animated.View style={[styles.textField, { marginBottom: inputMargin }]}>
                                 <Input variant="rounded" size="xl">
-                                    <InputField textContentType="oneTimeCode" type="email" placeholder="Email" onChangeText={setEmail} value={email} autoCapitalize="none" autoCorrect="false" spellCheck="false" onFocus={handleFocus} onBlur={handleBlur} />
+                                    <InputField textContentType="oneTimeCode" type="email" placeholder="Email" onChangeText={setEmail} value={email} autoCapitalize="none" autoCorrect={false} spellCheck="false" onFocus={handleFocus} onBlur={handleBlur} />
                                 </Input>
                             </Animated.View>
                             <Animated.View style={[styles.textField, { marginBottom: inputMargin }]}>
