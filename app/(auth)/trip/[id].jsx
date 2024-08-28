@@ -3,7 +3,7 @@ import { ActivityIndicator, View, Text, StyleSheet, ImageBackground, Dimensions,
 import { MenuProvider, Menu, MenuTrigger, MenuOptions, MenuOption } from 'react-native-popup-menu';
 import { useRouter } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
-import { db, auth } from '../../../firebase';
+import { db, auth, storage } from '../../../firebase';
 import { doc, onSnapshot, updateDoc, arrayRemove, deleteDoc, setDoc, collection, getDocs, getDoc } from 'firebase/firestore';
 import { getStorage, ref, deleteObject } from 'firebase/storage';
 import COLORS from '../../../styles/COLORS';
@@ -138,7 +138,6 @@ export default function DetailsScreen() {
       const imageUrl = tripData.image;
 
       if (imageUrl) {
-        const storage = getStorage();
         const imageRef = ref(storage, imageUrl);
         await deleteObject(imageRef);
       }
