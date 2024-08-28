@@ -203,6 +203,27 @@ export default function DetailsScreen() {
     }
   }
 
+  const handleAddStep = async () => {
+    try {
+      const newStep = {
+        title: '',
+        destination: '',
+        startDate: '',
+        endDate: '',
+        comments: [],
+        images: [],
+        tabOrder: []
+    };
+
+    const stepId = Math.random().toString(36).substr(2, 6);
+
+    await setDoc(doc(db, "trips", id, "steps", stepId), newStep);
+    router.push(`/(auth)/updateStep/${id}-${stepId}`);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return (
     <MenuProvider>
       <View style={styles.container}>
