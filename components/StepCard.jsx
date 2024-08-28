@@ -15,10 +15,10 @@ const StepCard = ({ title, startDate, endDate, isLast, destination, stepCode }) 
             <View style={styles.cardContainer}>
                 <Pressable onPress={handleCardPress}>
                     <View style={styles.cardContent}>
-                        <Text style={styles.tripTitle}>{title}</Text>
+                        <Text style={styles.tripTitle} ellipsizeMode='tail' numberOfLines={1}>{title}</Text>
                         <View style={styles.destinationContainer}>
                             <Entypo name="location-pin" size={20} color="white" />
-                            <Text style={styles.tripDestination}>{destination}</Text>
+                            <Text style={styles.tripDestination} ellipsizeMode='tail' numberOfLines={1}>{destination}</Text>
                         </View>
                         <View style={styles.datesContainer}>
                             <MaterialCommunityIcons style={{ transform: [{ rotate: '20deg' }] }} name="airplane" size={20} color="white" />
@@ -64,12 +64,14 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         alignSelf: 'center',
+        maxWidth: '95%',
     },
 
     tripDestination: {
         color: 'white',
         fontSize: 15,
         alignSelf: 'center',
+        maxWidth: '95%'
     },
 
     destinationContainer: {

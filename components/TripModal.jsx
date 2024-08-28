@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, TouchableWithoutFeedback, Keyboard, Platform, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, TouchableWithoutFeedback, Keyboard, Platform, ActivityIndicator, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { arrayUnion, doc, setDoc } from "firebase/firestore";
@@ -128,10 +128,14 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
             const currentDate = selectedDate;
             setStartDate(currentDate);
             if (Platform.OS === 'android') {
-                toggleStartDatePicker();
-                setStartDateString(currentDate.toLocaleDateString());
-                setOldStartDate(currentDate);
-                setPickedStart(true);
+                if (currentDate <= endDate || !pickedEnd) {
+                    toggleStartDatePicker();
+                    setStartDateString(currentDate.toLocaleDateString());
+                    setOldStartDate(currentDate);
+                    setPickedStart(true);
+                } else {
+                    Alert.alert("Back to the Future", "Departure date must be before or in the same day as return date.");
+                }
             }
         }
         else {
@@ -144,10 +148,14 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
             const currentDate = selectedDate;
             setEndDate(currentDate);
             if (Platform.OS === 'android') {
-                toggleEndDatePicker();
-                setEndDateString(currentDate.toLocaleDateString());
-                setOldEndDate(currentDate);
-                setPickedEnd(true);
+                if (currentDate >= startDate || !pickedStart) {
+                    toggleEndDatePicker();
+                    setEndDateString(currentDate.toLocaleDateString());
+                    setOldEndDate(currentDate);
+                    setPickedEnd(true);
+                } else {
+                    Alert.alert("Back to the Future", "Return date must be after or in the same day as departure date.");
+                }
             }
         }
         else {
@@ -156,17 +164,25 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
     };
 
     const confirmIOSStartDate = () => {
-        setStartDateString(startDate.toLocaleDateString());
-        setPickedStart(true);
-        toggleStartDatePicker();
-        setOldStartDate(startDate);
+        if (startDate <= endDate || !pickedEnd) {
+            setStartDateString(startDate.toLocaleDateString());
+            setPickedStart(true);
+            toggleStartDatePicker();
+            setOldStartDate(startDate);
+        } else {
+            Alert.alert("Back to the Future", "Departure date must be before or in the same day as return date.");
+        }
     }
 
     const confirmIOSEndDate = () => {
-        setEndDateString(endDate.toLocaleDateString());
-        setPickedEnd(true);
-        toggleEndDatePicker();
-        setOldEndDate(endDate);
+        if (endDate >= startDate || !pickedStart) {
+            setEndDateString(endDate.toLocaleDateString());
+            setPickedEnd(true);
+            toggleEndDatePicker();
+            setOldEndDate(endDate);
+        } else {
+            Alert.alert("Back to the Future", "Return date must be after or in the same day as departure date.");
+        }
     }
 
     const addTrip = async () => {

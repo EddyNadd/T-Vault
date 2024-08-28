@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform, ActivityIndicator, KeyboardAvoidingView, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DatePickerModal from '../../../components/DatePickerModal';
 import * as ImagePicker from 'expo-image-picker';
@@ -126,45 +126,65 @@ const UpdateStep = (isOpen, onClose) => {
     };
 
     const onChangeStart = ({ type }, selectedDate) => {
-        if (type === 'set') {
+        if (type == "set") {
             const currentDate = selectedDate;
             setStartDate(currentDate);
             if (Platform.OS === 'android') {
-                toggleStartDatePicker();
-                setStartDateString(currentDate.toLocaleDateString());
-                setPickedStart(true);
+                if (currentDate <= endDate || !pickedEnd) {
+                    toggleStartDatePicker();
+                    setStartDateString(currentDate.toLocaleDateString());
+                    setOldStartDate(currentDate);
+                    setPickedStart(true);
+                } else {
+                    Alert.alert("Back to the Future", "Departure date must be before or in the same day as return date.");
+                }
             }
-        } else {
+        }
+        else {
             toggleStartDatePicker();
         }
     };
 
     const onChangeEnd = ({ type }, selectedDate) => {
-        if (type === 'set') {
+        if (type == "set") {
             const currentDate = selectedDate;
             setEndDate(currentDate);
             if (Platform.OS === 'android') {
-                toggleEndDatePicker();
-                setEndDateString(currentDate.toLocaleDateString());
-                setPickedEnd(true);
+                if (currentDate >= startDate || !pickedStart) {
+                    toggleEndDatePicker();
+                    setEndDateString(currentDate.toLocaleDateString());
+                    setOldEndDate(currentDate);
+                    setPickedEnd(true);
+                } else {
+                    Alert.alert("Back to the Future", "Return date must be after or in the same day as departure date.");
+                }
             }
-        } else {
+        }
+        else {
             toggleEndDatePicker();
         }
     };
 
     const confirmIOSStartDate = () => {
-        setStartDateString(startDate.toLocaleDateString());
-        setPickedStart(true);
-        toggleStartDatePicker();
-        setOldStartDate(startDate);
+        if (startDate <= endDate || !pickedEnd) {
+            setStartDateString(startDate.toLocaleDateString());
+            setPickedStart(true);
+            toggleStartDatePicker();
+            setOldStartDate(startDate);
+        } else {
+            Alert.alert("Back to the Future", "Departure date must be before or in the same day as return date.");
+        }
     }
 
     const confirmIOSEndDate = () => {
-        setEndDateString(endDate.toLocaleDateString());
-        setPickedEnd(true);
-        toggleEndDatePicker();
-        setOldEndDate(endDate);
+        if (endDate >= startDate || !pickedStart) {
+            setEndDateString(endDate.toLocaleDateString());
+            setPickedEnd(true);
+            toggleEndDatePicker();
+            setOldEndDate(endDate);
+        } else {
+            Alert.alert("Back to the Future", "Return date must be after or in the same day as departure date.");
+        }
     }
 
     const addComponent = () => {
