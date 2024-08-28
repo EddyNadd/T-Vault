@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DatePickerModal from '../../../components/DatePickerModal';
 import * as ImagePicker from 'expo-image-picker';
@@ -269,219 +269,196 @@ const UpdateStep = (isOpen, onClose) => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.buttonContainer}>
-                    <Button size="lg" variant="link" action="primary" onPress={() => router.back()}>
-                        <ButtonIcon as={CloseCircleIcon} size="xl" />
-                    </Button>
+        <View style={styles.container}>
+            <View style={styles.safeAreaView}>
+                <SafeAreaView style={{marginBottom: -20}}>
+                    <View style={styles.header}>
+                        <View style={styles.buttons}>
+                            <Button size="lg" variant="link" action="primary" onPress={() => router.back()}>
+                                <ButtonIcon as={CloseCircleIcon} size="xl" />
+                            </Button>
 
-                    <Button size="lg" variant="link" action="primary" onPress={updateStep} disabled={loading}>
-                        {loading ? (
-                            <>
-                                <ActivityIndicator size="small" color="#fff" />
-                                <ButtonText style={{ marginLeft: 10 }}>Please wait...</ButtonText>
-                            </>
-                        ) : (
-                            <ButtonIcon as={CheckCircleIcon} size="xl" />
+                            <Button size="lg" variant="link" action="primary" onPress={updateStep} disabled={loading}>
+                                {loading ? (
+                                    <>
+                                        <ActivityIndicator size="small" color="#fff" />
+                                        <ButtonText style={styles.loadingText}>Please wait...</ButtonText>
+                                    </>
+                                ) : (
+                                    <ButtonIcon as={CheckCircleIcon} size="xl" />
+                                )}
+                            </Button>
+                        </View>
+                    </View>
+
+                    <View style={styles.inputContainer}>
+                        <Input variant='rounded' style={{marginBottom: 15}}>
+                            <InputField
+                                placeholder="Title"
+                                style={styles.inputField}
+                                onChangeText={setTitle}
+                                value={title} />
+                        </Input>
+
+                        <GooglePlacesAutocomplete
+                            ref={useRefReact}
+                            placeholder="Destination"
+                            value={destination}
+                            minLength={2}
+                            fetchDetails={true}
+                            onPress={handleDestinationSelect}
+                            onFocus={handleDestinationFocus}
+                            onBlur={handleDestinationBlur}
+                            query={{
+                                key: GOOGLE_MAPS_API_KEY,
+                                language: 'en',
+                            }}
+                            styles={{
+                                container: { flex: 1, zIndex: 2, marginBottom: 35 + 15 },
+                                textInput: styles.textInput,
+                                listView: styles.listView,
+                            }}
+                        />
+
+                        <View style={styles.dateContainer}>
+                            <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, {marginRight: 20}]}>
+                                <Input variant="rounded" size="lg" pointerEvents="none">
+                                    <InputSlot>
+                                        <InputIcon as={CalendarDaysIcon} style={styles.icon} />
+                                    </InputSlot>
+                                    <InputField
+                                        value={pickedStart ? startDateString : 'Departure date'}
+                                        editable={false}
+                                        style={styles.inputField}
+                                    />
+                                </Input>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={toggleEndDatePicker} style={styles.dateInput}>
+                                <Input variant="rounded" size="lg" pointerEvents="none">
+                                    <InputSlot>
+                                        <InputIcon as={CalendarDaysIcon} style={styles.icon} />
+                                    </InputSlot>
+                                    <InputField
+                                        value={pickedEnd ? endDateString : 'Return date'}
+                                        editable={false}
+                                        style={styles.inputField}
+                                    />
+                                </Input>
+                            </TouchableOpacity>
+                        </View>
+
+                        {showStartPicker && Platform.OS === 'android' && (
+                            <DateTimePicker
+                                display='spinner'
+                                mode='date'
+                                value={oldStartDate}
+                                onChange={onChangeStart}
+                            />
                         )}
 
-                    </Button>
-                </View>
-            <ScrollView style={styles.scrollContainer}>
-                <View style={styles.inputContainer}>
-                    <Input variant='rounded'>
-                        <InputField
-                            placeholder="Title"
-                            style={styles.inputField}
-                            onChangeText={setTitle}
-                            value={title} />
-                    </Input>
-                </View>
-
-                <View style={styles.destinationContainer}>
-                    <GooglePlacesAutocomplete
-                        ref={useRefReact}
-                        placeholder="Destination"
-                        value={destination}
-                        minLength={2}
-                        fetchDetails={true}
-                        onPress={handleDestinationSelect}
-                        onFocus={handleDestinationFocus}
-                        onBlur={handleDestinationBlur}
-                        query={{
-                            key: GOOGLE_MAPS_API_KEY,
-                            language: 'en',
-                        }}
-                        styles={{
-                            container: { flex: 1, zIndex: 2 },
-                            textInput: styles.textInput,
-                            listView: styles.listView,
-                        }}
-                        getDefaultValue={() => {
-                            return 'blabla'; // text input default value
-                        }}
-                    />
-                </View>
-
-                <View style={styles.dateContainer}>
-                    <TouchableOpacity onPress={() => toggleStartDatePicker()} style={styles.fullWidthInput}>
-                        <Input variant="rounded" size="lg" pointerEvents="none">
-                            <InputSlot>
-                                <InputIcon
-                                    as={CalendarDaysIcon}
-                                    className="text-typography-500 m-2 w-4 h-4"
-                                />
-                            </InputSlot>
-                            <InputField
-                                value={pickedStart ? startDateString : 'Departure date'}
-                                editable={false}
-                                style={styles.inputField}
+                        {showEndPicker && Platform.OS === 'android' && (
+                            <DateTimePicker
+                                display='spinner'
+                                mode='date'
+                                value={oldEndDate}
+                                onChange={onChangeEnd}
                             />
-                        </Input>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => toggleEndDatePicker()} style={styles.fullWidthInput}>
-                        <Input variant="rounded" size="lg" pointerEvents="none">
-                            <InputSlot>
-                                <InputIcon
-                                    as={CalendarDaysIcon}
-                                    className="text-typography-500 m-2 w-4 h-4"
+                        )}
+
+                        {Platform.OS === 'ios' && (
+                            <View>
+                                <DatePickerModal
+                                    isOpen={showStartPicker}
+                                    onClose={toggleStartDatePicker}
+                                    onConfirm={confirmIOSStartDate}
+                                    onCancel={toggleStartDatePicker}
+                                    selectedDate={oldStartDate}
+                                    onDateChange={onChangeStart}
                                 />
-                            </InputSlot>
-                            <InputField
-                                value={pickedEnd ? endDateString : 'Return date'}
-                                editable={false}
-                                style={styles.inputField}
-                            />
-                        </Input>
-                    </TouchableOpacity>
-                </View>
-                {showStartPicker && Platform.OS === 'android' && (
-                    <DateTimePicker
-                        display='spinner'
-                        mode='date'
-                        value={oldStartDate}
-                        onChange={onChangeStart}
-                    />
-                )}
-                {showEndPicker && Platform.OS == 'android' && (
-                    <DateTimePicker
-                        display='spinner'
-                        mode='date'
-                        value={oldEndDate}
-                        onChange={onChangeEnd}
-                    />
-                )}
-                {Platform.OS === 'ios' && (
-                    <View>
-                        <DatePickerModal
-                            isOpen={showStartPicker}
-                            onClose={toggleStartDatePicker}
-                            onConfirm={confirmIOSStartDate}
-                            onCancel={toggleStartDatePicker}
-                            selectedDate={oldStartDate}
-                            onDateChange={onChangeStart}
-                        />
-                        <DatePickerModal
-                            isOpen={showEndPicker}
-                            onClose={toggleEndDatePicker}
-                            onConfirm={confirmIOSEndDate}
-                            onCancel={toggleEndDatePicker}
-                            selectedDate={oldEndDate}
-                            onDateChange={onChangeEnd}
-                        />
+                                <DatePickerModal
+                                    isOpen={showEndPicker}
+                                    onClose={toggleEndDatePicker}
+                                    onConfirm={confirmIOSEndDate}
+                                    onCancel={toggleEndDatePicker}
+                                    selectedDate={oldEndDate}
+                                    onDateChange={onChangeEnd}
+                                />
+                            </View>
+                        )}
                     </View>
-                )}
-                {components.map((component) => {
-                    if (component.type === 'image') {
-                        return <Image key={component.id} source={{ uri: component.uri }} style={styles.image} />;
-                    } else if (component.type === 'comment') {
-                        return (
-                            <Textarea
-                                key={component.id}
-                                variant="rounded"
-                                size="lg"
-                                style={styles.inputField}
-                            >
-                                <TextareaInput placeholder={`Comments`}
-                                    onChangeText={(text) => handleCommentChange(text, component.id)}
-                                    value={component.value} />
-                            </Textarea>
-                        );
-                    }
-                    return null;
-                })}
+                </SafeAreaView>
 
-                <View style={styles.buttonContainer}>
-                    <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
-                        <ButtonText>Add Image</ButtonText>
-                    </Button>
+                <KeyboardAvoidingView style={styles.flexOne} behavior='padding'>
+                    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                        {components.map((component) => {
+                            if (component.type === 'image') {
+                                return <Image key={component.id} source={{ uri: component.uri }} style={styles.image} />;
+                            } else if (component.type === 'comment') {
+                                return (
+                                    <Textarea
+                                        key={component.id}
+                                        variant="rounded"
+                                        size="lg"
+                                        style={styles.inputField}
+                                    >
+                                        <TextareaInput
+                                            placeholder={`Comments`}
+                                            onChangeText={(text) => handleCommentChange(text, component.id)}
+                                            value={component.value}
+                                        />
+                                    </Textarea>
+                                );
+                            }
+                            return null;
+                        })}
+                        <View style={[styles.buttonContainer, {marginTop: 10}]}>
+                            <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
+                                <ButtonText>Add Image</ButtonText>
+                            </Button>
 
-                    <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
-                        <ButtonText>Add Comments</ButtonText>
-                    </Button>
-                </View>
-            </ScrollView>
-        </SafeAreaView>
+                            <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
+                                <ButtonText>Add Comments</ButtonText>
+                            </Button>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </View>
+        </View>
     );
 };
 
-
-export default UpdateStep;
-
 const styles = StyleSheet.create({
     container: {
-        display: 'flex',
-        backgroundColor: '#1E1E1E',
-        marginHorizontal: 20,
+        flex: 1,
+        paddingHorizontal: 20,
+    },
+    safeAreaView: {
         flex: 1
     },
-    inputContainer: {
-        marginBottom: 20,
+    buttons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
-    destinationContainer: {
-        zIndex: 2,
-        marginBottom: 13,
+    inputField: {
+        color: 'white',
+        marginVertical: 10
     },
     dateContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 10,
+        justifyContent: 'space-between'
     },
-    fullWidthInput: {
+    dateInput: {
         flex: 1,
-        marginHorizontal: 5,
-    },
-    inputField: {
-        color: '#ffffff',
-        marginVertical: 10,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 10
-    },
-    buttonStyle: {
-        width: '45%',
-        backgroundColor: COLORS.blue,
-        borderRadius: 25,
-    },
-    scrollContainer: {
-        flex: 2
-    },
-    image: {
-        width: '100%',
-        height: 200,
-        borderRadius: 10,
-        marginVertical: 10,
     },
     textInput: {
         height: 35,
         borderWidth: 1,
-        paddingHorizontal: 10,
         backgroundColor: COLORS.background_dark,
         borderRadius: 25,
         color: "white",
-        borderColor: "#505050"
+        borderColor: "#505050",
     },
     listView: {
         position: 'absolute',
@@ -489,4 +466,37 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         zIndex: 3,
     },
+    scrollViewContent: {
+        paddingBottom: 20,
+    },
+    image: {
+        width: '100%',
+        height: 200,
+        marginVertical: 10,
+        borderRadius: 10,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between'
+    },
+    buttonStyle: {
+        width: '45%',
+        backgroundColor: COLORS.blue,
+        borderRadius: 25,
+    },
+    loadingText: {
+        marginLeft: 10,
+    },
+    icon: {
+        color: "#505050",
+        marginLeft: 10,
+    },
+    flexOne: {
+        flex: 1,
+    },
+    inputContainer: {
+        zIndex: 3
+    },
 });
+
+export default UpdateStep;
