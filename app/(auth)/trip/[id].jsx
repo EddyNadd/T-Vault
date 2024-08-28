@@ -152,13 +152,12 @@ export default function DetailsScreen() {
   const handleAddStep = async () => {
     try {
       setIsLoadingStep(true);
-      const [startDay, startMonth, startYear] = startDate.split('.').map(Number);
-      const [endDay, endMonth, endYear] = endDate.split('.').map(Number);
+      const today = new Date();
       const newStep = {
         title: '',
         destination: '',
-        startDate: new Date(startYear, startMonth - 1, startDay),
-        endDate: new Date(endYear, endMonth - 1, endDay),
+        startDate: today,
+        endDate: today,
         comments: [],
         images: [],
         tabOrder: []
