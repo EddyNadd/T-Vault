@@ -300,7 +300,7 @@ const UpdateStep = (isOpen, onClose) => {
                     </View>
 
                     <View style={styles.inputContainer}>
-                        <Input variant='rounded' style={{ marginBottom: 15 }}>
+                        <Input size="xl" variant='rounded' style={{ marginBottom: 15 }}>
                             <InputField
                                 placeholder="Title"
                                 style={styles.inputField}
@@ -323,7 +323,7 @@ const UpdateStep = (isOpen, onClose) => {
                                 language: 'en',
                             }}
                             styles={{
-                                container: { flex: 1, zIndex: 2, marginBottom: 35 + 15, borderRadius: 100 },
+                                container: { flex: 1, zIndex: 2, marginBottom:45 + 15, borderRadius: 100 },
                                 textInput: styles.textInput,
                                 listView: styles.listView,
                                 row: { width: inputWidth, backgroundColor: COLORS.background_dark },
@@ -335,7 +335,7 @@ const UpdateStep = (isOpen, onClose) => {
 
                         <View style={styles.dateContainer}>
                             <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, { marginRight: 20 }]}>
-                                <Input variant="rounded" size="lg" pointerEvents="none">
+                                <Input variant="rounded" size="xl" pointerEvents="none">
                                     <InputSlot>
                                         <InputIcon as={CalendarDaysIcon} style={styles.icon} />
                                     </InputSlot>
@@ -348,7 +348,7 @@ const UpdateStep = (isOpen, onClose) => {
                             </TouchableOpacity>
 
                             <TouchableOpacity onPress={toggleEndDatePicker} style={styles.dateInput}>
-                                <Input variant="rounded" size="lg" pointerEvents="none">
+                                <Input variant="rounded" size="xl" pointerEvents="none">
                                     <InputSlot>
                                         <InputIcon as={CalendarDaysIcon} style={styles.icon} />
                                     </InputSlot>
@@ -412,7 +412,7 @@ const UpdateStep = (isOpen, onClose) => {
                                     <Textarea
                                         key={component.id}
                                         variant="rounded"
-                                        size="lg"
+                                        size="xl"
                                         style={styles.inputField}
                                     >
                                         <TextareaInput
@@ -426,11 +426,11 @@ const UpdateStep = (isOpen, onClose) => {
                             return null;
                         })}
                         <View style={[styles.buttonContainer, { marginTop: 10 }]}>
-                            <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
+                            <Button size="xl" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
                                 <ButtonText>Add Image</ButtonText>
                             </Button>
 
-                            <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
+                            <Button size="xl" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
                                 <ButtonText>Add Comments</ButtonText>
                             </Button>
                         </View>
@@ -466,12 +466,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     textInput: {
-        height: 35,
+        height: 45,
         borderWidth: 1,
         backgroundColor: COLORS.background_dark,
         borderRadius: 25,
         color: "white",
         borderColor: "#505050",
+        fontSize: 17,
     },
     listView: {
         position: 'absolute',
