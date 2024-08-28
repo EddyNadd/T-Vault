@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
 import { db, auth, storage } from '../../../firebase';
 import { doc, onSnapshot, updateDoc, arrayRemove, deleteDoc, setDoc, collection, getDocs, getDoc } from 'firebase/firestore';
-import { getStorage, ref, deleteObject } from 'firebase/storage';
+import { ref, deleteObject } from 'firebase/storage';
 import COLORS from '../../../styles/COLORS';
 import StepCard from '../../../components/StepCard';
 import ShareTripModal from '../../../components/ShareTripModal';
@@ -49,7 +49,6 @@ export default function DetailsScreen() {
           setEndDate(tripData.endDate.toDate().toLocaleDateString());
           setComment(tripData.comment);
           setImage(tripData.image);
-
           const [startDay, startMonth, startYear] = tripData.startDate.toDate().toLocaleDateString().split('.').map(Number);
           const [endDay, endMonth, endYear] = tripData.endDate.toDate().toLocaleDateString().split('.').map(Number);
           setCurrentStartDate(new Date(startYear, startMonth - 1, startDay));
@@ -128,6 +127,27 @@ export default function DetailsScreen() {
 
   const deleteTrip = async () => {
     try {
+      const allStepsRef = collection(db, 'trips', id, 'steps');
+      const allStepsSnap = await getDocs(allStepsRef);
+      const image = [];
+
+      allStepsSnap.forEach(async (stepDoc) => {
+        const stepData = stepDoc.data();
+        const images = stepData.images;
+        if (images.length > 0) {
+          await Promise.all(images.map(async (imageUrl) => {
+            const imageRef = ref(storage, imageUrl);
+              await deleteObject(imageRef);
+            }));
+        }
+      });
+
+
+      allStepsSnap.forEach(async (stepDoc) => {
+        await deleteDoc(stepDoc.ref);
+      });
+
+
       const tripRef = doc(db, 'trips', id);
 
       const tripSnap = await getDoc(tripRef);
