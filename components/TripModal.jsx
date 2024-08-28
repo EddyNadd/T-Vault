@@ -228,7 +228,7 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                                 type="title"
                                 placeholder="Title"
                                 onChangeText={setTitle}
-                                value={title}
+                                defaultValue={title}
                                 style={styles.inputField}
                             />
                         </Input>
