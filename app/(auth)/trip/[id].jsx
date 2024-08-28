@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, ImageBackground, Dimensions, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, ImageBackground, Dimensions, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { MenuProvider, Menu, MenuTrigger, MenuOptions, MenuOption } from 'react-native-popup-menu';
 import { useRouter } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
@@ -27,11 +27,14 @@ export default function DetailsScreen() {
   const [canShare, setCanShare] = useState(false);
   const [canDelete, setCanDelete] = useState(false);
 
+  const [isLoadingStep, setIsLoadingStep] = useState(false);
+
   const unsubscribeRef = useRef(null);
   const stepsUnsubscribeRef = useRef(null);
 
   useEffect(() => {
     const fetchTripDetails = async () => {
+      if (isLoadingStep) return;
       const docRef = doc(db, 'trips', id);
 
       unsubscribeRef.current = onSnapshot(docRef, (docSnap) => {
@@ -64,6 +67,7 @@ export default function DetailsScreen() {
     };
 
     const fetchTripSteps = async () => {
+      if (isLoadingStep) return;
       try {
         const stepsRef = collection(db, 'trips', id, 'steps');
 
@@ -78,7 +82,7 @@ export default function DetailsScreen() {
       }
     };
 
-    if (id) {
+    if (id && !isLoadingStep) {
       fetchTripDetails();
     }
 
@@ -90,7 +94,7 @@ export default function DetailsScreen() {
         stepsUnsubscribeRef.current();
       }
     };
-  }, [id]);
+  }, [id, isLoadingStep]);
 
   const quitTrip = async () => {
     try {
@@ -147,6 +151,7 @@ export default function DetailsScreen() {
 
   const handleAddStep = async () => {
     try {
+      setIsLoadingStep(true);
       const newStep = {
         title: '',
         destination: '',
@@ -163,6 +168,9 @@ export default function DetailsScreen() {
       router.push(`/(auth)/updateStep/${id}-${stepId}`);
     } catch (error) {
       console.error(error);
+    }
+    finally {
+      setIsLoadingStep(false);
     }
   }
 
@@ -245,9 +253,14 @@ export default function DetailsScreen() {
                   isLast={index === steps.length - 1 && !canEdit}
                 />
               ))}
-              {canEdit && <TouchableOpacity style={styles.addStepButton} onPress={() => handleAddStep()}>
-                <Text style={styles.addStepText}>ADD STEP</Text>
-              </TouchableOpacity>}
+              {canEdit && <TouchableOpacity style={styles.addStepButton} onPress={() => handleAddStep()} disabled={isLoadingStep} >
+              {isLoadingStep ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Text style={styles.addStepText}>ADD STEP</Text>
+                  )}
+                </TouchableOpacity>
+              }
             </ScrollView>
           </ImageBackground>
         </View>
