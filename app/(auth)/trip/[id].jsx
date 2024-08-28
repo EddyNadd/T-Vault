@@ -204,7 +204,7 @@ export default function DetailsScreen() {
   }
 
   return (
-    <MenuProvider>
+    <MenuProvider skipInstanceCheck>
       <View style={styles.container}>
         <ImageBackground source={{ uri: image }} style={styles.imageBackground}>
           <View style={styles.imageOverlay} />

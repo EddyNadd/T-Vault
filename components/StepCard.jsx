@@ -75,6 +75,7 @@ const styles = StyleSheet.create({
     },
 
     destinationContainer: {
+        maxWidth: '90%',
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
 
     datesContainer: {
         flexDirection: 'row',
-        justifyContent: 'flex-start',
+        justifyContent: 'center',
         alignItems: 'center',
         marginTop: 5,
     },
