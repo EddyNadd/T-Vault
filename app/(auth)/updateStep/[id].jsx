@@ -234,15 +234,18 @@ const UpdateStep = (isOpen, onClose) => {
             allowsMultipleSelection: true,
             quality: 0,
         });
-
+    
         if (!result.canceled) {
             const newImages = result.assets.map((asset) => ({
                 type: 'image',
                 uri: asset.uri,
                 id: generateUniqueId()
             }));
+    
             setComponents([...components, ...newImages]);
-            setTabOrder([...tabOrder, 'image']);
+    
+            // Update tabOrder with an 'image' entry for each selected image
+            setTabOrder([...tabOrder, ...newImages.map(() => 'image')]);
         }
     };
 

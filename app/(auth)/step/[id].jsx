@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from "../../../firebase.jsx";
+import { Modal, TouchableOpacity } from 'react-native';
 
 export default function DetailsScreen({ isOpen }) {
     const { id } = useLocalSearchParams();
@@ -21,6 +22,9 @@ export default function DetailsScreen({ isOpen }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const [isModalVisible, setModalVisible] = useState(false);
+    const [selectedImageUri, setSelectedImageUri] = useState('');
+
     const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
     useEffect(() => {
@@ -36,22 +40,16 @@ export default function DetailsScreen({ isOpen }) {
                     setStartDate(data.startDate?.toDate() || null);
                     setEndDate(data.endDate?.toDate() || null);
 
-                    // Ensure data.tabOrder is an array
                     const tabOrder = data.tabOrder || [];
                     setTabOrder(tabOrder);
 
-                    const images = data.images || [];
-                    const comments = data.comments || [];
-
-                    // Create components based on tabOrder
                     setComponents(data.tabOrder.map((type) => {
                         if (type === 'image') {
                             return { type, uri: data.images.shift(), id: generateUniqueId() };
                         } else if (type === 'comment') {
                             return { type, id: generateUniqueId(), value: data.comments.shift() };
                         }
-                    }
-                    ));
+                    }));
                 } else {
                     console.error("No such document!");
                 }
@@ -68,9 +66,14 @@ export default function DetailsScreen({ isOpen }) {
             setStartDate(null);
             setEndDate(null);
         }
-        
+
         getTripData();
     }, [isOpen, tripId, stepId]);
+
+    const handleImagePress = (uri) => {
+        setSelectedImageUri(uri);
+        setModalVisible(true);
+    };
 
     if (loading) {
         return (
@@ -88,35 +91,58 @@ export default function DetailsScreen({ isOpen }) {
         );
     }
 
+    const formatDate = (date) => {
+        if (!date) return '';
+        return date.toLocaleDateString('en-GB');
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.contentContainer}>
-                <Text style={styles.label}>Title:</Text>
-                <Text style={styles.value}>{title}</Text>
+                <View style={styles.header}>
+                    <Text style={styles.title}>{title}</Text>
+                    <Text style={styles.destination}>{destination}</Text>
+                    <View style={styles.datesContainer}>
+                        <Text style={styles.date}>{startDate ? formatDate(startDate) : startDateString}</Text>
+                        <Text style={styles.date}>{endDate ? formatDate(endDate) : endDateString}</Text>
+                    </View>
+                </View>
 
-                <Text style={styles.label}>Destination:</Text>
-                <Text style={styles.value}>{destination}</Text>
-
-                <Text style={styles.label}>Start Date:</Text>
-                <Text style={styles.value}>{startDate ? startDate.toDateString() : startDateString}</Text>
-
-                <Text style={styles.label}>End Date:</Text>
-                <Text style={styles.value}>{endDate ? endDate.toDateString() : endDateString}</Text>
-
-                {components.map((component) => {
-                    if (component.type === 'image') {
-                        return <Image key={component.id} source={{ uri: component.uri }} style={styles.image} />;
-                    } else if (component.type === 'comment') {
-                        return (
-                            <View key={component.id} style={styles.commentContainer}>
-                                <Text style={styles.comment}>{component.value}</Text>
-                            </View>
-                        );
-                    }
-                    return null;
-                })}
+                <View style={styles.contentContainer}>
+                    {components.map((component) => {
+                        if (component.type === 'image') {
+                            return (
+                                <TouchableOpacity key={component.id} onPress={() => handleImagePress(component.uri)}>
+                                    <Image source={{ uri: component.uri }} style={styles.image} />
+                                </TouchableOpacity>
+                            );
+                        } else if (component.type === 'comment') {
+                            return (
+                                <View key={component.id} style={styles.commentContainer}>
+                                    <Text style={styles.comment}>{component.value}</Text>
+                                </View>
+                            );
+                        }
+                        return null;
+                    })}
+                </View>
 
                 <Button title="Go back" onPress={() => router.back()} />
+                <Button title="Edit" onPress={() => router.push(`/(auth)/updateStep/${tripId}-${stepId}`)} />
+
+                {/* Modal to show full-screen image */}
+                <Modal
+                    visible={isModalVisible}
+                    transparent={true}
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <View style={styles.modalContainer}>
+                        <TouchableOpacity style={styles.modalCloseButton} onPress={() => setModalVisible(false)}>
+                            <Text style={styles.modalCloseText}>Close</Text>
+                        </TouchableOpacity>
+                        <Image source={{ uri: selectedImageUri }} style={styles.fullScreenImage} />
+                    </View>
+                </Modal>
             </ScrollView>
         </SafeAreaView>
     );
@@ -124,21 +150,43 @@ export default function DetailsScreen({ isOpen }) {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
     },
     contentContainer: {
+        display: 'flex',
         padding: 16,
     },
-    label: {
-        fontWeight: 'bold',
-        fontSize: 16,
-        marginBottom: 8,
-    },
-    value: {
-        fontSize: 16,
+    header: {
+        flex: 1,
+        alignItems: 'center',
         marginBottom: 16,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        color: '#fff',
+    },
+    destination: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        color: '#fff',
+    },
+    datesContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '90%',
+        marginBottom: 16,
+    },
+    date: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        color: '#fff',
     },
     image: {
         width: '100%',
@@ -148,12 +196,35 @@ const styles = StyleSheet.create({
     },
     commentContainer: {
         marginBottom: 16,
-        padding: 8, 
-        backgroundColor: '#f9f9f9', 
-        borderRadius: 4, 
+        padding: 8,
+        backgroundColor: '#1E1E1E',
+        borderRadius: 4,
     },
     comment: {
         fontSize: 16,
-        color: '#333',
+        color: '#fff',
+        textAlign: 'center',
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    },
+    modalCloseButton: {
+        position: 'absolute',
+        top: 40,
+        right: 20,
+        padding: 10,
+    },
+    modalCloseText: {
+        color: '#fff',
+        fontSize: 18,
+    },
+    fullScreenImage: {
+        width: '100%',
+        height: '80%',
+        resizeMode: 'contain',
     },
 });
+
