@@ -104,8 +104,6 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
             await ImagePicker.requestMediaLibraryPermissionsAsync();
             let result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [1, 1],
                 quality: 0,
             });
 
@@ -122,8 +120,6 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
             await ImagePicker.requestCameraPermissionsAsync();
             let result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [1, 1],
                 quality: 0,
             });
 

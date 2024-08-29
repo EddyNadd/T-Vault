@@ -212,8 +212,6 @@ const UpdateStep = (isOpen, onClose) => {
                 }));
                 setComponents([...components, ...newImages]);
                 setTabOrder([...tabOrder, 'image']);
-                setComponents([...components, ...newImages]);
-                setTabOrder([...tabOrder, 'image']);
             }
         } catch (error) {
             console.log(error);
