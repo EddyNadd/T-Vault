@@ -13,9 +13,10 @@ import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 const MapScreen = () => {
   const [myTripsSelected, setMyTripsSelected] = useState(true);
   const [discoverSelected, setDiscoverSelected] = useState(false);
-  const [tripsToShow, setTripsToShow] = useState([]); // State to store the markers and polylines
+  const [tripsToShow, setTripsToShow] = useState([]);
   const myTripsMap = useRef(new Map());
   const discoverMap = useRef(new Map());
+  const stepListeners = useRef(new Map());
   const { listenersRef } = useFirestoreListeners();
   const currentListeners = useRef([]);
   const router = useRouter();
@@ -44,19 +45,23 @@ const MapScreen = () => {
 
     const updateTripsMap = (snapshot, type) => {
       snapshot.docChanges().forEach((change) => {
+        const tripId = change.doc.id;
         const tripData = change.doc.data();
+        
         if (change.type === 'modified' || change.type === 'added') {
           if (type === 'myTrips') {
-            myTripsMap.current.set(change.doc.id, tripData);
+            myTripsMap.current.set(tripId, tripData);
           } else if (type === 'discover') {
-            discoverMap.current.set(change.doc.id, tripData);
+            discoverMap.current.set(tripId, tripData);
           }
+          attachStepListener(tripId);
         } else if (change.type === 'removed') {
           if (type === 'myTrips') {
-            myTripsMap.current.delete(change.doc.id);
+            myTripsMap.current.delete(tripId);
           } else if (type === 'discover') {
-            discoverMap.current.delete(change.doc.id);
+            discoverMap.current.delete(tripId);
           }
+          detachStepListener(tripId);
         }
       });
     };
@@ -64,13 +69,13 @@ const MapScreen = () => {
     const unsubscribeMyTripsQuery = onSnapshot(myTripsQuery, (snapshot) => {
       updateTripsMap(snapshot, "myTrips");
       processTrips();
-      fetchTripsToShow(); // Fetch data after updating the map
+      fetchTripsToShow();
     });
 
     const unsubscribeDiscoverQuery = onSnapshot(discoverQuery, (snapshot) => {
       updateTripsMap(snapshot, "discover");
       processTrips();
-      fetchTripsToShow(); // Fetch data after updating the map
+      fetchTripsToShow();
     });
 
     listenersRef.current.push(unsubscribeMyTripsQuery, unsubscribeDiscoverQuery);
@@ -79,8 +84,29 @@ const MapScreen = () => {
     return () => {
       currentListeners.current.forEach((unsubscribe) => unsubscribe());
       currentListeners.current = [];
+      stepListeners.current.forEach((unsubscribe) => unsubscribe());
+      stepListeners.current.clear();
     };
-  }, [myTripsSelected, discoverSelected]); // Re-run effect when switch values change
+  }, [myTripsSelected, discoverSelected]);
+
+  const attachStepListener = (tripId) => {
+    if (stepListeners.current.has(tripId)) return;
+
+    const stepsQuery = collection(db, `trips/${tripId}/steps`);
+    const unsubscribe = onSnapshot(stepsQuery, () => {
+      fetchTripsToShow();
+    });
+
+    stepListeners.current.set(tripId, unsubscribe);
+  };
+
+  const detachStepListener = (tripId) => {
+    const unsubscribe = stepListeners.current.get(tripId);
+    if (unsubscribe) {
+      unsubscribe();
+      stepListeners.current.delete(tripId);
+    }
+  };
 
   const fetchTripsToShow = async () => {
     const trips = [];
@@ -107,7 +133,7 @@ const MapScreen = () => {
       }
     }
 
-    setTripsToShow(trips); // Update the state with fetched trips
+    setTripsToShow(trips);
   };
 
   const handleMarkerPress = (stepCode) => {
