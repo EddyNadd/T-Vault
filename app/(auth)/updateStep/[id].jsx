@@ -111,7 +111,6 @@ const UpdateStep = (isOpen, onClose) => {
                         alert("Document does not exist.");
                         router.back();
                     }
-                    console.error("Document inexistant !");
                 }
             } catch (error) {
                 console.error("Erreur lors de la récupération du document:", error);
