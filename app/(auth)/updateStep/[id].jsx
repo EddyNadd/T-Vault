@@ -362,6 +362,26 @@ const UpdateStep = (isOpen, onClose) => {
         setTabOrder(prevTabOrder => prevTabOrder.filter((_, index) => components[index]?.id !== id));
     };
 
+    const handleImageClick = async (id) => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0,
+        });
+
+        if (!result.canceled) {
+            const newImage = {
+                type: 'image',
+                uri: result.assets[0].uri,
+                id: id,  // Conservez l'ID d'origine pour remplacer l'image existante
+            };
+
+            setComponents(prevComponents =>
+                prevComponents.map(component =>
+                    component.id === id ? newImage : component
+                )
+            );
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -499,11 +519,18 @@ const UpdateStep = (isOpen, onClose) => {
                         {components.map((component) => {
                             return (
                                 <View key={component.id} style={styles.componentContainer}>
-                                    <TouchableOpacity style={styles.deleteButton} onPress={() => removeComponent(component.id)}>
+                                    <TouchableOpacity
+                                        style={styles.deleteButton}
+                                        onPress={() => removeComponent(component.id)}
+                                    >
                                         <Icon as={CloseCircleIcon} size="xl" />
                                     </TouchableOpacity>
                                     {component.type === 'image' ? (
-                                        <Image source={{ uri: component.uri }} style={styles.image} />
+                                        <TouchableOpacity
+                                            onPress={() => handleImageClick(component.id)}
+                                        >
+                                            <Image source={{ uri: component.uri }} style={styles.image} />
+                                        </TouchableOpacity>
                                     ) : component.type === 'comment' ? (
                                         <Textarea
                                             variant="rounded"
@@ -520,6 +547,8 @@ const UpdateStep = (isOpen, onClose) => {
                                 </View>
                             );
                         })}
+
+
 
                         <View style={styles.buttonContainer}>
                             <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
