@@ -8,6 +8,7 @@ import TripCard from '../../../components/TripCard';
 import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../../firebase';
 import { useFirestoreListeners } from '@/components/FirestoreListenerContext';
+import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 
 const discover = () => {
   const [showActionsheet, setShowActionsheet] = useState(false);
@@ -107,7 +108,7 @@ const discover = () => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, AndroidSafeArea.AndroidSafeArea]}>
       <Header
         logoSource={require('../../../assets/logo_transparent_bg.png')}
         title="DISCOVER"

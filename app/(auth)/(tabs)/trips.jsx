@@ -9,7 +9,7 @@ import { collection, query, where, onSnapshot, getDoc, doc } from 'firebase/fire
 import { auth, db } from '../../../firebase';
 import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
 import {useRouter } from "expo-router";
-import {Button, ButtonText} from "@/components/ui/button";
+import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 
 const Trips = () => {
   const [trips, setTrips] = useState([]);
@@ -126,7 +126,7 @@ const Trips = () => {
 
   return (
     <View style={styles.safeArea}>
-      <SafeAreaView>
+      <SafeAreaView style={AndroidSafeArea.AndroidSafeArea}>
       <Header
         logoSource={require('../../../assets/logo_transparent_bg.png')}
         title="MY TRIPS"

@@ -1,60 +1,39 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, StyleSheet, Image, Text, SafeAreaView, Switch } from 'react-native';
+import { Platform, Image, View, StyleSheet, Text, SafeAreaView, Switch } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { Feather } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import { MenuProvider, Menu, MenuTrigger, MenuOptions, MenuOption } from 'react-native-popup-menu';
 import { auth, db } from '../../../firebase';
-import { collection, query, where, onSnapshot, or } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, or, getDocs } from 'firebase/firestore';
 import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
-import { Button } from '@/components/ui/button';
-
-
+import { useRouter } from 'expo-router';
+import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 
 const MapScreen = () => {
   const [myTripsSelected, setMyTripsSelected] = useState(true);
   const [discoverSelected, setDiscoverSelected] = useState(false);
-  const [trips, setTrips] = useState([]);
+  const [tripsToShow, setTripsToShow] = useState([]); // State to store the markers and polylines
   const myTripsMap = useRef(new Map());
   const discoverMap = useRef(new Map());
   const { listenersRef } = useFirestoreListeners();
   const currentListeners = useRef([]);
-
-
-  const point1 = { latitude: 48.8566, longitude: 2.3522 };
-  const point2 = { latitude: 43.7102, longitude: 7.2620 };
-  const point3 = { latitude: 46.991, longitude: 6.9293 };
-
-  const customImageParis = { uri: 'https://t4.ftcdn.net/jpg/02/96/15/35/360_F_296153501_B34baBHDkFXbl5RmzxpiOumF4LHGCvAE.jpg' };
-  const customImageNice = { uri: 'https://www.nice.fr/uploads/media/paysage/0001/29/thumb_28514_paysage_big.jpg' };
-  const customImageNeuchatel = { uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Vuevilledeneuchatel.jpg/280px-Vuevilledeneuchatel.jpg' };
-
-  const displayTrips = () => {
-    if(myTripsSelected) {
-      myTripsMap.current.forEach((trip) => {
-        console.log(trip.title);
-      });
-    }
-    if(discoverSelected) {
-      discoverMap.current.forEach((trip) => {
-        console.log(trip.title);
-      });
-    }
-  };
+  const router = useRouter();
 
   useEffect(() => {
+    const userId = auth.currentUser.uid;
 
     const myTripsQuery = query(
       collection(db, "trips"),
       or(
-        where('uid', '==', auth.currentUser.uid),
-        where('canWrite', 'array-contains', auth.currentUser.uid),
+        where('uid', '==', userId),
+        where('canWrite', 'array-contains', userId)
       )
     );
 
     const discoverQuery = query(
       collection(db, "trips"),
-      where('canRead', 'array-contains', auth.currentUser.uid),
+      where('canRead', 'array-contains', userId)
     );
 
     const processTrips = () => {
@@ -70,7 +49,7 @@ const MapScreen = () => {
           if (type === 'myTrips') {
             myTripsMap.current.set(change.doc.id, tripData);
           } else if (type === 'discover') {
-              discoverMap.current.set(change.doc.id, tripData);
+            discoverMap.current.set(change.doc.id, tripData);
           }
         } else if (change.type === 'removed') {
           if (type === 'myTrips') {
@@ -85,11 +64,13 @@ const MapScreen = () => {
     const unsubscribeMyTripsQuery = onSnapshot(myTripsQuery, (snapshot) => {
       updateTripsMap(snapshot, "myTrips");
       processTrips();
+      fetchTripsToShow(); // Fetch data after updating the map
     });
 
     const unsubscribeDiscoverQuery = onSnapshot(discoverQuery, (snapshot) => {
       updateTripsMap(snapshot, "discover");
       processTrips();
+      fetchTripsToShow(); // Fetch data after updating the map
     });
 
     listenersRef.current.push(unsubscribeMyTripsQuery, unsubscribeDiscoverQuery);
@@ -99,8 +80,83 @@ const MapScreen = () => {
       currentListeners.current.forEach((unsubscribe) => unsubscribe());
       currentListeners.current = [];
     };
-  }, []);
+  }, [myTripsSelected, discoverSelected]); // Re-run effect when switch values change
 
+  const fetchTripsToShow = async () => {
+    const trips = [];
+
+    if (myTripsSelected) {
+      for (const [tripId, trip] of myTripsMap.current) {
+        const stepsSnapshot = await getDocs(collection(db, `trips/${tripId}/steps`));
+        const steps = stepsSnapshot.docs.map(stepDoc => stepDoc.data());
+        steps.forEach((step, index) => {
+          step.id = stepsSnapshot.docs[index].id;
+        });
+        trips.push({ trip, tripId, steps });
+      }
+    }
+
+    if (discoverSelected) {
+      for (const [tripId, trip] of discoverMap.current) {
+        const stepsSnapshot = await getDocs(collection(db, `trips/${tripId}/steps`));
+        const steps = stepsSnapshot.docs.map(stepDoc => stepDoc.data());
+        steps.forEach((step, index) => {
+          step.id = stepsSnapshot.docs[index].id;
+        });
+        trips.push({ trip, tripId, steps });
+      }
+    }
+
+    setTripsToShow(trips); // Update the state with fetched trips
+  };
+
+  const handleMarkerPress = (stepCode) => {
+    router.push(`/(auth)/step/${stepCode}`);
+  };
+
+  const handleLinePress = (tripCode) => {
+    router.push(`/(auth)/trip/${tripCode}`);
+  };
+
+  const renderMarkersAndPolylines = () => {
+    return tripsToShow.map(({ trip, tripId, steps }) => {
+      if (steps.length === 0) return null;
+      const sortedSteps = steps.sort((a, b) => a.startDate.toMillis() - b.startDate.toMillis());
+
+      const markers = sortedSteps.map((step, index) => {
+        const imageMarker = step.images.length > 0 ? {uri: step.images[Math.floor(Math.random() * step.images.length)]} : require('../../../assets/defaultMarker.png');;
+        return (
+          <Marker
+            key={`${tripId}-${index}`}
+            coordinate={{ latitude: step.geopoint.latitude, longitude: step.geopoint.longitude }}
+            onPress={() => handleMarkerPress(step.id)}
+          >
+            <View style={styles.customMarker}>
+              <Image source={imageMarker} style={styles.markerImage} />
+            </View>
+          </Marker>
+        );
+      });
+
+      const polylineCoords = sortedSteps.map(step => ({
+        latitude: step.geopoint.latitude,
+        longitude: step.geopoint.longitude
+      }));
+
+      return (
+        <React.Fragment key={tripId}>
+          {markers}
+          <Polyline
+            coordinates={polylineCoords}
+            strokeColor={COLORS.blue_dark}
+            strokeWidth={3}
+            onPress={() => handleLinePress(tripId)}
+            tappable={true}
+          />
+        </React.Fragment>
+      );
+    });
+  };
 
   return (
     <MenuProvider skipInstanceCheck>
@@ -108,40 +164,20 @@ const MapScreen = () => {
         <MapView
           style={styles.map}
           initialRegion={{
-            latitude: 46.6034,
-            longitude: 4.5,
-            latitudeDelta: 5.0,
-            longitudeDelta: 5.0,
+            latitude: 46.99763183905308,
+            longitude: 6.938745394653198,
+            latitudeDelta: 10,
+            longitudeDelta: 10,
           }}
-          showsUserLocation={true}
-          mapType='hybridFlyover'
+          mapType={Platform.OS === 'ios' ? 'hybridFlyover' : 'hybrid'}
           zoomEnabled={true}
           scrollEnabled={true}
         >
-          <Polyline coordinates={[point1, point2, point3]} strokeColor="#000" strokeWidth={3} />
-          <Marker coordinate={point1}>
-            <View style={styles.customMarker}>
-              <Image source={customImageParis} style={styles.markerImage} />
-            </View>
-          </Marker>
-          <Marker coordinate={point2}>
-            <View style={styles.customMarker}>
-              <Image source={customImageNice} style={styles.markerImage} />
-            </View>
-          </Marker>
-          <Marker coordinate={point3}>
-            <View style={styles.customMarker}>
-              <Image source={customImageNeuchatel} style={styles.markerImage} />
-            </View>
-          </Marker>
+          {renderMarkersAndPolylines()}
         </MapView>
 
-        <SafeAreaView style={styles.safeAreaView}>
-          <Button
-            title="Add Trip"
-            onPress={() => displayTrips()}
-          />
-          <Menu style={{width: 60, height: 60, margin: 20}}>
+        <SafeAreaView style={AndroidSafeArea.AndroidSafeArea}>
+          <Menu style={{ width: 60, height: 60, margin: 20 }}>
             <MenuTrigger style={styles.filterButton}>
               <Feather name="settings" size={30} color={COLORS.blue} />
             </MenuTrigger>
@@ -150,9 +186,7 @@ const MapScreen = () => {
                 <Text style={styles.menuOptionText}>MY TRIPS</Text>
                 <Switch
                   value={myTripsSelected}
-                  onValueChange={(value) => {
-                    setMyTripsSelected(value);
-                  }}
+                  onValueChange={(value) => setMyTripsSelected(value)}
                   trackColor={{ false: COLORS.background_dark, true: COLORS.blue }}
                 />
               </MenuOption>
@@ -161,9 +195,7 @@ const MapScreen = () => {
                 <Text style={styles.menuOptionText}>DISCOVER</Text>
                 <Switch
                   value={discoverSelected}
-                  onValueChange={(value) => {
-                    setDiscoverSelected(value);
-                  }}
+                  onValueChange={(value) => setDiscoverSelected(value)}
                   trackColor={{ false: COLORS.background_dark, true: COLORS.blue }}
                 />
               </MenuOption>
@@ -190,21 +222,6 @@ const styles = StyleSheet.create({
   map: {
     ...StyleSheet.absoluteFillObject,
   },
-  customMarker: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  markerImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
   menuOptions: {
     backgroundColor: COLORS.background_dark,
     padding: 10,
@@ -227,6 +244,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  customMarker: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  markerImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
 });
 

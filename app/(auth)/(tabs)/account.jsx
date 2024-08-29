@@ -9,6 +9,7 @@ import { Input, InputField } from '@/components/ui/input';
 import { doc, deleteDoc, setDoc, getDocs, query, collection, where, documentId } from 'firebase/firestore';
 import { db } from "../../../firebase.jsx";
 import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
+import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 
 const Account = () => {
   const auth = getAuth();
@@ -141,7 +142,7 @@ const Account = () => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, AndroidSafeArea.AndroidSafeArea]}>
       <Header
         logoSource={require('../../../assets/logo_transparent_bg.png')}
         title="ACCOUNT"

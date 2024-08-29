@@ -18,6 +18,7 @@ import { db, storage } from "../../../firebase.jsx";
 import { doc, getDoc, setDoc, GeoPoint } from "firebase/firestore";
 import { Feather, Entypo } from '@expo/vector-icons';
 import {Icon} from "@/components/ui/icon";
+import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 
 const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
@@ -359,7 +360,7 @@ const UpdateStep = (isOpen, onClose) => {
     return (
         <View style={styles.container}>
             <View style={styles.safeAreaView}>
-                <SafeAreaView style={{ marginBottom: -20, zIndex: 2 }}>
+                <SafeAreaView style={[{ marginBottom: -20, zIndex: 2 }, AndroidSafeArea.AndroidSafeArea]}>
                     <View style={styles.header}>
                         <View style={styles.buttons}>
                             <TouchableOpacity onPress={() => router.back()}>

@@ -11,6 +11,8 @@ import StepCard from '../../../components/StepCard';
 import ShareTripModal from '../../../components/ShareTripModal';
 import { Feather, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import TripModal from '@/components/TripModal';
+import AndroidSafeArea from '../../../styles/AndroidSafeArea';
+
 
 export default function DetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -208,7 +210,7 @@ export default function DetailsScreen() {
       <View style={styles.container}>
         <ImageBackground source={{ uri: image }} style={styles.imageBackground}>
           <View style={styles.imageOverlay} />
-          <SafeAreaView style={styles.overlay}>
+          <SafeAreaView style={[styles.overlay, AndroidSafeArea.AndroidSafeArea]}>
             <View style={styles.header}>
               <TouchableOpacity onPress={() => router.back()}>
                 <Feather name="arrow-left" size={30} color="white" />

@@ -7,6 +7,7 @@ import { Input, InputField } from '@/components/ui/input';
 import { FormControl, FormControlLabel, FormControlLabelText, FormControlError, FormControlErrorText, FormControlHelper } from '@/components/ui/form-control';
 import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
 import colors from "@/styles/COLORS.jsx";
+import AndroidSafeArea from '../styles/AndroidSafeArea';
 
 export default function Signin() {
     const [email, setEmail] = useState("");
@@ -89,7 +90,7 @@ export default function Signin() {
     }
 
     return (
-        <SafeAreaView>
+        <SafeAreaView style={AndroidSafeArea.AndroidSafeArea}>
             <KeyboardAvoidingView behavior="padding" style={styles.main}>
                 <View style={styles.imageContainer}>
                     <Animated.Image source={require('../assets/logo_transparent_bg.png')} style={[styles.image, { transform: [{ scale: imageScale }] }]} resizeMode="contain" />
