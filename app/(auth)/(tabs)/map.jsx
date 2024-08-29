@@ -1,13 +1,25 @@
-import React, { useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, StyleSheet, Image, Text, SafeAreaView, Switch } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { Feather } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
 import { MenuProvider, Menu, MenuTrigger, MenuOptions, MenuOption } from 'react-native-popup-menu';
+import { auth, db } from '../../../firebase';
+import { collection, query, where, onSnapshot, or } from 'firebase/firestore';
+import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
+import { Button } from '@/components/ui/button';
+
+
 
 const MapScreen = () => {
   const [myTripsSelected, setMyTripsSelected] = useState(true);
   const [discoverSelected, setDiscoverSelected] = useState(false);
+  const [trips, setTrips] = useState([]);
+  const myTripsMap = useRef(new Map());
+  const discoverMap = useRef(new Map());
+  const { listenersRef } = useFirestoreListeners();
+  const currentListeners = useRef([]);
+
 
   const point1 = { latitude: 48.8566, longitude: 2.3522 };
   const point2 = { latitude: 43.7102, longitude: 7.2620 };
@@ -16,6 +28,79 @@ const MapScreen = () => {
   const customImageParis = { uri: 'https://t4.ftcdn.net/jpg/02/96/15/35/360_F_296153501_B34baBHDkFXbl5RmzxpiOumF4LHGCvAE.jpg' };
   const customImageNice = { uri: 'https://www.nice.fr/uploads/media/paysage/0001/29/thumb_28514_paysage_big.jpg' };
   const customImageNeuchatel = { uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Vuevilledeneuchatel.jpg/280px-Vuevilledeneuchatel.jpg' };
+
+  const displayTrips = () => {
+    if(myTripsSelected) {
+      myTripsMap.current.forEach((trip) => {
+        console.log(trip.title);
+      });
+    }
+    if(discoverSelected) {
+      discoverMap.current.forEach((trip) => {
+        console.log(trip.title);
+      });
+    }
+  };
+
+  useEffect(() => {
+
+    const myTripsQuery = query(
+      collection(db, "trips"),
+      or(
+        where('uid', '==', auth.currentUser.uid),
+        where('canWrite', 'array-contains', auth.currentUser.uid),
+      )
+    );
+
+    const discoverQuery = query(
+      collection(db, "trips"),
+      where('canRead', 'array-contains', auth.currentUser.uid),
+    );
+
+    const processTrips = () => {
+      myTripsMap.current.forEach((myTrip, myTripId) => {
+        discoverMap.current.delete(myTripId);
+      });
+    };
+
+    const updateTripsMap = (snapshot, type) => {
+      snapshot.docChanges().forEach((change) => {
+        const tripData = change.doc.data();
+        if (change.type === 'modified' || change.type === 'added') {
+          if (type === 'myTrips') {
+            myTripsMap.current.set(change.doc.id, tripData);
+          } else if (type === 'discover') {
+              discoverMap.current.set(change.doc.id, tripData);
+          }
+        } else if (change.type === 'removed') {
+          if (type === 'myTrips') {
+            myTripsMap.current.delete(change.doc.id);
+          } else if (type === 'discover') {
+            discoverMap.current.delete(change.doc.id);
+          }
+        }
+      });
+    };
+
+    const unsubscribeMyTripsQuery = onSnapshot(myTripsQuery, (snapshot) => {
+      updateTripsMap(snapshot, "myTrips");
+      processTrips();
+    });
+
+    const unsubscribeDiscoverQuery = onSnapshot(discoverQuery, (snapshot) => {
+      updateTripsMap(snapshot, "discover");
+      processTrips();
+    });
+
+    listenersRef.current.push(unsubscribeMyTripsQuery, unsubscribeDiscoverQuery);
+    currentListeners.current.push(unsubscribeMyTripsQuery, unsubscribeDiscoverQuery);
+
+    return () => {
+      currentListeners.current.forEach((unsubscribe) => unsubscribe());
+      currentListeners.current = [];
+    };
+  }, []);
+
 
   return (
     <MenuProvider skipInstanceCheck>
@@ -52,7 +137,11 @@ const MapScreen = () => {
         </MapView>
 
         <SafeAreaView style={styles.safeAreaView}>
-          <Menu>
+          <Button
+            title="Add Trip"
+            onPress={() => displayTrips()}
+          />
+          <Menu style={{width: 60, height: 60, margin: 20}}>
             <MenuTrigger style={styles.filterButton}>
               <Feather name="settings" size={30} color={COLORS.blue} />
             </MenuTrigger>
@@ -97,7 +186,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 20,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
