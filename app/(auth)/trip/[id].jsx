@@ -182,21 +182,8 @@ export default function DetailsScreen() {
   const handleAddStep = async () => {
     try {
       setIsLoadingStep(true);
-      const today = new Date();
-      const newStep = {
-        title: '',
-        destination: '',
-        startDate: today,
-        endDate: today,
-        comments: [],
-        images: [],
-        tabOrder: []
-      };
-
       const stepId = Math.random().toString(36).substr(2, 6);
-
-      await setDoc(doc(db, "trips", id, "steps", stepId), newStep);
-      router.push(`/(auth)/updateStep/${id}-${stepId}`);
+      router.push({pathname: `/(auth)/updateStep/${id}-${stepId}-new`});
     } catch (error) {
       console.error(error);
     }
@@ -296,7 +283,7 @@ export default function DetailsScreen() {
             </ScrollView>
           </ImageBackground>
         </View>
-        <TripModal isOpen={tripModal} onClose={() => setTripModal(false)} currentTripId={id} currentTitle={title} currentComment={comment} currentStartDate={currentStartDate} currentEndDate={currentEndDate} currentImage={image} />
+        <TripModal isOpen={tripModal} onClose={() => setTripModal(false)} currentTripId={id} currentTitle={title} currentComment={comment} currentStartDate={startDate} currentEndDate={endDate} currentImage={image} />
       </View>
     </MenuProvider>
   );

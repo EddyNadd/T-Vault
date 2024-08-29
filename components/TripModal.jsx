@@ -12,6 +12,7 @@ import { CalendarDaysIcon } from "@/components/ui/icon"
 import { Avatar, AvatarImage } from "@/components/ui/avatar"
 import { Button, ButtonText } from "@/components/ui/button"
 import DatePickerModal from './DatePickerModal.jsx';
+import { FormControl, FormControlError, FormControlErrorText, FormControlLabel, FormControlLabelText } from '@/components/ui/form-control';
 
 export default function TripModal({ isOpen, onClose, currentTitle, currentComment, currentStartDate, currentEndDate, currentImage, currentTripId }) {
     const [image, setImage] = useState(null);
@@ -29,6 +30,8 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
     const [pickedEnd, setPickedEnd] = useState(false);
     const animatedMargin = useRef(new Animated.Value(0)).current;
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
+    const [errorText, setErrorText] = useState("");
 
     const dismissKeyboard = () => {
         Keyboard.dismiss();
@@ -41,13 +44,15 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
             setImage(currentImage || null);
             setStartDate(currentStartDate || new Date());
             setEndDate(currentEndDate || new Date());
-            setStartDateString(currentStartDate ? currentStartDate.toLocaleDateString() : 'Departure date');
-            setEndDateString(currentEndDate ? currentEndDate.toLocaleDateString() : 'Return date');
+            setStartDateString(currentStartDate ? currentStartDate : 'Departure date');
+            setEndDateString(currentEndDate ? currentEndDate : 'Return date');
             setOldStartDate(currentStartDate || new Date());
             setOldEndDate(currentEndDate || new Date());
             setPickedStart(!!currentStartDate);
             setPickedEnd(!!currentEndDate);
             setLoading(false);
+            setError(false);
+            setErrorText("");
         }
     }, [isOpen, currentTitle, currentComment, currentStartDate, currentEndDate, currentImage]);
 
@@ -94,8 +99,8 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
             const url = await getDownloadURL(storageRef);
             return url;
         } catch (error) {
-            console.log('Error uploading image: ', error);
-            throw error;
+            setError(true);
+            setErrorText("Error uploading image. Please try again.");
         }
     };
 
@@ -111,7 +116,8 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                 setImage(result.assets[0].uri);
             }
         } catch (error) {
-            console.log(error);
+            setError(true);
+            setErrorText("Error uploading image. Please try again.");
         }
     };
 
@@ -127,7 +133,8 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                 setImage(result.assets[0].uri);
             }
         } catch (error) {
-            console.log(error);
+            setError(true);
+            setErrorText("Error taking photo. Please try again.");
         }
     };
 
@@ -228,7 +235,7 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
     }
 
     const addTrip = async () => {
-        if (title && comment && startDate && endDate && image) {
+        if (title && comment && startDate && endDate && image && startDateString !== 'Departure date' && endDateString !== 'Return date') {
             try {
                 setLoading(true);
                 const imageUrl = await uploadImageToStorage(image);
@@ -253,12 +260,14 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                 setImage(null);
                 onClose();
             } catch (error) {
-                console.error("Error while adding the document: ", error);
+                setError(true);
+                setErrorText("Error adding trip. Please try again.");
             } finally {
                 setLoading(false); // Stop loading
             }
         } else {
-            console.error("Title and commentary are required.");
+            setError(true);
+            setErrorText("Please fill in all fields.");
         }
     };
 
@@ -281,110 +290,121 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                             )}
                         </View>
 
-                        <Input variant="rounded" size="lg" style={styles.input}>
-                            <InputField
-                                type="title"
-                                placeholder="Title"
-                                onChangeText={setTitle}
-                                defaultValue={title}
-                                style={styles.inputField}
-                            />
-                        </Input>
-                        <View style={styles.date}>
-                            <TouchableOpacity onPress={() => toggleStartDatePicker()} style={styles.fullWidthInput}>
-                                <Input variant="rounded" size="lg" pointerEvents="none">
-                                    <InputSlot>
-                                        <InputIcon
-                                            as={CalendarDaysIcon}
-                                            className="text-typography-500 m-2 w-4 h-4"
-                                        />
-                                    </InputSlot>
-                                    <InputField
-                                        value={pickedStart ? startDateString : 'Departure date'}
-                                        editable={false}
-                                        style={styles.inputField}
-                                    />
-                                </Input>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => toggleEndDatePicker()} style={styles.fullWidthInput}>
-                                <Input variant="rounded" size="lg" pointerEvents="none">
-                                    <InputSlot>
-                                        <InputIcon
-                                            as={CalendarDaysIcon}
-                                            className="text-typography-500 m-2 w-4 h-4"
-                                        />
-                                    </InputSlot>
-                                    <InputField
-                                        value={pickedEnd ? endDateString : 'Return date'}
-                                        editable={false}
-                                        style={styles.inputField}
-                                    />
-                                </Input>
-                            </TouchableOpacity>
-                        </View>
-                        {showStartPicker && Platform.OS === 'android' && (
-                            <DateTimePicker
-                                display='spinner'
-                                mode='date'
-                                value={oldStartDate}
-                                onChange={onChangeStart}
-                            />
-                        )}
-                        {showEndPicker && Platform.OS == 'android' && (
-                            <DateTimePicker
-                                display='spinner'
-                                mode='date'
-                                value={oldEndDate}
-                                onChange={onChangeEnd}
-                            />
-                        )}
-                        {Platform.OS === 'ios' && (
-                            <View>
-                                <DatePickerModal
-                                    isOpen={showStartPicker}
-                                    onClose={toggleStartDatePicker}
-                                    onConfirm={confirmIOSStartDate}
-                                    onCancel={toggleStartDatePicker}
-                                    selectedDate={oldStartDate}
-                                    onDateChange={onChangeStart}
+                        <FormControl isInvalid={error}>
+                            <Input variant="rounded" size="lg" style={styles.input}>
+                                <InputField
+                                    type="title"
+                                    placeholder="Title"
+                                    onChangeText={setTitle}
+                                    defaultValue={title}
+                                    style={styles.inputField}
                                 />
-                                <DatePickerModal
-                                    isOpen={showEndPicker}
-                                    onClose={toggleEndDatePicker}
-                                    onConfirm={confirmIOSEndDate}
-                                    onCancel={toggleEndDatePicker}
-                                    selectedDate={oldEndDate}
-                                    onDateChange={onChangeEnd}
-                                />
+                            </Input>
+                            <View style={styles.date}>
+                                <TouchableOpacity onPress={() => toggleStartDatePicker()} style={styles.fullWidthInput}>
+                                    <Input variant="rounded" size="lg" pointerEvents="none">
+                                        <InputSlot>
+                                            <InputIcon
+                                                as={CalendarDaysIcon}
+                                                className="text-typography-500 m-2 w-4 h-4"
+                                            />
+                                        </InputSlot>
+                                        <InputField
+                                            value={pickedStart ? startDateString : 'Departure date'}
+                                            editable={false}
+                                            style={styles.inputField}
+                                        />
+                                    </Input>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => toggleEndDatePicker()} style={styles.fullWidthInput}>
+                                    <Input variant="rounded" size="lg" pointerEvents="none">
+                                        <InputSlot>
+                                            <InputIcon
+                                                as={CalendarDaysIcon}
+                                                className="text-typography-500 m-2 w-4 h-4"
+                                            />
+                                        </InputSlot>
+                                        <InputField
+                                            value={pickedEnd ? endDateString : 'Return date'}
+                                            editable={false}
+                                            style={styles.inputField}
+                                        />
+                                    </Input>
+                                </TouchableOpacity>
                             </View>
-                        )}
-
-                        <TouchableOpacity onPress={selectImage} style={styles.avatarContainer}>
-                            <Avatar size="xl">
-                                {image ? (
-                                    <AvatarImage source={{ uri: image }} />
-                                ) : (
-                                    <Text style={styles.avatarPlaceholder}>Add Image</Text>
-                                )}
-                            </Avatar>
-                        </TouchableOpacity>
-
-                        <View style={styles.textareacontainer}>
-                            <Textarea
-                                size="xl"
-                                isReadOnly={false}
-                                isInvalid={false}
-                                isDisabled={false}
-                                className="w-64"
-                                style={styles.textarea}
-                            >
-                                <TextareaInput
-                                    onChangeText={setComment}
-                                    placeholder="Comments"
-                                    defaultValue={comment}
+                            {showStartPicker && Platform.OS === 'android' && (
+                                <DateTimePicker
+                                    display='spinner'
+                                    mode='date'
+                                    value={oldStartDate}
+                                    onChange={onChangeStart}
                                 />
-                            </Textarea>
-                        </View>
+                            )}
+                            {showEndPicker && Platform.OS == 'android' && (
+                                <DateTimePicker
+                                    display='spinner'
+                                    mode='date'
+                                    value={oldEndDate}
+                                    onChange={onChangeEnd}
+                                />
+                            )}
+                            {Platform.OS === 'ios' && (
+                                <View>
+                                    <DatePickerModal
+                                        isOpen={showStartPicker}
+                                        onClose={toggleStartDatePicker}
+                                        onConfirm={confirmIOSStartDate}
+                                        onCancel={toggleStartDatePicker}
+                                        selectedDate={oldStartDate}
+                                        onDateChange={onChangeStart}
+                                    />
+                                    <DatePickerModal
+                                        isOpen={showEndPicker}
+                                        onClose={toggleEndDatePicker}
+                                        onConfirm={confirmIOSEndDate}
+                                        onCancel={toggleEndDatePicker}
+                                        selectedDate={oldEndDate}
+                                        onDateChange={onChangeEnd}
+                                    />
+                                </View>
+                            )}
+
+                            <TouchableOpacity onPress={selectImage} style={styles.avatarContainer}>
+                                <Avatar size="xl">
+                                    {image ? (
+                                        <AvatarImage source={{ uri: image }} />
+                                    ) : (
+                                        <Text style={styles.avatarPlaceholder}>Add Image</Text>
+                                    )}
+                                </Avatar>
+                            </TouchableOpacity>
+
+                            <View style={styles.textareacontainer}>
+                                <Textarea
+                                    size="xl"
+                                    isReadOnly={false}
+                                    isInvalid={false}
+                                    isDisabled={false}
+                                    className="w-64"
+                                    style={styles.textarea}
+                                >
+                                    <TextareaInput
+                                        onChangeText={setComment}
+                                        placeholder="Comments"
+                                        defaultValue={comment}
+                                    />
+                                </Textarea>
+                            </View>
+                            <View style={styles.errorContainer}>
+                                {error && (
+                                    <FormControlError>
+                                        <FormControlErrorText>
+                                            {errorText}
+                                        </FormControlErrorText>
+                                    </FormControlError>
+                                )}
+                            </View>
+                        </FormControl>
 
                         <Animated.View style={[styles.buttonContainer, { marginBottom: animatedMargin }]}>
                             <Button
@@ -420,41 +440,34 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-
     image: {
         width: 100,
         height: 100,
         borderRadius: 50,
         borderWidth: 2,
     },
-
     input: {
         marginBottom: 10,
     },
-
     fullWidthInput: {
         flex: 1,
         margin: 10
     },
-
     inputField: {
         paddingHorizontal: 10,
         paddingVertical: 5,
         fontSize: 16,
     },
-
     text: {
         color: 'white',
         fontSize: 40,
         font: 'Anton',
         fontWeight: 'bold',
     },
-
     textarea: {
         width: '100%',
         marginVertical: 10,
     },
-
     textareaInput: {
         paddingHorizontal: 10,
         paddingVertical: 5,
@@ -464,34 +477,32 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
-
     textareacontainer: {
-        marginBottom: 10,
         justifyContent: 'center',
         alignItems: 'center',
     },
-
     buttonContainer: {
         alignItems: 'center',
         justifyContent: 'center',
         margin: 10,
     },
-
     date: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%',
     },
-
     avatarContainer: {
         alignItems: 'center',
         justifyContent: 'center',
         marginVertical: 10
     },
-
     avatarPlaceholder: {
         color: 'white',
         fontSize: 14,
         fontWeight: 'bold',
-    }
+    },
+    errorContainer: {
+        minHeight: 25,
+        justifyContent: 'center',
+    },
 });

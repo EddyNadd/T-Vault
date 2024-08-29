@@ -19,12 +19,13 @@ import { doc, getDoc, setDoc, GeoPoint } from "firebase/firestore";
 import { Feather, Entypo } from '@expo/vector-icons';
 import {Icon} from "@/components/ui/icon";
 import AndroidSafeArea from '../../../styles/AndroidSafeArea';
+import { FormControl, FormControlHelperText, FormControlHelper } from '@/components/ui/form-control';
 
 const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
 const UpdateStep = (isOpen, onClose) => {
     const { id } = useLocalSearchParams();
-    const [tripId, stepId] = id.split('-');
+    const [tripId, stepId, isNew] = id.split('-');
     const [title, setTitle] = useState('');
     const [destination, setDestination] = useState('');
     const [comment, setComment] = useState('');
@@ -45,6 +46,8 @@ const UpdateStep = (isOpen, onClose) => {
     const [tabOrder, setTabOrder] = useState([]);
     const [inputWidth, setInputWidth] = useState(0);
     const [geoPoint, setGeoPoint] = useState(null);
+    const [error, setError] = useState(false);
+    const [errorText, setErrorText] = useState('');
     const router = useRouter();
     const useRefReact = useRef();
 
@@ -91,7 +94,10 @@ const UpdateStep = (isOpen, onClose) => {
                     }
                     ));
                 } else {
-                    console.error("No such document!");
+                    if (isNew != 'new') {
+                        alert("Document does not exist.");
+                        router.back();
+                    }
                 }
             } catch (error) {
                 console.error("Error getting document:", error);
@@ -298,11 +304,10 @@ const UpdateStep = (isOpen, onClose) => {
             console.error("Trip ID is missing.");
             return;
         }
+        try {
+            setLoading(true);
 
-        if (title && destination && startDate && endDate) {
-            try {
-                setLoading(true);
-
+            if (geoPoint != null && title != '' && destination != '' && pickedStart && pickedEnd) {
                 const images = components
                     .filter(component => component.type === 'image')
                     .map(component => component.uri);
@@ -318,7 +323,7 @@ const UpdateStep = (isOpen, onClose) => {
                 const newStep = {
                     title: title || '',
                     destination: destination || '',
-                    geopoint: geoPoint|| '',
+                    geopoint: geoPoint || '',
                     startDate: startDate || new Date(),
                     endDate: endDate || new Date(),
                     comments: comments || [],
@@ -334,14 +339,16 @@ const UpdateStep = (isOpen, onClose) => {
                 setComponents([]);
                 setLoading(false);
                 router.back();
-            } catch (error) {
-                console.error("Error while adding the document: ", error);
+            } else {
+                setError(true);
+                setErrorText("Please fill in all fields.");
                 setLoading(false);
             }
-        } else {
-            console.error("Title, Destination, Start Date, and End Date are required.");
+        } catch (error) {
+            console.error("Error while adding the document: ", error);
+            setLoading(false);
         }
-    }
+    };
 
     const handleCommentChange = (text, id) => {
         setComponents(prevComponents =>
@@ -356,6 +363,26 @@ const UpdateStep = (isOpen, onClose) => {
         setTabOrder(prevTabOrder => prevTabOrder.filter((_, index) => components[index]?.id !== id));
     };
 
+    const handleImageClick = async (id) => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0,
+        });
+
+        if (!result.canceled) {
+            const newImage = {
+                type: 'image',
+                uri: result.assets[0].uri,
+                id: id,  // Conservez l'ID d'origine pour remplacer l'image existante
+            };
+
+            setComponents(prevComponents =>
+                prevComponents.map(component =>
+                    component.id === id ? newImage : component
+                )
+            );
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -368,19 +395,19 @@ const UpdateStep = (isOpen, onClose) => {
                             </TouchableOpacity>
 
                             <TouchableOpacity onPress={() => updateStep()} disabled={loading}>
-                            {loading ? (
+                                {loading ? (
                                     <>
                                         <ActivityIndicator size="small" color="white" />
                                     </>
                                 ) : (
                                     <Entypo name="save" size={30} color="white" />
                                 )}
-                                
+
                             </TouchableOpacity>
                         </View>
                     </View>
-
                     <View style={styles.inputContainer}>
+                    <FormControl>
                         <Input size="xl" variant='rounded' style={{ marginBottom: 15 }}>
                             <InputField
                                 placeholder="Title"
@@ -404,7 +431,7 @@ const UpdateStep = (isOpen, onClose) => {
                                 language: 'en',
                             }}
                             styles={{
-                                container: { flex: 1, zIndex: 2, marginBottom:45 + 15, borderRadius: 100 },
+                                container: { flex: 1, zIndex: 2, marginBottom: 45 + 15, borderRadius: 100 },
                                 textInput: styles.textInput,
                                 listView: styles.listView,
                                 row: { width: inputWidth, backgroundColor: COLORS.background_dark },
@@ -414,7 +441,7 @@ const UpdateStep = (isOpen, onClose) => {
                             }}
                         />
 
-                        <View style={[styles.dateContainer, {marginBottom : Platform.OS === "android" ? 40 : 0}]}>
+                        <View style={[styles.dateContainer, { marginBottom: Platform.OS === "android" ? 40 : 0 }]}>
                             <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, { marginRight: 20 }]}>
                                 <Input variant="rounded" size="xl" pointerEvents="none">
                                     <InputSlot>
@@ -480,42 +507,56 @@ const UpdateStep = (isOpen, onClose) => {
                                 />
                             </View>
                         )}
+                        {error && (
+                            <FormControlHelper>
+                                <FormControlHelperText style={{color: "#cf8282"}}>{errorText}</FormControlHelperText>
+                            </FormControlHelper>
+                        )}
+                        </FormControl>
                     </View>
                 </SafeAreaView>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flexOne}>
                     <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                {components.map((component) => {
-                    return (
-                        <View key={component.id} style={styles.componentContainer}>
-                            <TouchableOpacity style={styles.deleteButton} onPress={() => removeComponent(component.id)}>
-                                <Icon  as={CloseCircleIcon} size="xl" />
-                            </TouchableOpacity>
-                            {component.type === 'image' ? (
-                                <Image source={{ uri: component.uri }} style={styles.image} />
-                            ) : component.type === 'comment' ? (
-                                <Textarea
-                                    variant="rounded"
-                                    size="lg"
-                                    style={styles.inputField}
-                                >
-                                    <TextareaInput
-                                        placeholder={`Comments`}
-                                        onChangeText={(text) => handleCommentChange(text, component.id)}
-                                        value={component.value}
-                                    />
-                                </Textarea>
-                            ) : null}
-                        </View>
-                    );
-                })}
+                        {components.map((component) => {
+                            return (
+                                <View key={component.id} style={styles.componentContainer}>
+                                    <TouchableOpacity
+                                        style={styles.deleteButton}
+                                        onPress={() => removeComponent(component.id)}
+                                    >
+                                        <Icon as={CloseCircleIcon} size="xl" />
+                                    </TouchableOpacity>
+                                    {component.type === 'image' ? (
+                                        <TouchableOpacity
+                                            onPress={() => handleImageClick(component.id)}
+                                        >
+                                            <Image source={{ uri: component.uri }} style={styles.image} />
+                                        </TouchableOpacity>
+                                    ) : component.type === 'comment' ? (
+                                        <Textarea
+                                            variant="rounded"
+                                            size="lg"
+                                            style={styles.inputField}
+                                        >
+                                            <TextareaInput
+                                                placeholder={`Comments`}
+                                                onChangeText={(text) => handleCommentChange(text, component.id)}
+                                                value={component.value}
+                                            />
+                                        </Textarea>
+                                    ) : null}
+                                </View>
+                            );
+                        })}
 
 
-                <View style={styles.buttonContainer}>
-                    <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
-                        <ButtonText>Add Image</ButtonText>
-                    </Button>
 
-                            <Button size="xl" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
+                        <View style={styles.buttonContainer}>
+                            <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
+                                <ButtonText>Add Image</ButtonText>
+                            </Button>
+
+                            <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
                                 <ButtonText>Add Comments</ButtonText>
                             </Button>
                         </View>
@@ -609,15 +650,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         borderRadius: 50,
         padding: 5,
-    },
-    textInput: {
-        height: 35,
-        borderWidth: 1,
-        paddingHorizontal: 10,
-        backgroundColor: COLORS.background_dark,
-        borderRadius: 25,
-        color: "white",
-        borderColor: "#505050"
     },
     listView: {
         position: 'absolute',

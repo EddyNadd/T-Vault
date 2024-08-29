@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, ScrollView, Text, useWindowDimensions } from 'react-native';
 import { Modal, ModalBackdrop, ModalContent } from "@/components/ui/modal";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { db } from '@/firebase';
 import COLORS from '@/styles/COLORS';
 import * as Clipboard from 'expo-clipboard';
 import { useFirestoreListeners } from '@/components/FirestoreListenerContext';
+import { FormControl, FormControlErrorText, FormControlError } from '@/components/ui/form-control';
 
 export default function ShareTripModal({
     isOpen,
@@ -18,18 +19,20 @@ export default function ShareTripModal({
     onConfirm,
     onCancel
 }) {
-    const [values, setValues] = React.useState(false)
-    const [username, setUsername] = React.useState("");
-    const [users, setUsers] = React.useState([]);
-    const [shared, setShared] = React.useState(false);
-    const [copyAction, setCopyAction] = React.useState("primary");
-    const [copyVariant, setCopyVariant] = React.useState("outline");
+    const [values, setValues] = useState(false)
+    const [username, setUsername] = useState("");
+    const [users, setUsers] = useState([]);
+    const [shared, setShared] = useState(false);
+    const [copyAction, setCopyAction] = useState("primary");
+    const [copyVariant, setCopyVariant] = useState("outline");
+    const [error, setError] = useState(false);
+    const [errorText, setErrorText] = useState("");
     const { height } = useWindowDimensions();
     const [props, getCellOnLayoutHandler] = useClearByFocusCell({
         tripCode
     });
     const { listenersRef } = useFirestoreListeners();
-    const currentListeners = React.useRef([]);
+    const currentListeners = useRef([]);
 
     const scrollViewMaxHeight = height * 0.3;
 
@@ -57,6 +60,8 @@ export default function ShareTripModal({
             setShared(false);
             setCopyAction("primary");
             setCopyVariant("outline");
+            setError(false);
+            setErrorText("");
         } else {
             const tripRef = doc(db, "trips", tripCode.toLowerCase());
 
@@ -116,7 +121,7 @@ export default function ShareTripModal({
         return () => {
             currentListeners.current.forEach((unsubscribe) => unsubscribe());
             currentListeners.current = [];
-          };
+        };
     }, [isOpen, tripCode]);
 
     const copyCode = async () => {
@@ -143,7 +148,8 @@ export default function ShareTripModal({
             if (username === "") return;
             const userDoc = await getDoc(doc(db, "Users", username));
             if (!userDoc.exists()) {
-                alert("User not found");
+                setError(true);
+                setErrorText("User not found");
                 return;
             }
             const uid = userDoc.data().uid;
@@ -159,8 +165,11 @@ export default function ShareTripModal({
                     invitRead: arrayUnion(uid)
                 }, { merge: true });
             }
+            setError(false);
+            setErrorText("");
         } catch (error) {
-            console.error("Error adding user: ", error);
+            setError(true);
+            setErrorText("User not found");
         }
     };
 
@@ -227,11 +236,18 @@ export default function ShareTripModal({
             <ModalBackdrop />
             <ModalContent>
                 <View style={{ marginBottom: 20, display: 'flex', flexDirection: "row", alignItems: 'center' }}>
+
                     <View style={{ flex: 1, marginRight: 20 }}>
-                        <Input>
-                            <InputField textContentType="oneTimeCode" placeholder="Username" onChangeText={setUsername} value={username} autoCapitalize="none" autoCorrect={false} spellCheck="false"></InputField>
-                        </Input>
+                        <FormControl isInvalid={error}>
+                            <Input>
+                                <InputField textContentType="oneTimeCode" placeholder="Username" onChangeText={setUsername} value={username} autoCapitalize="none" autoCorrect={false} spellCheck="false"></InputField>
+                            </Input>
+                            <FormControlError>
+                                <FormControlErrorText>{errorText}</FormControlErrorText>
+                            </FormControlError>
+                        </FormControl>
                     </View>
+
                     <View>
                         <RadioGroup value={values} onChange={setValues}>
                             <Radio size="lg" value={false}>

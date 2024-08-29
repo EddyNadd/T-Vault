@@ -97,9 +97,6 @@ export default function Signin() {
                 </View>
                 <View style={styles.textFieldContainer}>
                     <FormControl isInvalid={error} style={{ marginBottom: 5 }}>
-                        <FormControlLabel>
-                            <FormControlLabelText />
-                        </FormControlLabel>
                         <View style={styles.textField}>
                             <Input variant="rounded" size="xl" style={{ marginBottom: 20 }}>
                                 <InputField textContentType="oneTimeCode" type="email" placeholder="Email" onChangeText={setEmail} value={email} autoCapitalize="none" autoCorrect={false} spellCheck="false" onFocus={handleFocus} onBlur={handleBlur} />
