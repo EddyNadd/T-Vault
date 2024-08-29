@@ -17,7 +17,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from "../../../firebase.jsx";
 import { doc, getDoc, setDoc, GeoPoint } from "firebase/firestore";
 import { Feather, Entypo } from '@expo/vector-icons';
-import {Icon} from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 
 const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
@@ -297,50 +297,45 @@ const UpdateStep = (isOpen, onClose) => {
             console.error("Trip ID is missing.");
             return;
         }
+        try {
+            setLoading(true);
 
-        if (title && destination && startDate && endDate) {
-            try {
-                setLoading(true);
+            const images = components
+                .filter(component => component.type === 'image')
+                .map(component => component.uri);
 
-                const images = components
-                    .filter(component => component.type === 'image')
-                    .map(component => component.uri);
+            const comments = components
+                .filter(component => component.type === 'comment')
+                .map(component => component.value || '');  // Default to empty string if comment is undefined
 
-                const comments = components
-                    .filter(component => component.type === 'comment')
-                    .map(component => component.value || '');  // Default to empty string if comment is undefined
+            // Upload images and get URLs
+            const imageUrls = await Promise.all(images.map(uri => uploadImageToStorage(uri)));
 
-                // Upload images and get URLs
-                const imageUrls = await Promise.all(images.map(uri => uploadImageToStorage(uri)));
+            // Prepare the new step object
+            const newStep = {
+                title: title || '',
+                destination: destination || '',
+                geopoint: geoPoint || '',
+                startDate: startDate || new Date(),
+                endDate: endDate || new Date(),
+                comments: comments || [],
+                images: imageUrls || [],
+                tabOrder: tabOrder || [],
+            };
 
-                // Prepare the new step object
-                const newStep = {
-                    title: title || '',
-                    destination: destination || '',
-                    geopoint: geoPoint|| '',
-                    startDate: startDate || new Date(),
-                    endDate: endDate || new Date(),
-                    comments: comments || [],
-                    images: imageUrls || [],
-                    tabOrder: tabOrder || [],
-                };
+            await setDoc(doc(db, "trips", tripId, "steps", stepId), newStep);
 
-                await setDoc(doc(db, "trips", tripId, "steps", stepId), newStep);
-
-                // Clear the form and navigate back
-                setTitle('');
-                setDestination('');
-                setComponents([]);
-                setLoading(false);
-                router.back();
-            } catch (error) {
-                console.error("Error while adding the document: ", error);
-                setLoading(false);
-            }
-        } else {
-            console.error("Title, Destination, Start Date, and End Date are required.");
+            // Clear the form and navigate back
+            setTitle('');
+            setDestination('');
+            setComponents([]);
+            setLoading(false);
+            router.back();
+        } catch (error) {
+            console.error("Error while adding the document: ", error);
+            setLoading(false);
         }
-    }
+    };
 
     const handleCommentChange = (text, id) => {
         setComponents(prevComponents =>
@@ -367,14 +362,14 @@ const UpdateStep = (isOpen, onClose) => {
                             </TouchableOpacity>
 
                             <TouchableOpacity onPress={() => updateStep()} disabled={loading}>
-                            {loading ? (
+                                {loading ? (
                                     <>
                                         <ActivityIndicator size="small" color="white" />
                                     </>
                                 ) : (
                                     <Entypo name="save" size={30} color="white" />
                                 )}
-                                
+
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -403,7 +398,7 @@ const UpdateStep = (isOpen, onClose) => {
                                 language: 'en',
                             }}
                             styles={{
-                                container: { flex: 1, zIndex: 2, marginBottom:45 + 15, borderRadius: 100 },
+                                container: { flex: 1, zIndex: 2, marginBottom: 45 + 15, borderRadius: 100 },
                                 textInput: styles.textInput,
                                 listView: styles.listView,
                                 row: { width: inputWidth, backgroundColor: COLORS.background_dark },
@@ -413,7 +408,7 @@ const UpdateStep = (isOpen, onClose) => {
                             }}
                         />
 
-                        <View style={[styles.dateContainer, {marginBottom : Platform.OS === "android" ? 40 : 0}]}>
+                        <View style={[styles.dateContainer, { marginBottom: Platform.OS === "android" ? 40 : 0 }]}>
                             <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, { marginRight: 20 }]}>
                                 <Input variant="rounded" size="xl" pointerEvents="none">
                                     <InputSlot>
@@ -483,36 +478,35 @@ const UpdateStep = (isOpen, onClose) => {
                 </SafeAreaView>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flexOne}>
                     <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                {components.map((component) => {
-                    return (
-                        <View key={component.id} style={styles.componentContainer}>
-                            <TouchableOpacity style={styles.deleteButton} onPress={() => removeComponent(component.id)}>
-                                <Icon  as={CloseCircleIcon} size="xl" />
-                            </TouchableOpacity>
-                            {component.type === 'image' ? (
-                                <Image source={{ uri: component.uri }} style={styles.image} />
-                            ) : component.type === 'comment' ? (
-                                <Textarea
-                                    variant="rounded"
-                                    size="lg"
-                                    style={styles.inputField}
-                                >
-                                    <TextareaInput
-                                        placeholder={`Comments`}
-                                        onChangeText={(text) => handleCommentChange(text, component.id)}
-                                        value={component.value}
-                                    />
-                                </Textarea>
-                            ) : null}
-                        </View>
-                    );
-                })}
+                        {components.map((component) => {
+                            return (
+                                <View key={component.id} style={styles.componentContainer}>
+                                    <TouchableOpacity style={styles.deleteButton} onPress={() => removeComponent(component.id)}>
+                                        <Icon as={CloseCircleIcon} size="xl" />
+                                    </TouchableOpacity>
+                                    {component.type === 'image' ? (
+                                        <Image source={{ uri: component.uri }} style={styles.image} />
+                                    ) : component.type === 'comment' ? (
+                                        <Textarea
+                                            variant="rounded"
+                                            size="lg"
+                                            style={styles.inputField}
+                                        >
+                                            <TextareaInput
+                                                placeholder={`Comments`}
+                                                onChangeText={(text) => handleCommentChange(text, component.id)}
+                                                value={component.value}
+                                            />
+                                        </Textarea>
+                                    ) : null}
+                                </View>
+                            );
+                        })}
 
-
-                <View style={styles.buttonContainer}>
-                    <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
-                        <ButtonText>Add Image</ButtonText>
-                    </Button>
+                        <View style={styles.buttonContainer}>
+                            <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
+                                <ButtonText>Add Image</ButtonText>
+                            </Button>
 
                             <Button size="xl" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
                                 <ButtonText>Add Comments</ButtonText>

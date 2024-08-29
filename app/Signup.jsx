@@ -124,9 +124,6 @@ export default function Signup() {
                 </Animated.View>
                 <View style={styles.textFieldContainer}>
                     <FormControl isInvalid={error} style={{ marginBottom: 5 }}>
-                        <FormControlLabel>
-                            <FormControlLabelText />
-                        </FormControlLabel>
                         <View style={styles.textField} behavior="padding">
                             <Animated.View style={[styles.textField, { marginBottom: inputMargin }]}>
                                 <Input variant="rounded" size="xl">
