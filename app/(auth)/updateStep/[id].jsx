@@ -224,7 +224,7 @@ const UpdateStep = (isOpen, onClose) => {
             let result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: false,
-                quality: 0,
+                quality: Platform.OS === 'android' ? 1 : 0,
             });
 
             if (!result.canceled) {
@@ -246,7 +246,7 @@ const UpdateStep = (isOpen, onClose) => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsMultipleSelection: true,
-            quality: 0,
+            quality: Platform.OS === 'android' ? 1 : 0,
         });
 
         if (!result.canceled) {
@@ -384,7 +384,7 @@ const UpdateStep = (isOpen, onClose) => {
     const handleImageClick = async (id) => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            quality: 0,
+            quality: Platform.OS === 'android' ? 1 : 0,
         });
 
         if (!result.canceled) {
