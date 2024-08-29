@@ -13,13 +13,15 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import COLORS from '@/styles/COLORS';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { GOOGLE_MAPS_API_KEY } from '../../../map.js';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from "../../../firebase.jsx";
 import { doc, getDoc, setDoc, GeoPoint } from "firebase/firestore";
 import { Feather, Entypo } from '@expo/vector-icons';
 import {Icon} from "@/components/ui/icon";
 import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 import { FormControl, FormControlHelperText, FormControlHelper } from '@/components/ui/form-control';
+import * as FileSystem from 'expo-file-system';
+
 
 const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
@@ -56,7 +58,6 @@ const UpdateStep = (isOpen, onClose) => {
     }, [destination]);
 
     useEffect(() => {
-        // get the trip data from the database
         const getTripData = async () => {
             try {
                 const docRef = doc(db, "trips", tripId, "steps", stepId);
@@ -66,41 +67,55 @@ const UpdateStep = (isOpen, onClose) => {
                     setTitle(data.title);
                     setDestination(data.destination);
                     setGeoPoint(data.geopoint);
+
                     if (data.startDate) {
                         const incomingStartDate = data.startDate?.toDate();
                         setStartDate(incomingStartDate);
-                        if (incomingStartDate) {
-                            setPickedStart(true);
-                            setOldStartDate(incomingStartDate);
-                            setStartDateString(incomingStartDate.toLocaleDateString());
-                        }
+                        setPickedStart(true);
+                        setOldStartDate(incomingStartDate);
+                        setStartDateString(incomingStartDate.toLocaleDateString());
                     }
+
                     if (data.endDate) {
                         const incomingEndDate = data.endDate?.toDate();
                         setEndDate(incomingEndDate);
-                        if (incomingEndDate) {
-                            setPickedEnd(true);
-                            setOldEndDate(incomingEndDate);
-                            setEndDateString(oldEndDate.toLocaleDateString());
-                        }
+                        setPickedEnd(true);
+                        setOldEndDate(incomingEndDate);
+                        setEndDateString(incomingEndDate.toLocaleDateString());
                     }
+
                     setTabOrder(data.tabOrder);
+
+                    const localImages = await Promise.all(data.images.map(async (url) => {
+                        const imageRef = ref(storage, url);
+                        try {
+                            await getDownloadURL(imageRef);
+                            const localUri = `${FileSystem.documentDirectory}${generateUniqueId()}.jpg`;
+                            await FileSystem.downloadAsync(url, localUri);
+                            await deleteObject(imageRef);
+                            return localUri;
+                        } catch (error) {
+                            console.error("Erreur lors du téléchargement ou de la suppression de l'image: ", error);
+                            return null;
+                        }
+                    }));
+
                     setComponents(data.tabOrder.map((type) => {
                         if (type === 'image') {
-                            return { type, uri: data.images.shift(), id: generateUniqueId() };
+                            return { type, uri: localImages.shift(), id: generateUniqueId() };
                         } else if (type === 'comment') {
                             return { type, id: generateUniqueId(), value: data.comments.shift() };
                         }
-                    }
-                    ));
+                    }).filter(component => component !== null));
                 } else {
                     if (isNew != 'new') {
                         alert("Document does not exist.");
                         router.back();
                     }
+                    console.error("Document inexistant !");
                 }
             } catch (error) {
-                console.error("Error getting document:", error);
+                console.error("Erreur lors de la récupération du document:", error);
             }
         };
 
@@ -116,8 +131,8 @@ const UpdateStep = (isOpen, onClose) => {
             setPickedStart(false);
             setPickedEnd(false);
             setLoading(false);
+            getTripData();
         }
-        getTripData();
     }, [isOpen]);
 
     const handleTitleLayout = (event) => {
@@ -234,16 +249,16 @@ const UpdateStep = (isOpen, onClose) => {
             allowsMultipleSelection: true,
             quality: 0,
         });
-    
+
         if (!result.canceled) {
             const newImages = result.assets.map((asset) => ({
                 type: 'image',
                 uri: asset.uri,
                 id: generateUniqueId()
             }));
-    
+
             setComponents([...components, ...newImages]);
-    
+
             // Update tabOrder with an 'image' entry for each selected image
             setTabOrder([...tabOrder, ...newImages.map(() => 'image')]);
         }
