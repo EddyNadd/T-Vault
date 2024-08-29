@@ -135,7 +135,9 @@ const UpdateStep = (isOpen, onClose) => {
                     setOldStartDate(currentDate);
                     setPickedStart(true);
                 } else {
+                    toggleStartDatePicker();
                     Alert.alert("Back to the Future", "Departure date must be before or in the same day as return date.");
+                    toggleEndDatePicker();
                 }
             }
         }
@@ -155,7 +157,9 @@ const UpdateStep = (isOpen, onClose) => {
                     setOldEndDate(currentDate);
                     setPickedEnd(true);
                 } else {
+                    toggleEndDatePicker();
                     Alert.alert("Back to the Future", "Return date must be after or in the same day as departure date.");
+                    toggleEndDatePicker();
                 }
             }
         }
