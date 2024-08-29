@@ -1,11 +1,11 @@
+import React, { useState, useEffect } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, Button, SafeAreaView, ScrollView, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, Button, SafeAreaView, ScrollView, ActivityIndicator, Image, Modal, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
 import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from "../../../firebase.jsx";
-import { Modal, TouchableOpacity } from 'react-native';
 import { getStorage, ref, deleteObject } from 'firebase/storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function DetailsScreen({ isOpen }) {
     const { id } = useLocalSearchParams();
@@ -28,48 +28,45 @@ export default function DetailsScreen({ isOpen }) {
 
     const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
-    useEffect(() => {
-        const getTripData = async () => {
-            try {
-                const docRef = doc(db, "trips", tripId, "steps", stepId);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
+    const getTripData = async () => {
+        try {
+            const docRef = doc(db, "trips", tripId, "steps", stepId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
 
-                    setTitle(data.title || '');
-                    setDestination(data.destination || '');
-                    setStartDate(data.startDate?.toDate() || null);
-                    setEndDate(data.endDate?.toDate() || null);
+                setTitle(data.title || '');
+                setDestination(data.destination || '');
+                setStartDate(data.startDate?.toDate() || null);
+                setEndDate(data.endDate?.toDate() || null);
 
-                    const tabOrder = data.tabOrder || [];
-                    setTabOrder(tabOrder);
+                const tabOrder = data.tabOrder || [];
+                setTabOrder(tabOrder);
 
-                    setComponents(data.tabOrder.map((type) => {
-                        if (type === 'image') {
-                            return { type, uri: data.images.shift(), id: generateUniqueId() };
-                        } else if (type === 'comment') {
-                            return { type, id: generateUniqueId(), value: data.comments.shift() };
-                        }
-                    }));
-                } else {
-                    console.error("No such document!");
-                }
-            } catch (error) {
-                console.error("Error getting document:", error);
-                setError("Failed to load data.");
+                setComponents(data.tabOrder.map((type) => {
+                    if (type === 'image') {
+                        return { type, uri: data.images.shift(), id: generateUniqueId() };
+                    } else if (type === 'comment') {
+                        return { type, id: generateUniqueId(), value: data.comments.shift() };
+                    }
+                }));
+            } else {
+                console.error("No such document!");
             }
-            setLoading(false);
-        };
-
-        if (isOpen) {
-            setTitle('');
-            setDestination('');
-            setStartDate(null);
-            setEndDate(null);
+        } catch (error) {
+            console.error("Error getting document:", error);
+            setError("Failed to load data.");
         }
+        setLoading(false);
+    };
 
-        getTripData();
-    }, [isOpen, tripId, stepId]);
+    useFocusEffect(
+        React.useCallback(() => {
+            setLoading(true);
+            setError(null);
+            getTripData();
+        }, [tripId, stepId])
+    );
 
     const handleImagePress = (uri) => {
         setSelectedImageUri(uri);
@@ -110,6 +107,7 @@ export default function DetailsScreen({ isOpen }) {
             console.error('Error deleting step: ', error);
         }
     };
+
     if (loading) {
         return (
             <View style={styles.container}>
@@ -264,4 +262,3 @@ const styles = StyleSheet.create({
         resizeMode: 'contain',
     },
 });
-

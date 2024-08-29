@@ -86,16 +86,15 @@ const UpdateStep = (isOpen, onClose) => {
 
                     setTabOrder(data.tabOrder);
 
+                    // Télécharger les images à partir des URLs Firebase
                     const localImages = await Promise.all(data.images.map(async (url) => {
-                        const imageRef = ref(storage, url);
                         try {
-                            await getDownloadURL(imageRef);
+                            // Télécharger l'image depuis Firebase
                             const localUri = `${FileSystem.documentDirectory}${generateUniqueId()}.jpg`;
                             await FileSystem.downloadAsync(url, localUri);
-                            await deleteObject(imageRef);
                             return localUri;
                         } catch (error) {
-                            console.error("Erreur lors du téléchargement ou de la suppression de l'image: ", error);
+                            console.error("Erreur lors du téléchargement de l'image: ", error);
                             return null;
                         }
                     }));
@@ -299,6 +298,7 @@ const UpdateStep = (isOpen, onClose) => {
         }
     };
 
+
     const handleDestinationFocus = () => {
         setIsInputActive(true);
     };
@@ -388,19 +388,25 @@ const UpdateStep = (isOpen, onClose) => {
         });
 
         if (!result.canceled) {
-            const newImage = {
-                type: 'image',
-                uri: result.assets[0].uri,
-                id: id,  // Conservez l'ID d'origine pour remplacer l'image existante
-            };
+            const newImageUri = result.assets[0].uri;
 
+            // Ajout d'un cache buster
+            const timestamp = new Date().getTime();
+            const imageWithCacheBuster = `${newImageUri}?${timestamp}`;
+
+            // Mettre à jour l'état avec la nouvelle URI
             setComponents(prevComponents =>
                 prevComponents.map(component =>
-                    component.id === id ? newImage : component
+                    component.id === id
+                        ? { ...component, uri: imageWithCacheBuster }
+                        : component
                 )
             );
         }
     };
+
+
+
 
     return (
         <View style={styles.container}>
@@ -425,111 +431,111 @@ const UpdateStep = (isOpen, onClose) => {
                         </View>
                     </View>
                     <View style={styles.inputContainer}>
-                    <FormControl>
-                        <Input size="xl" variant='rounded' style={{ marginBottom: 15 }}>
-                            <InputField
-                                placeholder="Title"
-                                style={styles.inputField}
-                                onChangeText={setTitle}
-                                value={title}
-                                onLayout={handleTitleLayout} />
-                        </Input>
+                        <FormControl>
+                            <Input size="xl" variant='rounded' style={{ marginBottom: 15 }}>
+                                <InputField
+                                    placeholder="Title"
+                                    style={styles.inputField}
+                                    onChangeText={setTitle}
+                                    value={title}
+                                    onLayout={handleTitleLayout} />
+                            </Input>
 
-                        <GooglePlacesAutocomplete
-                            ref={useRefReact}
-                            placeholder="Destination"
-                            value={destination}
-                            minLength={2}
-                            fetchDetails={true}
-                            onPress={handleDestinationSelect}
-                            onFocus={handleDestinationFocus}
-                            onBlur={handleDestinationBlur}
-                            query={{
-                                key: GOOGLE_MAPS_API_KEY,
-                                language: 'en',
-                            }}
-                            styles={{
-                                container: { flex: 1, zIndex: 2, marginBottom: 45 + 15, borderRadius: 100 },
-                                textInput: styles.textInput,
-                                listView: styles.listView,
-                                row: { width: inputWidth, backgroundColor: COLORS.background_dark },
-                                poweredContainer: { backgroundColor: COLORS.background_dark },
-                                powered: { color: 'white' },
-                                description: { color: 'white' },
-                            }}
-                        />
-
-                        <View style={[styles.dateContainer, { marginBottom: Platform.OS === "android" ? 40 : 0 }]}>
-                            <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, { marginRight: 20 }]}>
-                                <Input variant="rounded" size="xl" pointerEvents="none">
-                                    <InputSlot>
-                                        <InputIcon as={CalendarDaysIcon} style={styles.icon} />
-                                    </InputSlot>
-                                    <InputField
-                                        value={pickedStart ? startDateString : 'Departure date'}
-                                        editable={false}
-                                        style={styles.inputField}
-                                    />
-                                </Input>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity onPress={toggleEndDatePicker} style={styles.dateInput}>
-                                <Input variant="rounded" size="xl" pointerEvents="none">
-                                    <InputSlot>
-                                        <InputIcon as={CalendarDaysIcon} style={styles.icon} />
-                                    </InputSlot>
-                                    <InputField
-                                        value={pickedEnd ? endDateString : 'Return date'}
-                                        editable={false}
-                                        style={styles.inputField}
-                                    />
-                                </Input>
-                            </TouchableOpacity>
-                        </View>
-
-                        {showStartPicker && Platform.OS === 'android' && (
-                            <DateTimePicker
-                                display='spinner'
-                                mode='date'
-                                value={oldStartDate}
-                                onChange={onChangeStart}
+                            <GooglePlacesAutocomplete
+                                ref={useRefReact}
+                                placeholder="Destination"
+                                value={destination}
+                                minLength={2}
+                                fetchDetails={true}
+                                onPress={handleDestinationSelect}
+                                onFocus={handleDestinationFocus}
+                                onBlur={handleDestinationBlur}
+                                query={{
+                                    key: GOOGLE_MAPS_API_KEY,
+                                    language: 'en',
+                                }}
+                                styles={{
+                                    container: { flex: 1, zIndex: 2, marginBottom: 45 + 15, borderRadius: 100 },
+                                    textInput: styles.textInput,
+                                    listView: styles.listView,
+                                    row: { width: inputWidth, backgroundColor: COLORS.background_dark },
+                                    poweredContainer: { backgroundColor: COLORS.background_dark },
+                                    powered: { color: 'white' },
+                                    description: { color: 'white' },
+                                }}
                             />
-                        )}
 
-                        {showEndPicker && Platform.OS === 'android' && (
-                            <DateTimePicker
-                                display='spinner'
-                                mode='date'
-                                value={oldEndDate}
-                                onChange={onChangeEnd}
-                            />
-                        )}
+                            <View style={[styles.dateContainer, { marginBottom: Platform.OS === "android" ? 40 : 0 }]}>
+                                <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, { marginRight: 20 }]}>
+                                    <Input variant="rounded" size="xl" pointerEvents="none">
+                                        <InputSlot>
+                                            <InputIcon as={CalendarDaysIcon} style={styles.icon} />
+                                        </InputSlot>
+                                        <InputField
+                                            value={pickedStart ? startDateString : 'Departure date'}
+                                            editable={false}
+                                            style={styles.inputField}
+                                        />
+                                    </Input>
+                                </TouchableOpacity>
 
-                        {Platform.OS === 'ios' && (
-                            <View>
-                                <DatePickerModal
-                                    isOpen={showStartPicker}
-                                    onClose={toggleStartDatePicker}
-                                    onConfirm={confirmIOSStartDate}
-                                    onCancel={toggleStartDatePicker}
-                                    selectedDate={oldStartDate}
-                                    onDateChange={onChangeStart}
-                                />
-                                <DatePickerModal
-                                    isOpen={showEndPicker}
-                                    onClose={toggleEndDatePicker}
-                                    onConfirm={confirmIOSEndDate}
-                                    onCancel={toggleEndDatePicker}
-                                    selectedDate={oldEndDate}
-                                    onDateChange={onChangeEnd}
-                                />
+                                <TouchableOpacity onPress={toggleEndDatePicker} style={styles.dateInput}>
+                                    <Input variant="rounded" size="xl" pointerEvents="none">
+                                        <InputSlot>
+                                            <InputIcon as={CalendarDaysIcon} style={styles.icon} />
+                                        </InputSlot>
+                                        <InputField
+                                            value={pickedEnd ? endDateString : 'Return date'}
+                                            editable={false}
+                                            style={styles.inputField}
+                                        />
+                                    </Input>
+                                </TouchableOpacity>
                             </View>
-                        )}
-                        {error && (
-                            <FormControlHelper>
-                                <FormControlHelperText style={{color: "#cf8282"}}>{errorText}</FormControlHelperText>
-                            </FormControlHelper>
-                        )}
+
+                            {showStartPicker && Platform.OS === 'android' && (
+                                <DateTimePicker
+                                    display='spinner'
+                                    mode='date'
+                                    value={oldStartDate}
+                                    onChange={onChangeStart}
+                                />
+                            )}
+
+                            {showEndPicker && Platform.OS === 'android' && (
+                                <DateTimePicker
+                                    display='spinner'
+                                    mode='date'
+                                    value={oldEndDate}
+                                    onChange={onChangeEnd}
+                                />
+                            )}
+
+                            {Platform.OS === 'ios' && (
+                                <View>
+                                    <DatePickerModal
+                                        isOpen={showStartPicker}
+                                        onClose={toggleStartDatePicker}
+                                        onConfirm={confirmIOSStartDate}
+                                        onCancel={toggleStartDatePicker}
+                                        selectedDate={oldStartDate}
+                                        onDateChange={onChangeStart}
+                                    />
+                                    <DatePickerModal
+                                        isOpen={showEndPicker}
+                                        onClose={toggleEndDatePicker}
+                                        onConfirm={confirmIOSEndDate}
+                                        onCancel={toggleEndDatePicker}
+                                        selectedDate={oldEndDate}
+                                        onDateChange={onChangeEnd}
+                                    />
+                                </View>
+                            )}
+                            {error && (
+                                <FormControlHelper>
+                                    <FormControlHelperText style={{ color: "#cf8282" }}>{errorText}</FormControlHelperText>
+                                </FormControlHelper>
+                            )}
                         </FormControl>
                     </View>
                 </SafeAreaView>
