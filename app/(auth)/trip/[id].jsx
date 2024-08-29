@@ -281,7 +281,7 @@ export default function DetailsScreen() {
             </ScrollView>
           </ImageBackground>
         </View>
-        <TripModal isOpen={tripModal} onClose={() => setTripModal(false)} currentTripId={id} currentTitle={title} currentComment={comment} currentStartDate={currentStartDate} currentEndDate={currentEndDate} currentImage={image} />
+        <TripModal isOpen={tripModal} onClose={() => setTripModal(false)} currentTripId={id} currentTitle={title} currentComment={comment} currentStartDate={startDate} currentEndDate={endDate} currentImage={image} />
       </View>
     </MenuProvider>
   );
