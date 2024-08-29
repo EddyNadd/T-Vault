@@ -136,8 +136,8 @@ const MapScreen = () => {
     setTripsToShow(trips);
   };
 
-  const handleMarkerPress = (stepCode) => {
-    router.push(`/(auth)/step/${stepCode}`);
+  const handleMarkerPress = (stepCode, tripCode) => {
+    router.push(`/(auth)/step/${tripCode}-${stepCode}`);
   };
 
   const handleLinePress = (tripCode) => {
@@ -155,7 +155,7 @@ const MapScreen = () => {
           <Marker
             key={`${tripId}-${index}`}
             coordinate={{ latitude: step.geopoint.latitude, longitude: step.geopoint.longitude }}
-            onPress={() => handleMarkerPress(step.id)}
+            onPress={() => handleMarkerPress(step.id, tripId)}
           >
             <View style={styles.customMarker}>
               <Image source={imageMarker} style={styles.markerImage} />
