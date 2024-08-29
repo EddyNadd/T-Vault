@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { CalendarDaysIcon } from "@/components/ui/icon";
+import { CloseCircleIcon } from "@/components/ui/icon";
 import { Button, ButtonText } from "@/components/ui/button";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -414,7 +415,7 @@ const UpdateStep = (isOpen, onClose) => {
                             }}
                         />
 
-                        <View style={styles.dateContainer}>
+                        <View style={[styles.dateContainer, {marginBottom : Platform.OS === "android" ? 40 : 0}]}>
                             <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, { marginRight: 20 }]}>
                                 <Input variant="rounded" size="xl" pointerEvents="none">
                                     <InputSlot>
@@ -481,7 +482,9 @@ const UpdateStep = (isOpen, onClose) => {
                             </View>
                         )}
                     </View>
-                )}
+                </SafeAreaView>
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flexOne}>
+                    <ScrollView contentContainerStyle={styles.scrollViewContent}>
                 {components.map((component) => {
                     return (
                         <View key={component.id} style={styles.componentContainer}>
@@ -594,6 +597,7 @@ const styles = StyleSheet.create({
     },
     flexOne: {
         flex: 1,
+    },
     componentContainer: {
         position: 'relative',
         marginBottom: 20,
