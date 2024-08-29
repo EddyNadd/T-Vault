@@ -18,12 +18,13 @@ import { db, storage } from "../../../firebase.jsx";
 import { doc, getDoc, setDoc, GeoPoint } from "firebase/firestore";
 import { Feather, Entypo } from '@expo/vector-icons';
 import { Icon } from "@/components/ui/icon";
+import { FormControl, FormControlHelperText, FormControlHelper } from '@/components/ui/form-control';
 
 const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
 const UpdateStep = (isOpen, onClose) => {
     const { id } = useLocalSearchParams();
-    const [tripId, stepId] = id.split('-');
+    const [tripId, stepId, isNew] = id.split('-');
     const [title, setTitle] = useState('');
     const [destination, setDestination] = useState('');
     const [comment, setComment] = useState('');
@@ -44,6 +45,8 @@ const UpdateStep = (isOpen, onClose) => {
     const [tabOrder, setTabOrder] = useState([]);
     const [inputWidth, setInputWidth] = useState(0);
     const [geoPoint, setGeoPoint] = useState(null);
+    const [error, setError] = useState(false);
+    const [errorText, setErrorText] = useState('');
     const router = useRouter();
     const useRefReact = useRef();
 
@@ -90,7 +93,10 @@ const UpdateStep = (isOpen, onClose) => {
                     }
                     ));
                 } else {
-                    console.error("No such document!");
+                    if (isNew != 'new') {
+                        alert("Document does not exist.");
+                        router.back();
+                    }
                 }
             } catch (error) {
                 console.error("Error getting document:", error);
@@ -300,37 +306,43 @@ const UpdateStep = (isOpen, onClose) => {
         try {
             setLoading(true);
 
-            const images = components
-                .filter(component => component.type === 'image')
-                .map(component => component.uri);
+            if (geoPoint != null && title != '' && destination != '' && pickedStart && pickedEnd) {
+                const images = components
+                    .filter(component => component.type === 'image')
+                    .map(component => component.uri);
 
-            const comments = components
-                .filter(component => component.type === 'comment')
-                .map(component => component.value || '');  // Default to empty string if comment is undefined
+                const comments = components
+                    .filter(component => component.type === 'comment')
+                    .map(component => component.value || '');  // Default to empty string if comment is undefined
 
-            // Upload images and get URLs
-            const imageUrls = await Promise.all(images.map(uri => uploadImageToStorage(uri)));
+                // Upload images and get URLs
+                const imageUrls = await Promise.all(images.map(uri => uploadImageToStorage(uri)));
 
-            // Prepare the new step object
-            const newStep = {
-                title: title || '',
-                destination: destination || '',
-                geopoint: geoPoint || '',
-                startDate: startDate || new Date(),
-                endDate: endDate || new Date(),
-                comments: comments || [],
-                images: imageUrls || [],
-                tabOrder: tabOrder || [],
-            };
+                // Prepare the new step object
+                const newStep = {
+                    title: title || '',
+                    destination: destination || '',
+                    geopoint: geoPoint || '',
+                    startDate: startDate || new Date(),
+                    endDate: endDate || new Date(),
+                    comments: comments || [],
+                    images: imageUrls || [],
+                    tabOrder: tabOrder || [],
+                };
 
-            await setDoc(doc(db, "trips", tripId, "steps", stepId), newStep);
+                await setDoc(doc(db, "trips", tripId, "steps", stepId), newStep);
 
-            // Clear the form and navigate back
-            setTitle('');
-            setDestination('');
-            setComponents([]);
-            setLoading(false);
-            router.back();
+                // Clear the form and navigate back
+                setTitle('');
+                setDestination('');
+                setComponents([]);
+                setLoading(false);
+                router.back();
+            } else {
+                setError(true);
+                setErrorText("Please fill in all fields.");
+                setLoading(false);
+            }
         } catch (error) {
             console.error("Error while adding the document: ", error);
             setLoading(false);
@@ -373,8 +385,8 @@ const UpdateStep = (isOpen, onClose) => {
                             </TouchableOpacity>
                         </View>
                     </View>
-
                     <View style={styles.inputContainer}>
+                    <FormControl>
                         <Input size="xl" variant='rounded' style={{ marginBottom: 15 }}>
                             <InputField
                                 placeholder="Title"
@@ -474,6 +486,12 @@ const UpdateStep = (isOpen, onClose) => {
                                 />
                             </View>
                         )}
+                        {error && (
+                            <FormControlHelper>
+                                <FormControlHelperText style={{color: "#cf8282"}}>{errorText}</FormControlHelperText>
+                            </FormControlHelper>
+                        )}
+                        </FormControl>
                     </View>
                 </SafeAreaView>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flexOne}>
@@ -504,11 +522,11 @@ const UpdateStep = (isOpen, onClose) => {
                         })}
 
                         <View style={styles.buttonContainer}>
-                            <Button size="md" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
+                            <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
                                 <ButtonText>Add Image</ButtonText>
                             </Button>
 
-                            <Button size="xl" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
+                            <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
                                 <ButtonText>Add Comments</ButtonText>
                             </Button>
                         </View>
@@ -602,15 +620,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         borderRadius: 50,
         padding: 5,
-    },
-    textInput: {
-        height: 35,
-        borderWidth: 1,
-        paddingHorizontal: 10,
-        backgroundColor: COLORS.background_dark,
-        borderRadius: 25,
-        color: "white",
-        borderColor: "#505050"
     },
     listView: {
         position: 'absolute',

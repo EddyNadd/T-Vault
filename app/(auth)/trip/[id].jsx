@@ -180,21 +180,8 @@ export default function DetailsScreen() {
   const handleAddStep = async () => {
     try {
       setIsLoadingStep(true);
-      const today = new Date();
-      const newStep = {
-        title: '',
-        destination: '',
-        startDate: today,
-        endDate: today,
-        comments: [],
-        images: [],
-        tabOrder: []
-      };
-
       const stepId = Math.random().toString(36).substr(2, 6);
-
-      await setDoc(doc(db, "trips", id, "steps", stepId), newStep);
-      router.push(`/(auth)/updateStep/${id}-${stepId}`);
+      router.push({pathname: `/(auth)/updateStep/${id}-${stepId}-new`});
     } catch (error) {
       console.error(error);
     }
