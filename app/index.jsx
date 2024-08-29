@@ -68,7 +68,6 @@ export default function Signin() {
         setLoading(true);
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            alert("Signed in successfully!");
         } catch (error) {
             setError(true);
         } finally {
