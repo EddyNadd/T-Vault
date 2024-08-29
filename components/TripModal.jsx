@@ -381,7 +381,6 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                                 <TextareaInput
                                     onChangeText={setComment}
                                     placeholder="Comments"
-                                    style={styles.textareaInput}
                                     defaultValue={comment}
                                 />
                             </Textarea>
