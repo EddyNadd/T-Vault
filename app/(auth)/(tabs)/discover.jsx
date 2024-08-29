@@ -68,6 +68,11 @@ const discover = () => {
     const processTrips = async () => {
       const invitArray = Array.from(tripsInvitMap.current.values());
       const readArray = Array.from(tripsSharedMap.current.values());
+      readArray.forEach((trip) => {
+        if (trip.canWrite.includes(auth.currentUser.uid)) {
+          readArray.splice(readArray.indexOf(trip), 1);
+        }
+      });
       invitArray.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
       readArray.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
       const allTrips = invitArray.concat(readArray);
