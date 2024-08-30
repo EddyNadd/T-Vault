@@ -1,44 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Platform,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Alert,
-} from "react-native";
+import {View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform, ActivityIndicator, KeyboardAvoidingView, Alert,} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DatePickerModal from "../../../components/DatePickerModal";
 import * as ImagePicker from "expo-image-picker";
 import { Input, InputField, InputSlot, InputIcon } from "@/components/ui/input";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
-import { CalendarDaysIcon } from "@/components/ui/icon";
-import { CloseCircleIcon } from "@/components/ui/icon";
+import { CalendarDaysIcon, CloseCircleIcon } from "@/components/ui/icon";
 import { Button, ButtonText } from "@/components/ui/button";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import COLORS from "@/styles/COLORS";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { GOOGLE_MAPS_API_KEY } from "../../../map.js";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject,
-} from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject,} from "firebase/storage";
 import { db, storage } from "../../../firebase.jsx";
 import { doc, getDoc, setDoc, GeoPoint } from "firebase/firestore";
 import { Feather, Entypo } from "@expo/vector-icons";
 import { Icon } from "@/components/ui/icon";
 import AndroidSafeArea from "../../../styles/AndroidSafeArea";
-import {
-  FormControl,
-  FormControlHelperText,
-  FormControlHelper,
-} from "@/components/ui/form-control";
+import { FormControl, FormControlHelperText, FormControlHelper,} from "@/components/ui/form-control";
 import * as FileSystem from "expo-file-system";
 
 const generateUniqueId = () => "_" + Math.random().toString(36).substr(2, 9);
@@ -522,13 +502,7 @@ const UpdateStep = (isOpen, onClose) => {
           <View style={styles.inputContainer}>
             <FormControl>
               <Input size="xl" variant="rounded" style={{ marginBottom: 15 }}>
-                <InputField
-                  placeholder="Title"
-                  style={styles.inputField}
-                  onChangeText={setTitle}
-                  value={title}
-                  onLayout={handleTitleLayout}
-                />
+                <InputField placeholder="Title" style={styles.inputField} onChangeText={setTitle} value={title} onLayout={handleTitleLayout}/>
               </Input>
 
               <GooglePlacesAutocomplete
@@ -544,100 +518,49 @@ const UpdateStep = (isOpen, onClose) => {
                   key: GOOGLE_MAPS_API_KEY,
                   language: "en",
                 }}
-                styles={{
-                  container: {
-                    flex: 1,
-                    zIndex: 2,
-                    marginBottom: 45 + 15,
-                    borderRadius: 100,
-                  },
+                styles={{container: {flex: 1, zIndex: 2, marginBottom: 45 + 15, borderRadius: 100,},
                   textInput: styles.textInput,
                   listView: styles.listView,
-                  row: {
-                    width: inputWidth,
-                    backgroundColor: COLORS.background_dark,
-                  },
+                  row: {width: inputWidth, backgroundColor: COLORS.background_dark,},
                   poweredContainer: { backgroundColor: COLORS.background_dark },
                   powered: { color: "white" },
                   description: { color: "white" },
                 }}
               />
 
-              <View
-                style={[
-                  styles.dateContainer,
-                  { marginBottom: Platform.OS === "android" ? 40 : 0 },
-                ]}
-              >
-                <TouchableOpacity
-                  onPress={toggleStartDatePicker}
-                  style={[styles.dateInput, { marginRight: 20 }]}
-                >
+              <View style={[ styles.dateContainer, { marginBottom: Platform.OS === "android" ? 40 : 0 },]}>
+                <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, { marginRight: 20 }]}>
                   <Input variant="rounded" size="xl" pointerEvents="none">
                     <InputSlot>
                       <InputIcon as={CalendarDaysIcon} style={styles.icon} />
                     </InputSlot>
-                    <InputField
-                      value={pickedStart ? startDateString : "Departure date"}
-                      editable={false}
-                      style={styles.inputField}
-                    />
+                    <InputField value={pickedStart ? startDateString : "Departure date"} editable={false} style={styles.inputField}/>
                   </Input>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={toggleEndDatePicker}
-                  style={styles.dateInput}
-                >
+                <TouchableOpacity onPress={toggleEndDatePicker} style={styles.dateInput}>
                   <Input variant="rounded" size="xl" pointerEvents="none">
                     <InputSlot>
                       <InputIcon as={CalendarDaysIcon} style={styles.icon} />
                     </InputSlot>
-                    <InputField
-                      value={pickedEnd ? endDateString : "Return date"}
-                      editable={false}
-                      style={styles.inputField}
-                    />
+                    <InputField value={pickedEnd ? endDateString : "Return date"} editable={false} style={styles.inputField}/>
                   </Input>
                 </TouchableOpacity>
               </View>
 
               {showStartPicker && Platform.OS === "android" && (
-                <DateTimePicker
-                  display="calendar"
-                  mode="date"
-                  value={oldStartDate}
-                  onChange={onChangeStart}
-                />
+                <DateTimePicker display="calendar" mode="date" value={oldStartDate} onChange={onChangeStart}/>
               )}
 
               {showEndPicker && Platform.OS === "android" && (
-                <DateTimePicker
-                  display="calendar"
-                  mode="date"
-                  value={oldEndDate}
-                  onChange={onChangeEnd}
-                />
+                <DateTimePicker display="calendar"mode="date" value={oldEndDate} onChange={onChangeEnd}/>
               )}
 
               {Platform.OS === "ios" && (
                 <View>
-                  <DatePickerModal
-                    isOpen={showStartPicker}
-                    onClose={toggleStartDatePicker}
-                    onConfirm={confirmIOSStartDate}
-                    onCancel={toggleStartDatePicker}
-                    selectedDate={oldStartDate}
-                    onDateChange={onChangeStart}
+                  <DatePickerModal isOpen={showStartPicker} onClose={toggleStartDatePicker} onConfirm={confirmIOSStartDate} onCancel={toggleStartDatePicker} selectedDate={oldStartDate} onDateChange={onChangeStart}
                   />
-                  <DatePickerModal
-                    isOpen={showEndPicker}
-                    onClose={toggleEndDatePicker}
-                    onConfirm={confirmIOSEndDate}
-                    onCancel={toggleEndDatePicker}
-                    selectedDate={oldEndDate}
-                    onDateChange={onChangeEnd}
-                  />
+                  <DatePickerModal isOpen={showEndPicker} onClose={toggleEndDatePicker} onConfirm={confirmIOSEndDate} onCancel={toggleEndDatePicker} selectedDate={oldEndDate} onDateChange={onChangeEnd}/>
                 </View>
               )}
               {error && (
@@ -650,42 +573,21 @@ const UpdateStep = (isOpen, onClose) => {
             </FormControl>
           </View>
         </SafeAreaView>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.flexOne}
-        >
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.flexOne}>
           <ScrollView contentContainerStyle={styles.scrollViewContent}>
             {components.map((component) => {
               return (
                 <View key={component.id} style={styles.componentContainer}>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => removeComponent(component.id)}
-                  >
+                  <TouchableOpacity style={styles.deleteButton} onPress={() => removeComponent(component.id)}>
                     <Icon as={CloseCircleIcon} size="xl" />
                   </TouchableOpacity>
                   {component.type === "image" ? (
-                    <TouchableOpacity
-                      onPress={() => handleImageClick(component.id)}
-                    >
-                      <Image
-                        source={{ uri: component.uri }}
-                        style={styles.image}
-                      />
+                    <TouchableOpacity onPress={() => handleImageClick(component.id)}>
+                      <Image source={{ uri: component.uri }} style={styles.image}/>
                     </TouchableOpacity>
                   ) : component.type === "comment" ? (
-                    <Textarea
-                      variant="rounded"
-                      size="lg"
-                      style={styles.inputField}
-                    >
-                      <TextareaInput
-                        placeholder={`Comments`}
-                        onChangeText={(text) =>
-                          handleCommentChange(text, component.id)
-                        }
-                        value={component.value}
-                      />
+                    <Textarea variant="rounded" size="lg" style={styles.inputField}>
+                      <TextareaInput placeholder={`Comments`} onChangeText={(text) => handleCommentChange(text, component.id)} value={component.value}/>
                     </Textarea>
                   ) : null}
                 </View>
@@ -693,23 +595,11 @@ const UpdateStep = (isOpen, onClose) => {
             })}
 
             <View style={styles.buttonContainer}>
-              <Button
-                size="lg"
-                variant="outline"
-                action="primary"
-                style={styles.buttonStyle}
-                onPress={pickImage}
-              >
+              <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
                 <ButtonText>Add Image</ButtonText>
               </Button>
 
-              <Button
-                size="lg"
-                variant="outline"
-                action="primary"
-                style={styles.buttonStyle}
-                onPress={addComponent}
-              >
+              <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
                 <ButtonText>Add Comments</ButtonText>
               </Button>
             </View>
@@ -814,5 +704,4 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 });
-
 export default UpdateStep;
