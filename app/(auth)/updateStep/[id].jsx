@@ -152,6 +152,31 @@ const UpdateStep = (isOpen, onClose) => {
       }
     };
 
+    // get trip data
+    const getCurrentTripDate = async () => {
+
+        try {
+            const docRef = doc(db, "trips", tripId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                setStartDateString(data.startDate.toDate().toLocaleDateString());
+                setEndDateString(data.endDate.toDate().toLocaleDateString());
+                setOldEndDate(data.endDate.toDate());
+                setOldStartDate(data.startDate.toDate());
+                setStartDate(data.startDate.toDate());
+                setEndDate(data.endDate.toDate());
+                setPickedEnd(true);
+                setPickedStart(true);
+            } else {
+                console.error("No such document!");
+            }
+        } catch (error) {
+        }
+    }
+
+    getCurrentTripDate();
+
     if (isOpen) {
       setTitle("");
       setComment("");
