@@ -610,7 +610,7 @@ const UpdateStep = (isOpen, onClose) => {
                 ) : item.type === "comment" ? (
                   <ScaleDecorator>
                   <View style={[styles.inputField, {alignItems: 'center', justifyContent: 'center'}]} onLongPress={drag}>
-                  <Textarea variant="rounded" size="lg">
+                  <Textarea variant="rounded" size="lg" style={{backgroundColor: COLORS.background_dark}}>
                     <TextareaInput placeholder={`Comments`} onChangeText={(text) => handleCommentChange(text, item.id)} value={item.value} />
                   </Textarea>
                   <TouchableOpacity onLongPress={drag}>
