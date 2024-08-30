@@ -19,8 +19,8 @@ export default function DetailsScreen() {
   const [openShare, setOpenShare] = useState(false);
   const router = useRouter();
   const [title, setTitle] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [comment, setComment] = useState('');
   const [image, setImage] = useState('');
   const [steps, setSteps] = useState([]);
@@ -47,14 +47,10 @@ export default function DetailsScreen() {
         if (docSnap.exists()) {
           const tripData = docSnap.data();
           setTitle(tripData.title);
-          setStartDate(tripData.startDate.toDate().toLocaleDateString());
-          setEndDate(tripData.endDate.toDate().toLocaleDateString());
+          setStartDate(tripData.startDate.toDate());
+          setEndDate(tripData.endDate.toDate());
           setComment(tripData.comment);
           setImage(tripData.image);
-          const [startDay, startMonth, startYear] = tripData.startDate.toDate().toLocaleDateString().split('.').map(Number);
-          const [endDay, endMonth, endYear] = tripData.endDate.toDate().toLocaleDateString().split('.').map(Number);
-          setCurrentStartDate(new Date(startYear, startMonth - 1, startDay));
-          setCurrentEndDate(new Date(endYear, endMonth - 1, endDay));
 
           const userId = auth.currentUser.uid;
           if (userId === tripData.uid) {
@@ -83,7 +79,8 @@ export default function DetailsScreen() {
         const stepsRef = collection(db, 'trips', id, 'steps');
 
         stepsUnsubscribeRef.current = onSnapshot(stepsRef, (stepsSnapshot) => {
-          const fetchedSteps = stepsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })).sort((a, b) => a.startDate.seconds - b.startDate.seconds);
+          const fetchedSteps = stepsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => a.startDate.seconds - b.startDate.seconds);
           setSteps(fetchedSteps);
           setLoading(false);
         });
@@ -139,8 +136,8 @@ export default function DetailsScreen() {
         if (images.length > 0) {
           await Promise.all(images.map(async (imageUrl) => {
             const imageRef = ref(storage, imageUrl);
-              await deleteObject(imageRef);
-            }));
+            await deleteObject(imageRef);
+          }));
         }
       });
 
@@ -183,7 +180,7 @@ export default function DetailsScreen() {
     try {
       setIsLoadingStep(true);
       const stepId = Math.random().toString(36).substr(2, 6);
-      router.push({pathname: `/(auth)/updateStep/${id}-${stepId}-new`});
+      router.push({ pathname: `/(auth)/updateStep/${id}-${stepId}-new` });
     } catch (error) {
       console.error(error);
     }
@@ -252,9 +249,9 @@ export default function DetailsScreen() {
 
             <View style={styles.imageDateContainer}>
               <MaterialCommunityIcons style={[{ transform: [{ rotate: '20deg' }] }, styles.imageDates]} name="airplane" size={20} color="white" />
-              <Text style={styles.imageDates}> {startDate}</Text>
+              <Text style={styles.imageDates}> {startDate ? startDate.toLocaleDateString() : 'N/A'}</Text>
               <MaterialCommunityIcons style={[{ transform: [{ rotate: '70deg' }], marginLeft: 25 }, styles.imageDates]} name="airplane" size={20} color="white" />
-              <Text style={styles.imageDates}> {endDate}</Text>
+              <Text style={styles.imageDates}> {endDate ? endDate.toLocaleDateString() : 'N/A'}</Text>
             </View>
           </SafeAreaView>
         </ImageBackground>
@@ -284,7 +281,16 @@ export default function DetailsScreen() {
             </ScrollView>
           </ImageBackground>
         </View>
-        <TripModal isOpen={tripModal} onClose={() => setTripModal(false)} currentTripId={id} currentTitle={title} currentComment={comment} currentStartDate={startDate} currentEndDate={endDate} currentImage={image} />
+        <TripModal
+          isOpen={tripModal}
+          onClose={() => setTripModal(false)}
+          currentTripId={id}
+          currentTitle={title}
+          currentComment={comment}
+          currentStartDate={startDate}
+          currentEndDate={endDate}
+          currentImage={image}
+        />
       </View>
     </MenuProvider>
   );

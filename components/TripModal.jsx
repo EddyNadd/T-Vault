@@ -42,12 +42,12 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
             setTitle(currentTitle || '');
             setComment(currentComment || '');
             setImage(currentImage || null);
-            setStartDate(currentStartDate || new Date());
-            setEndDate(currentEndDate || new Date());
-            setStartDateString(currentStartDate ? currentStartDate : 'Departure date');
-            setEndDateString(currentEndDate ? currentEndDate : 'Return date');
-            setOldStartDate(currentStartDate || new Date());
-            setOldEndDate(currentEndDate || new Date());
+            setStartDate(currentStartDate instanceof Date ? currentStartDate : new Date());
+            setEndDate(currentEndDate instanceof Date ? currentEndDate : new Date());
+            setStartDateString(currentStartDate ? currentStartDate.toLocaleDateString() : 'Departure date');
+            setEndDateString(currentEndDate ? currentEndDate.toLocaleDateString() : 'Return date');
+            setOldStartDate(currentStartDate instanceof Date ? currentStartDate : new Date());
+            setOldEndDate(currentEndDate instanceof Date ? currentEndDate : new Date());
             setPickedStart(!!currentStartDate);
             setPickedEnd(!!currentEndDate);
             setLoading(false);

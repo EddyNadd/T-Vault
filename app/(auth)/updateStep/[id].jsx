@@ -410,7 +410,7 @@ const UpdateStep = (isOpen, onClose) => {
     return (
         <View style={styles.container}>
             <View style={styles.safeAreaView}>
-                <SafeAreaView style={[{ marginBottom: -20, zIndex: 2 }, AndroidSafeArea.AndroidSafeArea]}>
+                <SafeAreaView style={[{ paddingBottom: -20, zIndex: 2 }, AndroidSafeArea.AndroidSafeArea]}>
                     <View style={styles.header}>
                         <View style={styles.buttons}>
                             <TouchableOpacity onPress={() => router.back()}>
