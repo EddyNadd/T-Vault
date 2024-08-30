@@ -26,7 +26,6 @@ const Account = () => {
   const [isPasswordButtonEnabled, setIsPasswordButtonEnabled] = useState(false);
 
   const { unsubscribeAllListeners } = useFirestoreListeners();
-  const scrollViewRef = useRef(null);
 
   useEffect(() => {
     setUsername(auth.currentUser.displayName);
@@ -150,13 +149,7 @@ const Account = () => {
       />
       <KeyboardAvoidingView behavior='padding'>
       <ScrollView 
-          ref={scrollViewRef} // Reference to ScrollView
-          contentContainerStyle={styles.scrollViewContent}
-          onScroll={() => {
-            if (scrollViewRef.current) {
-              scrollViewRef.current.scrollTo({ x: 0, y: 150, animated: false });
-            }
-          }}>
+          contentContainerStyle={styles.scrollViewContent}>
           <View style={styles.info}>
             <View style={styles.input}>
               <Input variant='rounded'>
