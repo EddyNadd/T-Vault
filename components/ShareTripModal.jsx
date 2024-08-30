@@ -268,7 +268,7 @@ export default function ShareTripModal({
                             <Radio size="lg" value={true}>
                                 <RadioIndicator style={values === true ? styles.checked : styles.unchecked}>
                                 </RadioIndicator>
-                                <RadioLabel>Write</RadioLabel>
+                                <RadioLabel>Edit</RadioLabel>
                             </Radio>
                         </RadioGroup>
                     </View>
@@ -292,7 +292,7 @@ export default function ShareTripModal({
                                 </Radio>
                                 <Radio size="lg" value={true}>
                                     <RadioIndicator style={user.permission === true ? styles.checked : styles.unchecked} />
-                                    <RadioLabel>Write</RadioLabel>
+                                    <RadioLabel>Edit</RadioLabel>
                                 </Radio>
                             </RadioGroup>
                             <Button onPress={() => handleRemoveUser(user.uid, user.id)} size="sm" variant="outline" style={{ marginLeft: 20 }}>
