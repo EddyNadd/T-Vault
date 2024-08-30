@@ -7,7 +7,7 @@ import { RadioGroup, Radio, RadioIndicator, RadioLabel } from '@/components/ui/r
 import { Switch } from '@/components/ui/switch';
 import { CodeField, useClearByFocusCell, Cursor } from 'react-native-confirmation-code-field';
 import { getDoc, doc, setDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
-import { db } from '@/firebase';
+import { auth, db } from '@/firebase';
 import COLORS from '@/styles/COLORS';
 import * as Clipboard from 'expo-clipboard';
 import { useFirestoreListeners } from '@/components/FirestoreListenerContext';
@@ -146,6 +146,16 @@ export default function ShareTripModal({
     const handleAddUser = async () => {
         try {
             if (username === "") return;
+            if (users.find(user => user.username === username)) {
+                setError(true);
+                setErrorText("User already added");
+                return;
+            }
+            if (username === auth.currentUser.displayName) {
+                setError(true);
+                setErrorText("You can't add yourself");
+                return;
+            }
             const userDoc = await getDoc(doc(db, "Users", username));
             if (!userDoc.exists()) {
                 setError(true);

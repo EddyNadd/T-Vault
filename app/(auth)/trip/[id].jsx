@@ -59,6 +59,10 @@ export default function DetailsScreen() {
             setCanDelete(true);
           } else if (tripData.canWrite.includes(userId)) {
             setCanEdit(true);
+          } else {
+            setCanEdit(false);
+            setCanShare(false);
+            setCanDelete(false);
           }
 
           fetchTripSteps();
