@@ -743,7 +743,7 @@ const styles = StyleSheet.create({
   listView: {
     position: "absolute",
     top: 40,
-    backgroundColor: "white",
+    backgroundColor: COLORS.background_dark,
     zIndex: 3,
   },
   header: {
