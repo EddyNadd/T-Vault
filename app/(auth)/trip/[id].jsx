@@ -195,7 +195,6 @@ export default function DetailsScreen() {
 
   return (
     <MenuProvider skipInstanceCheck>
-      <View style={styles.container}>
         <ImageBackground source={{ uri: image }} style={styles.imageBackground}>
           <View style={styles.imageOverlay} />
           <SafeAreaView style={[styles.overlay, AndroidSafeArea.AndroidSafeArea]}>
@@ -284,7 +283,6 @@ export default function DetailsScreen() {
               }
             </ScrollView>
           </ImageBackground>
-        </View>
         <TripModal
           isOpen={tripModal}
           onClose={() => setTripModal(false)}
@@ -301,9 +299,6 @@ export default function DetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   imageBackground: {
     width: '100%',
     height: Dimensions.get('window').height / 3,
