@@ -341,7 +341,7 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                             </View>
                             {showStartPicker && Platform.OS === 'android' && (
                                 <DateTimePicker
-                                    display='spinner'
+                                    display='calendar'
                                     mode='date'
                                     value={oldStartDate}
                                     onChange={onChangeStart}
@@ -349,7 +349,7 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                             )}
                             {showEndPicker && Platform.OS == 'android' && (
                                 <DateTimePicker
-                                    display='spinner'
+                                    display='calendar'
                                     mode='date'
                                     value={oldEndDate}
                                     onChange={onChangeEnd}
