@@ -174,7 +174,7 @@ const MapScreen = () => {
           {markers}
           <Polyline
             coordinates={polylineCoords}
-            strokeColor={COLORS.blue_dark}
+            strokeColor={COLORS.blue}
             strokeWidth={3}
             onPress={() => handleLinePress(tripId)}
             tappable={true}
