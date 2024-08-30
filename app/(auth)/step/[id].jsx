@@ -39,7 +39,7 @@ export default function DetailsScreen() {
 
     const getTripData = useCallback(() => {
 
-        const stepDocRef = doc(db, "trips", tripId, "steps", stepId);
+        const stepDocRef = doc(db, "Trips", tripId, "Steps", stepId);
         unsubscribeRef.current = onSnapshot(stepDocRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
@@ -66,14 +66,14 @@ export default function DetailsScreen() {
                     }
                 }));
             } else {
-                console.error("No such document!");
+                console.log("No such document!");
             }
         }, (error) => {
             console.error("Error getting document:", error);
             setError("Failed to load data.");
         });
 
-        const tripDocRef = doc(db, "trips", tripId);
+        const tripDocRef = doc(db, "Trips", tripId);
         permissionsUnsubscribeRef.current = onSnapshot(tripDocRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
@@ -113,7 +113,7 @@ export default function DetailsScreen() {
 
     const deleteStep = async () => {
         try {
-            const stepRef = doc(db, 'trips', tripId, 'steps', stepId);
+            const stepRef = doc(db, 'Trips', tripId, 'Steps', stepId);
             const stepSnap = await getDoc(stepRef);
 
             if (!stepSnap.exists()) {

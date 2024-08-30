@@ -63,7 +63,7 @@ export default function ShareTripModal({
             setError(false);
             setErrorText("");
         } else {
-            const tripRef = doc(db, "trips", tripCode.toLowerCase());
+            const tripRef = doc(db, "Trips", tripCode.toLowerCase());
 
             unsubscribe = onSnapshot(tripRef, async (snapshot) => {
                 if (snapshot.exists()) {
@@ -136,7 +136,7 @@ export default function ShareTripModal({
 
     const handleShareToggle = () => {
         setShared(!shared);
-        const tripRef = doc(db, "trips", tripCode.toLowerCase());
+        const tripRef = doc(db, "Trips", tripCode.toLowerCase());
         setDoc(tripRef, {
             shared: !shared,
             canRead: [],
@@ -165,7 +165,7 @@ export default function ShareTripModal({
             const uid = userDoc.data().uid;
             const id = Math.random().toString(36);
             const user = { id, username, permission: values, uid, pending: true };
-            const tripRef = doc(db, "trips", tripCode.toLowerCase());
+            const tripRef = doc(db, "Trips", tripCode.toLowerCase());
             if (values === true) {
                 setDoc(tripRef, {
                     invitWrite: arrayUnion(uid)
@@ -186,7 +186,7 @@ export default function ShareTripModal({
     const handleRemoveUser = async (uid, id) => {
         try {
             const user = users.find(user => user.id === id);
-            const tripRef = doc(db, "trips", tripCode.toLowerCase());
+            const tripRef = doc(db, "Trips", tripCode.toLowerCase());
 
             if (user.permission === true && user.pending === false) {
                 await setDoc(tripRef, {
@@ -213,22 +213,22 @@ export default function ShareTripModal({
     const handlePermissionChange = async (id, permission) => {
         const user = users.find(user => user.id === id);
         if (permission === true && user.pending === false) {
-            await setDoc(doc(db, "trips", tripCode.toLowerCase()), {
+            await setDoc(doc(db, "Trips", tripCode.toLowerCase()), {
                 canRead: arrayRemove(user.uid),
                 canWrite: arrayUnion(user.uid)
             }, { merge: true });
         } else if (permission === false && user.pending === false) {
-            await setDoc(doc(db, "trips", tripCode.toLowerCase()), {
+            await setDoc(doc(db, "Trips", tripCode.toLowerCase()), {
                 canWrite: arrayRemove(user.uid),
                 canRead: arrayUnion(user.uid)
             }, { merge: true });
         } else if (permission === true && user.pending === true) {
-            await setDoc(doc(db, "trips", tripCode.toLowerCase()), {
+            await setDoc(doc(db, "Trips", tripCode.toLowerCase()), {
                 invitRead: arrayRemove(user.uid),
                 invitWrite: arrayUnion(user.uid)
             }, { merge: true });
         } else if (permission === false && user.pending === true) {
-            await setDoc(doc(db, "trips", tripCode.toLowerCase()), {
+            await setDoc(doc(db, "Trips", tripCode.toLowerCase()), {
                 invitWrite: arrayRemove(user.uid),
                 invitRead: arrayUnion(user.uid)
             }, { merge: true });

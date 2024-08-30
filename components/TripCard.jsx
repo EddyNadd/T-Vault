@@ -19,7 +19,7 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
 
     const handleTickPress = async (tripCode) => {
         try {
-            const tripRef = doc(db, "trips", tripCode);
+            const tripRef = doc(db, "Trips", tripCode);
             if (editableTrip) {
                 await updateDoc(tripRef, {
                     canWrite: arrayUnion(auth.currentUser.uid),
@@ -38,7 +38,7 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
 
     const handleCrossPress = async (tripCode) => {
         try {
-            const tripRef = doc(db, "trips", tripCode);
+            const tripRef = doc(db, "Trips", tripCode);
             if (editableTrip) {
                 await updateDoc(tripRef, {
                     invitWrite: arrayRemove(auth.currentUser.uid)

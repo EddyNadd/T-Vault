@@ -24,12 +24,12 @@ const discover = () => {
 
   useEffect(() => {
     const sharedQuery = query(
-      collection(db, "trips"),
+      collection(db, "Trips"),
       where('canRead', 'array-contains', auth.currentUser.uid)
     );
 
     const invitQuery = query(
-      collection(db, "trips"),
+      collection(db, "Trips"),
       where('invitRead', 'array-contains', auth.currentUser.uid)
     );
 

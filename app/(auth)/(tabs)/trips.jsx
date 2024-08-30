@@ -33,17 +33,17 @@ const Trips = () => {
 
   useEffect(() => {
     const ownerQuery = query(
-      collection(db, "trips"),
+      collection(db, "Trips"),
       where('uid', '==', auth.currentUser.uid)
     );
 
     const sharedQuery = query(
-      collection(db, "trips"),
+      collection(db, "Trips"),
       where('canWrite', 'array-contains', auth.currentUser.uid)
     );
 
     const invitQuery = query(
-      collection(db, "trips"),
+      collection(db, "Trips"),
       where('invitWrite', 'array-contains', auth.currentUser.uid)
     );
 

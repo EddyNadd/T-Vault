@@ -25,7 +25,7 @@ const MapScreen = () => {
     const userId = auth.currentUser.uid;
 
     const myTripsQuery = query(
-      collection(db, "trips"),
+      collection(db, "Trips"),
       or(
         where('uid', '==', userId),
         where('canWrite', 'array-contains', userId)
@@ -33,7 +33,7 @@ const MapScreen = () => {
     );
 
     const discoverQuery = query(
-      collection(db, "trips"),
+      collection(db, "Trips"),
       where('canRead', 'array-contains', userId)
     );
 
@@ -92,7 +92,7 @@ const MapScreen = () => {
   const attachStepListener = (tripId) => {
     if (stepListeners.current.has(tripId)) return;
 
-    const stepsQuery = collection(db, `trips/${tripId}/steps`);
+    const stepsQuery = collection(db, `Trips/${tripId}/Steps`);
     const unsubscribe = onSnapshot(stepsQuery, () => {
       fetchTripsToShow();
     });
@@ -113,7 +113,7 @@ const MapScreen = () => {
 
     if (myTripsSelected) {
       for (const [tripId, trip] of myTripsMap.current) {
-        const stepsSnapshot = await getDocs(collection(db, `trips/${tripId}/steps`));
+        const stepsSnapshot = await getDocs(collection(db, `Trips/${tripId}/Steps`));
         const steps = stepsSnapshot.docs.map(stepDoc => stepDoc.data());
         steps.forEach((step, index) => {
           step.id = stepsSnapshot.docs[index].id;
@@ -124,7 +124,7 @@ const MapScreen = () => {
 
     if (discoverSelected) {
       for (const [tripId, trip] of discoverMap.current) {
-        const stepsSnapshot = await getDocs(collection(db, `trips/${tripId}/steps`));
+        const stepsSnapshot = await getDocs(collection(db, `Trips/${tripId}/Steps`));
         const steps = stepsSnapshot.docs.map(stepDoc => stepDoc.data());
         steps.forEach((step, index) => {
           step.id = stepsSnapshot.docs[index].id;

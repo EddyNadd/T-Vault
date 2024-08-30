@@ -12,7 +12,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import COLORS from "@/styles/COLORS";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { GOOGLE_MAPS_API_KEY } from "../../../map.js";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "../../../firebase.jsx";
 import { doc, getDoc, setDoc, GeoPoint } from "firebase/firestore";
 import { Feather, Entypo } from "@expo/vector-icons";
@@ -61,7 +61,7 @@ const UpdateStep = (isOpen, onClose) => {
   useEffect(() => {
     const getTripData = async () => {
       try {
-        const docRef = doc(db, "trips", tripId, "steps", stepId);
+        const docRef = doc(db, "Trips", tripId, "Steps", stepId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -139,7 +139,7 @@ const UpdateStep = (isOpen, onClose) => {
     const getCurrentTripDate = async () => {
 
       try {
-        const docRef = doc(db, "trips", tripId);
+        const docRef = doc(db, "Trips", tripId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -152,7 +152,7 @@ const UpdateStep = (isOpen, onClose) => {
           setPickedEnd(true);
           setPickedStart(true);
         } else {
-          console.error("No such document!");
+          console.log("No such document!");
         }
       } catch (error) {
       }
@@ -411,6 +411,26 @@ const UpdateStep = (isOpen, onClose) => {
           .filter((component) => component.type === "comment")
           .map((component) => component.value || ""); // Default to empty string if comment is undefined
 
+        // getting all current images of the step
+        const docRef = doc(db, "Trips", tripId, "Steps", stepId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const currentImages = data.images;
+
+          //  Delete all images in currentImages
+          await Promise.all(
+            currentImages.map(async (url) => {
+              try {
+                const imageRef = ref(storage, url);
+                await deleteObject(imageRef);
+              } catch (error) {
+                console.error("Error while deleting image: ", error);
+              }
+            })
+          );
+        }
+
         // Upload images and get URLs
         const imageUrls = await Promise.all(
           images.map((uri) => uploadImageToStorage(uri))
@@ -428,7 +448,7 @@ const UpdateStep = (isOpen, onClose) => {
           tabOrder: tabOrder || [],
         };
 
-        await setDoc(doc(db, "trips", tripId, "steps", stepId), newStep);
+        await setDoc(doc(db, "Trips", tripId, "Steps", stepId), newStep);
 
         // Clear the form and navigate back
         setTitle("");
@@ -595,42 +615,42 @@ const UpdateStep = (isOpen, onClose) => {
               </FormControl>
             </View>
           </SafeAreaView>
-          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={[styles.flexOne, {marginHorizontal: -20}]}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={[styles.flexOne, { marginHorizontal: -20 }]}>
             <DraggableFlatList style={styles.scrollViewContent} data={components} keyExtractor={item => item.id} onDragEnd={handleDragEnd} onRef={function (ref) { listRef = ref }} ref={listRef} renderItem={({ item, drag, isActive }) => (
-              <View key={item.id} style={[styles.componentContainer, {marginHorizontal: 10}]}>
+              <View key={item.id} style={[styles.componentContainer, { marginHorizontal: 10 }]}>
                 <TouchableOpacity style={styles.deleteButton} onPress={() => removeComponent(item.id)}>
                   <Icon as={CloseCircleIcon} size="xl" />
                 </TouchableOpacity>
                 {item.type === "image" ? (
                   <ScaleDecorator>
-                  <TouchableOpacity onPress={() => handleImageClick(item.id)} onLongPress={drag}>
-                    <Image source={{ uri: item.uri }} style={styles.image} />
-                  </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleImageClick(item.id)} onLongPress={drag}>
+                      <Image source={{ uri: item.uri }} style={styles.image} />
+                    </TouchableOpacity>
                   </ScaleDecorator>
                 ) : item.type === "comment" ? (
                   <ScaleDecorator>
-                  <View style={[styles.inputField, {alignItems: 'center', justifyContent: 'center'}]} onLongPress={drag}>
-                  <Textarea variant="rounded" size="lg" style={{backgroundColor: COLORS.background_dark}}>
-                    <TextareaInput placeholder={`Comments`} onChangeText={(text) => handleCommentChange(text, item.id)} value={item.value} />
-                  </Textarea>
-                  <TouchableOpacity onLongPress={drag}>
-                    <Entypo name="dots-three-horizontal" size={24} color="white" />
-                  </TouchableOpacity>
-                  </View>
+                    <View style={[styles.inputField, { alignItems: 'center', justifyContent: 'center' }]} onLongPress={drag}>
+                      <Textarea variant="rounded" size="lg" style={{ backgroundColor: COLORS.background_dark }}>
+                        <TextareaInput placeholder={`Comments`} onChangeText={(text) => handleCommentChange(text, item.id)} value={item.value} />
+                      </Textarea>
+                      <TouchableOpacity onLongPress={drag}>
+                        <Entypo name="dots-three-horizontal" size={24} color="white" />
+                      </TouchableOpacity>
+                    </View>
                   </ScaleDecorator>
                 ) : null}
               </View>
             )} />
           </KeyboardAvoidingView>
-          <View style={[styles.buttonContainer, {marginBottom: 20, marginTop: 10}]}>
-              <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={()=>selectImage()}>
-                <ButtonText>Add Image</ButtonText>
-              </Button>
+          <View style={[styles.buttonContainer, { marginBottom: 20, marginTop: 10 }]}>
+            <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={() => selectImage()}>
+              <ButtonText>Add Image</ButtonText>
+            </Button>
 
-              <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
-                <ButtonText>Add Comments</ButtonText>
-              </Button>
-            </View>
+            <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={addComponent}>
+              <ButtonText>Add Comments</ButtonText>
+            </Button>
+          </View>
         </View>
       </View>
     </GestureHandlerRootView>

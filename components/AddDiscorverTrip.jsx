@@ -27,7 +27,7 @@ export default function AddDiscoverTrip({ isOpen, onClose }) {
     const addDiscoverTrip = async () => {
         setLoading(true);
         try {
-            const tripRef = doc(db, "trips", value.toLowerCase());
+            const tripRef = doc(db, "Trips", value.toLowerCase());
             const isShared = await getDoc(tripRef).then(async (doc) => {
                 if (doc.data().shared) {
                     await updateDoc(tripRef, {

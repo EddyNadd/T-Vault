@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, TouchableWithoutFeedback, Keyboard, Platform, ActivityIndicator, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
-import { arrayUnion, doc, setDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { arrayUnion, doc, setDoc, getDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, auth, storage } from "../firebase.jsx";
 import { Actionsheet, ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicator, ActionsheetDragIndicatorWrapper } from '@/components/ui/actionsheet';
 import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
@@ -257,9 +257,15 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                         invitWrite: arrayUnion(),
                         invitRead: arrayUnion(),
                     };
-                    await setDoc(doc(db, "trips", currentTripId ? currentTripId : id), tripWithAllFields);
+                    await setDoc(doc(db, "Trips", currentTripId ? currentTripId : id), tripWithAllFields);
                 } else {
-                    await setDoc(doc(db, "trips", currentTripId ? currentTripId : id), newTrip, { merge: true });
+                    // get current image and delete it
+                    const currentTripRef = doc(db, "Trips", currentTripId ? currentTripId : id);
+                    const currentTrip = await getDoc(currentTripRef);
+                    const currentTripData = currentTrip.data();
+                    const currentImageRef = ref(storage, currentTripData.image);
+                    await deleteObject(currentImageRef);
+                    await setDoc(doc(db, "Trips", currentTripId ? currentTripId : id), newTrip, { merge: true });
                 }
 
                 setTitle('');

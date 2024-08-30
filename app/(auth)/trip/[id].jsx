@@ -41,7 +41,7 @@ export default function DetailsScreen() {
   useEffect(() => {
     const fetchTripDetails = async () => {
       if (isLoadingStep) return;
-      const docRef = doc(db, 'trips', id);
+      const docRef = doc(db, 'Trips', id);
 
       unsubscribeRef.current = onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -80,7 +80,7 @@ export default function DetailsScreen() {
     const fetchTripSteps = async () => {
       if (isLoadingStep) return;
       try {
-        const stepsRef = collection(db, 'trips', id, 'steps');
+        const stepsRef = collection(db, 'Trips', id, 'Steps');
 
         stepsUnsubscribeRef.current = onSnapshot(stepsRef, (stepsSnapshot) => {
           const fetchedSteps = stepsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
@@ -110,7 +110,7 @@ export default function DetailsScreen() {
 
   const quitTrip = async () => {
     try {
-      const tripRef = doc(db, 'trips', id);
+      const tripRef = doc(db, 'Trips', id);
 
       if (canEdit) {
         await updateDoc(tripRef, {
@@ -130,7 +130,7 @@ export default function DetailsScreen() {
 
   const deleteTrip = async () => {
     try {
-      const allStepsRef = collection(db, 'trips', id, 'steps');
+      const allStepsRef = collection(db, 'Trips', id, 'Steps');
       const allStepsSnap = await getDocs(allStepsRef);
       const image = [];
 
@@ -151,7 +151,7 @@ export default function DetailsScreen() {
       });
 
 
-      const tripRef = doc(db, 'trips', id);
+      const tripRef = doc(db, 'Trips', id);
 
       const tripSnap = await getDoc(tripRef);
       if (!tripSnap.exists()) {
