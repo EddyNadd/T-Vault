@@ -5,7 +5,7 @@ import { doc, getDocs, setDoc, collection, query, where, documentId } from "fire
 import { useState, useRef } from "react";
 import { router } from "expo-router";
 import { Input, InputField } from '@/components/ui/input';
-import { FormControl, FormControlLabel, FormControlLabelText, FormControlError, FormControlErrorText, FormControlHelper } from '@/components/ui/form-control';
+import { FormControl, FormControlError, FormControlErrorText } from '@/components/ui/form-control';
 import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
 import colors from "@/styles/COLORS.jsx";
 import AndroidSafeArea from '../styles/AndroidSafeArea';
@@ -128,7 +128,7 @@ export default function Signup() {
                         <View style={styles.textField} behavior="padding">
                             <Animated.View style={[styles.textField, { marginBottom: inputMargin }]}>
                                 <Input variant="rounded" size="xl">
-                                    <InputField textContentType="oneTimeCode" type="email" placeholder="Username" onChangeText={setUsername} value={username} autoCapitalize="none" autoCorrect={false} spellCheck="fasle" onFocus={handleFocus} onBlur={handleBlur} />
+                                    <InputField textContentType="oneTimeCode" type="text" placeholder="Username" onChangeText={setUsername} value={username} autoCapitalize="none" autoCorrect={false} spellCheck="fasle" onFocus={handleFocus} onBlur={handleBlur} />
                                 </Input>
                             </Animated.View>
                             <Animated.View style={[styles.textField, { marginBottom: inputMargin }]}>

@@ -6,7 +6,7 @@ const Header = ({ logoSource, title, ButtonComponent }) => {
   return (
     <View style={styles.headerContainer}>
       <View style={styles.sideContainer}>
-        <Image source={logoSource} style={styles.logo} />
+        <Image source={logoSource} style={styles.logo} testID="header-logo"/>
       </View>
       <View style={styles.titleContainer}>
         <Text style={styles.title}>{title}</Text>
