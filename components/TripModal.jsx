@@ -239,21 +239,28 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
             try {
                 setLoading(true);
                 const imageUrl = await uploadImageToStorage(image);
+                const id = Math.random().toString(36).substr(2, 6);
                 const newTrip = {
                     image: imageUrl || '',
                     startDate: startDate,
                     endDate: endDate,
                     title: title,
                     comment: comment,
-                    uid: auth.currentUser.uid,
-                    canRead: arrayUnion(),
-                    canWrite: arrayUnion(),
-                    invitWrite: arrayUnion(),
-                    invitRead: arrayUnion(),
                     shared: false
                 };
-                const id = Math.random().toString(36).substr(2, 6);
-                await setDoc(doc(db, "trips", currentTripId ? currentTripId : id), newTrip);
+                if (!currentTitle) {
+                    const tripWithAllFields = {
+                        ...newTrip,
+                        uid: auth.currentUser.uid,
+                        canRead: arrayUnion(),
+                        canWrite: arrayUnion(),
+                        invitWrite: arrayUnion(),
+                        invitRead: arrayUnion(),
+                    };
+                    await setDoc(doc(db, "trips", currentTripId ? currentTripId : id), tripWithAllFields);
+                } else {
+                    await setDoc(doc(db, "trips", currentTripId ? currentTripId : id), newTrip, { merge: true });
+                }
 
                 setTitle('');
                 setComment('');
