@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {View, StyleSheet, TouchableOpacity, ScrollView, Image, Platform, ActivityIndicator, KeyboardAvoidingView, Alert,} from "react-native";
+import { View, StyleSheet, TouchableOpacity, Image, Platform, ActivityIndicator, KeyboardAvoidingView, Alert, } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DatePickerModal from "../../../components/DatePickerModal";
 import * as ImagePicker from "expo-image-picker";
@@ -12,14 +12,16 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import COLORS from "@/styles/COLORS";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { GOOGLE_MAPS_API_KEY } from "../../../map.js";
-import { ref, uploadBytes, getDownloadURL, deleteObject,} from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../../firebase.jsx";
 import { doc, getDoc, setDoc, GeoPoint } from "firebase/firestore";
 import { Feather, Entypo } from "@expo/vector-icons";
 import { Icon } from "@/components/ui/icon";
 import AndroidSafeArea from "../../../styles/AndroidSafeArea";
-import { FormControl, FormControlHelperText, FormControlHelper,} from "@/components/ui/form-control";
+import { FormControl, FormControlHelperText, FormControlHelper, } from "@/components/ui/form-control";
 import * as FileSystem from "expo-file-system";
+import DraggableFlatList, { ScaleDecorator } from "react-native-draggable-flatlist";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const generateUniqueId = () => "_" + Math.random().toString(36).substr(2, 9);
 
@@ -50,6 +52,7 @@ const UpdateStep = (isOpen, onClose) => {
   const [errorText, setErrorText] = useState("");
   const router = useRouter();
   const useRefReact = useRef();
+  let listRef = useRef(null);
 
   useEffect(() => {
     useRefReact.current?.setAddressText(destination);
@@ -135,24 +138,24 @@ const UpdateStep = (isOpen, onClose) => {
     // get trip data
     const getCurrentTripDate = async () => {
 
-        try {
-            const docRef = doc(db, "trips", tripId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                setStartDateString(data.startDate.toDate().toLocaleDateString());
-                setEndDateString(data.endDate.toDate().toLocaleDateString());
-                setOldEndDate(data.endDate.toDate());
-                setOldStartDate(data.startDate.toDate());
-                setStartDate(data.startDate.toDate());
-                setEndDate(data.endDate.toDate());
-                setPickedEnd(true);
-                setPickedStart(true);
-            } else {
-                console.error("No such document!");
-            }
-        } catch (error) {
+      try {
+        const docRef = doc(db, "trips", tripId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setStartDateString(data.startDate.toDate().toLocaleDateString());
+          setEndDateString(data.endDate.toDate().toLocaleDateString());
+          setOldEndDate(data.endDate.toDate());
+          setOldStartDate(data.startDate.toDate());
+          setStartDate(data.startDate.toDate());
+          setEndDate(data.endDate.toDate());
+          setPickedEnd(true);
+          setPickedStart(true);
+        } else {
+          console.error("No such document!");
         }
+      } catch (error) {
+      }
     }
 
     getCurrentTripDate();
@@ -268,6 +271,10 @@ const UpdateStep = (isOpen, onClose) => {
       { type: "comment", id: generateUniqueId(), value: "" },
     ]);
     setTabOrder([...tabOrder, "comment"]);
+
+    setTimeout(() => {
+      listRef.current?.scrollToEnd();
+    }, 100);
   };
 
   const takePhoto = async () => {
@@ -287,6 +294,10 @@ const UpdateStep = (isOpen, onClose) => {
         }));
         setComponents([...components, ...newImages]);
         setTabOrder([...tabOrder, "image"]);
+
+        setTimeout(() => {
+          listRef.current?.scrollToEnd();
+        }, 100);
       }
     } catch (error) {
       console.log(error);
@@ -312,6 +323,10 @@ const UpdateStep = (isOpen, onClose) => {
 
       // Update tabOrder with an 'image' entry for each selected image
       setTabOrder([...tabOrder, ...newImages.map(() => "image")]);
+
+      setTimeout(() => {
+        listRef.current?.scrollToEnd();
+      }, 100);
     }
   };
 
@@ -473,129 +488,142 @@ const UpdateStep = (isOpen, onClose) => {
     }
   };
 
+  const handleDragEnd = ({ data }) => {
+    setComponents(data);
+    setTabOrder(data.map(item => item.type));
+  };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.safeAreaView}>
-        <SafeAreaView
-          style={[
-            { paddingBottom: -20, zIndex: 2 },
-            AndroidSafeArea.AndroidSafeArea,
-          ]}
-        >
-          <View style={styles.header}>
-            <View style={styles.buttons}>
-              <TouchableOpacity onPress={() => router.back()}>
-                <Feather name="arrow-left" size={30} color="white" />
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => updateStep()} disabled={loading}>
-                {loading ? (
-                  <>
-                    <ActivityIndicator size="small" color="white" />
-                  </>
-                ) : (
-                  <Entypo name="save" size={30} color="white" />
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={styles.inputContainer}>
-            <FormControl>
-              <Input size="xl" variant="rounded" style={{ marginBottom: 15 }}>
-                <InputField placeholder="Title" style={styles.inputField} onChangeText={setTitle} value={title} onLayout={handleTitleLayout}/>
-              </Input>
-
-              <GooglePlacesAutocomplete
-                ref={useRefReact}
-                placeholder="Destination"
-                value={destination}
-                minLength={2}
-                fetchDetails={true}
-                onPress={handleDestinationSelect}
-                onFocus={handleDestinationFocus}
-                onBlur={handleDestinationBlur}
-                query={{
-                  key: GOOGLE_MAPS_API_KEY,
-                  language: "en",
-                }}
-                styles={{container: {flex: 1, zIndex: 2, marginBottom: 45 + 15, borderRadius: 100,},
-                  textInput: styles.textInput,
-                  listView: styles.listView,
-                  row: {width: inputWidth, backgroundColor: COLORS.background_dark,},
-                  poweredContainer: { backgroundColor: COLORS.background_dark },
-                  powered: { color: "white" },
-                  description: { color: "white" },
-                }}
-              />
-
-              <View style={[ styles.dateContainer, { marginBottom: Platform.OS === "android" ? 40 : 0 },]}>
-                <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, { marginRight: 20 }]}>
-                  <Input variant="rounded" size="xl" pointerEvents="none">
-                    <InputSlot>
-                      <InputIcon as={CalendarDaysIcon} style={styles.icon} />
-                    </InputSlot>
-                    <InputField value={pickedStart ? startDateString : "Departure date"} editable={false} style={styles.inputField}/>
-                  </Input>
+    <GestureHandlerRootView>
+      <View style={styles.container}>
+        <View style={styles.safeAreaView}>
+          <SafeAreaView
+            style={[
+              { paddingBottom: -20, zIndex: 2 },
+              AndroidSafeArea.AndroidSafeArea,
+            ]}
+          >
+            <View style={styles.header}>
+              <View style={styles.buttons}>
+                <TouchableOpacity onPress={() => router.back()}>
+                  <Feather name="arrow-left" size={30} color="white" />
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={toggleEndDatePicker} style={styles.dateInput}>
-                  <Input variant="rounded" size="xl" pointerEvents="none">
-                    <InputSlot>
-                      <InputIcon as={CalendarDaysIcon} style={styles.icon} />
-                    </InputSlot>
-                    <InputField value={pickedEnd ? endDateString : "Return date"} editable={false} style={styles.inputField}/>
-                  </Input>
+                <TouchableOpacity onPress={() => updateStep()} disabled={loading}>
+                  {loading ? (
+                    <>
+                      <ActivityIndicator size="small" color="white" />
+                    </>
+                  ) : (
+                    <Entypo name="save" size={30} color="white" />
+                  )}
                 </TouchableOpacity>
               </View>
+            </View>
+            <View style={styles.inputContainer}>
+              <FormControl>
+                <Input size="xl" variant="rounded" style={{ marginBottom: 15 }}>
+                  <InputField placeholder="Title" style={styles.inputField} onChangeText={setTitle} value={title} onLayout={handleTitleLayout} />
+                </Input>
 
-              {showStartPicker && Platform.OS === "android" && (
-                <DateTimePicker display="calendar" mode="date" value={oldStartDate} onChange={onChangeStart}/>
-              )}
+                <GooglePlacesAutocomplete
+                  ref={useRefReact}
+                  placeholder="Destination"
+                  value={destination}
+                  minLength={2}
+                  fetchDetails={true}
+                  onPress={handleDestinationSelect}
+                  onFocus={handleDestinationFocus}
+                  onBlur={handleDestinationBlur}
+                  query={{
+                    key: GOOGLE_MAPS_API_KEY,
+                    language: "en",
+                  }}
+                  styles={{
+                    container: { flex: 1, zIndex: 2, marginBottom: 45 + 15, borderRadius: 100, },
+                    textInput: styles.textInput,
+                    listView: styles.listView,
+                    row: { width: inputWidth, backgroundColor: COLORS.background_dark, },
+                    poweredContainer: { backgroundColor: COLORS.background_dark },
+                    powered: { color: "white" },
+                    description: { color: "white" },
+                  }}
+                />
 
-              {showEndPicker && Platform.OS === "android" && (
-                <DateTimePicker display="calendar"mode="date" value={oldEndDate} onChange={onChangeEnd}/>
-              )}
-
-              {Platform.OS === "ios" && (
-                <View>
-                  <DatePickerModal isOpen={showStartPicker} onClose={toggleStartDatePicker} onConfirm={confirmIOSStartDate} onCancel={toggleStartDatePicker} selectedDate={oldStartDate} onDateChange={onChangeStart}
-                  />
-                  <DatePickerModal isOpen={showEndPicker} onClose={toggleEndDatePicker} onConfirm={confirmIOSEndDate} onCancel={toggleEndDatePicker} selectedDate={oldEndDate} onDateChange={onChangeEnd}/>
-                </View>
-              )}
-              {error && (
-                <FormControlHelper>
-                  <FormControlHelperText style={{ color: "#cf8282" }}>
-                    {errorText}
-                  </FormControlHelperText>
-                </FormControlHelper>
-              )}
-            </FormControl>
-          </View>
-        </SafeAreaView>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.flexOne}>
-          <ScrollView contentContainerStyle={styles.scrollViewContent}>
-            {components.map((component) => {
-              return (
-                <View key={component.id} style={styles.componentContainer}>
-                  <TouchableOpacity style={styles.deleteButton} onPress={() => removeComponent(component.id)}>
-                    <Icon as={CloseCircleIcon} size="xl" />
+                <View style={[styles.dateContainer, { marginBottom: Platform.OS === "android" ? 40 : 0 },]}>
+                  <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, { marginRight: 20 }]}>
+                    <Input variant="rounded" size="xl" pointerEvents="none">
+                      <InputSlot>
+                        <InputIcon as={CalendarDaysIcon} style={styles.icon} />
+                      </InputSlot>
+                      <InputField value={pickedStart ? startDateString : "Departure date"} editable={false} style={styles.inputField} />
+                    </Input>
                   </TouchableOpacity>
-                  {component.type === "image" ? (
-                    <TouchableOpacity onPress={() => handleImageClick(component.id)}>
-                      <Image source={{ uri: component.uri }} style={styles.image}/>
-                    </TouchableOpacity>
-                  ) : component.type === "comment" ? (
-                    <Textarea variant="rounded" size="lg" style={styles.inputField}>
-                      <TextareaInput placeholder={`Comments`} onChangeText={(text) => handleCommentChange(text, component.id)} value={component.value}/>
-                    </Textarea>
-                  ) : null}
-                </View>
-              );
-            })}
 
-            <View style={styles.buttonContainer}>
-              <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={pickImage}>
+                  <TouchableOpacity onPress={toggleEndDatePicker} style={styles.dateInput}>
+                    <Input variant="rounded" size="xl" pointerEvents="none">
+                      <InputSlot>
+                        <InputIcon as={CalendarDaysIcon} style={styles.icon} />
+                      </InputSlot>
+                      <InputField value={pickedEnd ? endDateString : "Return date"} editable={false} style={styles.inputField} />
+                    </Input>
+                  </TouchableOpacity>
+                </View>
+
+                {showStartPicker && Platform.OS === "android" && (
+                  <DateTimePicker display="calendar" mode="date" value={oldStartDate} onChange={onChangeStart} />
+                )}
+
+                {showEndPicker && Platform.OS === "android" && (
+                  <DateTimePicker display="calendar" mode="date" value={oldEndDate} onChange={onChangeEnd} />
+                )}
+
+                {Platform.OS === "ios" && (
+                  <View>
+                    <DatePickerModal isOpen={showStartPicker} onClose={toggleStartDatePicker} onConfirm={confirmIOSStartDate} onCancel={toggleStartDatePicker} selectedDate={oldStartDate} onDateChange={onChangeStart}
+                    />
+                    <DatePickerModal isOpen={showEndPicker} onClose={toggleEndDatePicker} onConfirm={confirmIOSEndDate} onCancel={toggleEndDatePicker} selectedDate={oldEndDate} onDateChange={onChangeEnd} />
+                  </View>
+                )}
+                {error && (
+                  <FormControlHelper>
+                    <FormControlHelperText style={{ color: "#cf8282" }}>
+                      {errorText}
+                    </FormControlHelperText>
+                  </FormControlHelper>
+                )}
+              </FormControl>
+            </View>
+          </SafeAreaView>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={[styles.flexOne, {marginHorizontal: -20}]}>
+            <DraggableFlatList style={styles.scrollViewContent} data={components} keyExtractor={item => item.id} onDragEnd={handleDragEnd} onRef={function (ref) { listRef = ref }} ref={listRef} renderItem={({ item, drag, isActive }) => (
+              <View key={item.id} style={[styles.componentContainer, {marginHorizontal: 10}]}>
+                <TouchableOpacity style={styles.deleteButton} onPress={() => removeComponent(item.id)}>
+                  <Icon as={CloseCircleIcon} size="xl" />
+                </TouchableOpacity>
+                {item.type === "image" ? (
+                  <ScaleDecorator>
+                  <TouchableOpacity onPress={() => handleImageClick(item.id)} onLongPress={drag}>
+                    <Image source={{ uri: item.uri }} style={styles.image} />
+                  </TouchableOpacity>
+                  </ScaleDecorator>
+                ) : item.type === "comment" ? (
+                  <ScaleDecorator>
+                  <View style={[styles.inputField, {alignItems: 'center', justifyContent: 'center'}]} onLongPress={drag}>
+                  <Textarea variant="rounded" size="lg">
+                    <TextareaInput placeholder={`Comments`} onChangeText={(text) => handleCommentChange(text, item.id)} value={item.value} />
+                  </Textarea>
+                  <TouchableOpacity onLongPress={drag}>
+                    <Entypo name="dots-three-horizontal" size={24} color="white" />
+                  </TouchableOpacity>
+                  </View>
+                  </ScaleDecorator>
+                ) : null}
+              </View>
+            )} />
+          </KeyboardAvoidingView>
+          <View style={[styles.buttonContainer, {marginBottom: 20, marginTop: 10}]}>
+              <Button size="lg" variant="outline" action="primary" style={styles.buttonStyle} onPress={()=>selectImage()}>
                 <ButtonText>Add Image</ButtonText>
               </Button>
 
@@ -603,10 +631,9 @@ const UpdateStep = (isOpen, onClose) => {
                 <ButtonText>Add Comments</ButtonText>
               </Button>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+        </View>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -664,12 +691,12 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-between"
   },
   buttonStyle: {
     width: "45%",
     backgroundColor: COLORS.blue,
-    borderRadius: 25,
+    borderRadius: 25
   },
   loadingText: {
     marginLeft: 10,
@@ -682,8 +709,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   componentContainer: {
-    position: "relative",
-    marginBottom: 20,
+    position: "relative"
   },
   deleteButton: {
     position: "absolute",
