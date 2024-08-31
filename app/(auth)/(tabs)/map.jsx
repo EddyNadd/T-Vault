@@ -9,17 +9,44 @@ import { collection, query, where, onSnapshot, or, getDocs } from 'firebase/fire
 import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
 import { useRouter } from 'expo-router';
 import AndroidSafeArea from '../../../styles/AndroidSafeArea';
+import * as Location from 'expo-location';
 
 const MapScreen = () => {
   const [myTripsSelected, setMyTripsSelected] = useState(true);
   const [discoverSelected, setDiscoverSelected] = useState(false);
   const [tripsToShow, setTripsToShow] = useState([]);
+  const [location, setLocation] = useState(null);
+  const [region, setRegion] = useState({
+    latitude: 46.99763183905308,
+    longitude: 6.938745394653198,
+    latitudeDelta: 10,
+    longitudeDelta: 10,
+  });
   const myTripsMap = useRef(new Map());
   const discoverMap = useRef(new Map());
   const stepListeners = useRef(new Map());
   const { listenersRef } = useFirestoreListeners();
   const currentListeners = useRef([]);
   const router = useRouter();
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'You need to grant location permission to use this feature.');
+        return;
+      }
+
+      let currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation(currentLocation.coords);
+      setRegion({
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        latitudeDelta: 10,
+        longitudeDelta: 10,
+      });
+    })();
+  }, []);
 
   useEffect(() => {
     const userId = auth.currentUser.uid;
@@ -47,7 +74,7 @@ const MapScreen = () => {
       snapshot.docChanges().forEach((change) => {
         const tripId = change.doc.id;
         const tripData = change.doc.data();
-        
+
         if (change.type === 'modified' || change.type === 'added') {
           if (type === 'myTrips') {
             myTripsMap.current.set(tripId, tripData);
@@ -150,7 +177,7 @@ const MapScreen = () => {
       const sortedSteps = steps.sort((a, b) => a.startDate.toMillis() - b.startDate.toMillis());
 
       const markers = sortedSteps.map((step, index) => {
-        const imageMarker = step.images.length > 0 ? {uri: step.images[Math.floor(Math.random() * step.images.length)]} : require('../../../assets/defaultMarker.png');;
+        const imageMarker = step.images.length > 0 ? { uri: step.images[Math.floor(Math.random() * step.images.length)] } : require('../../../assets/defaultMarker.png');;
         return (
           <Marker
             key={`${tripId}-${index}`}
@@ -189,15 +216,11 @@ const MapScreen = () => {
       <View style={styles.container}>
         <MapView
           style={styles.map}
-          initialRegion={{
-            latitude: 46.99763183905308,
-            longitude: 6.938745394653198,
-            latitudeDelta: 10,
-            longitudeDelta: 10,
-          }}
+          region={region}
           mapType={Platform.OS === 'ios' ? 'hybridFlyover' : 'hybrid'}
           zoomEnabled={true}
           scrollEnabled={true}
+          showsUserLocation={true}
         >
           {renderMarkersAndPolylines()}
         </MapView>
