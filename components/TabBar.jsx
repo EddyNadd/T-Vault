@@ -2,9 +2,15 @@ import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native'
 import React from 'react'
 import COLORS from '../styles/COLORS'
 
+/**
+ * TabBar component that displays the navigation tabs at the bottom of the screen.
+ * @param {object} props.state - The state of the tab bar.
+ * @param {object} props.descriptors - The descriptors of the tab bar.
+ * @param {object} props.navigation - The navigation object.
+ */
 const TabBar = ({ state, descriptors, navigation }) => {
 
-    // Replace these with your actual image paths
+    // Icons for the tab bar
     const icons = {
         trips: (isFocused) => isFocused 
             ? require('../assets/tabicons/MyTrips_blue.png') 

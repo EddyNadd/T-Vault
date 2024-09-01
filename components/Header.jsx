@@ -2,6 +2,12 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import COLORS from '../styles/COLORS';
 
+/**
+ * Header component for the application.
+ * @param {string} props.logoSource - The source of the logo image.
+ * @param {string} props.title - The title of the header.
+ * @param {React.Component} props.ButtonComponent - The component to render on the right side of the header. 
+ */
 const Header = ({ logoSource, title, ButtonComponent }) => {
   return (
     <View style={styles.headerContainer}>

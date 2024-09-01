@@ -2,6 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import COLORS from '../styles/COLORS';
 
+/**
+ * Custom bubble component for chat messages.
+ * @param {string} text - The message text.
+ */
 const CustomBubble = ({ text }) => {
     return (
         <View style={styles.container}>

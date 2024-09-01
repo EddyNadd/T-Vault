@@ -14,6 +14,17 @@ import { Button, ButtonText } from "@/components/ui/button"
 import DatePickerModal from './DatePickerModal.jsx';
 import { FormControl, FormControlError, FormControlErrorText, FormControlLabel, FormControlLabelText } from '@/components/ui/form-control';
 
+/**
+ * Trip modal component that allows the user to add or edit a trip.
+ * @param {boolean} isOpen - Indicates if the modal is open.
+ * @param {function} onClose - The function to call when the modal is closed.
+ * @param {string} currentTitle - The current title of the trip.
+ * @param {string} currentComment - The current comment of the trip.
+ * @param {Date} currentStartDate - The current start date of the trip.
+ * @param {Date} currentEndDate - The current end date of the trip.
+ * @param {string} currentImage - The current image of the trip.
+ * @param {string} currentTripId - The current trip id.
+ */
 export default function TripModal({ isOpen, onClose, currentTitle, currentComment, currentStartDate, currentEndDate, currentImage, currentTripId }) {
     const [image, setImage] = useState(null);
     const [startDateString, setStartDateString] = useState(new Date());
@@ -33,10 +44,16 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
     const [error, setError] = useState(false);
     const [errorText, setErrorText] = useState("");
 
+    /**
+     * Dismiss the keyboard.
+     */
     const dismissKeyboard = () => {
         Keyboard.dismiss();
     };
 
+    /**
+     * Set the initial values when the modal is opened.
+     */
     useEffect(() => {
         if (isOpen) {
             setTitle(currentTitle || '');
@@ -56,6 +73,9 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         }
     }, [isOpen, currentTitle, currentComment, currentStartDate, currentEndDate, currentImage]);
 
+    /**
+     * Add listeners for the keyboard.
+     */
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', handleKeyboardDidShow);
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', handleKeyboardDidHide);
@@ -66,6 +86,10 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         };
     }, []);
 
+    /**
+     * Handle the keyboard did show event.
+     * @param {*} event 
+     */
     const handleKeyboardDidShow = (event) => {
         if (Platform.OS === 'android') {
             return;
@@ -79,6 +103,9 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         }).start();
     };
 
+    /**
+     * Handle the keyboard did hide event.
+     */ 
     const handleKeyboardDidHide = () => {
         if (Platform.OS === 'android') {
             return;
@@ -90,6 +117,11 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         }).start();
     };
 
+    /**
+     * Upload the image to the storage.
+     * @param {string} imageUri - The uri of the image.
+     * @returns {url} - The url of the image.
+     */ 
     const uploadImageToStorage = async (imageUri) => {
         try {
             const response = await fetch(imageUri);
@@ -104,6 +136,9 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         }
     };
 
+    /**
+     * Upload an image from the gallery.
+     */ 
     const uploadImage = async () => {
         try {
             await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -121,6 +156,9 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         }
     };
 
+    /**
+     * Take a photo with the phone  camera.
+     */  
     const takePhoto = async () => {
         try {
             await ImagePicker.requestCameraPermissionsAsync();
@@ -138,6 +176,9 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         }
     };
 
+    /**
+     * Select an image from the gallery or take a photo.
+     */ 
     const selectImage = () => {
         Alert.alert(
             'Select Image',
@@ -160,14 +201,25 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         );
     };
 
+    /**
+     * Toggle the start date picker.
+     */
     const toggleStartDatePicker = () => {
         setShowStartPicker(!showStartPicker);
     }
 
+    /**
+     * Toggle the end date picker.
+     */
     const toggleEndDatePicker = () => {
         setShowEndPicker(!showEndPicker);
     }
 
+    /**
+     * Handle the change of the start date.
+     * @param {type} - The type of the change.
+     * @param {selectedDate} - The selected date.
+     */
     const onChangeStart = ({ type }, selectedDate) => {
         if (type == "set") {
             const currentDate = selectedDate;
@@ -190,6 +242,11 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         }
     };
 
+    /**
+     * Handle the change of the end date.
+     * @param {type} - The type of the change.
+     * @param {selectedDate} - The selected date.
+     */ 
     const onChangeEnd = ({ type }, selectedDate) => {
         if (type == "set") {
             const currentDate = selectedDate;
@@ -212,6 +269,9 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         }
     };
 
+    /**
+     * Confirm the start date on iOS.
+     */
     const confirmIOSStartDate = () => {
         if (startDate <= endDate || !pickedEnd) {
             setStartDateString(startDate.toLocaleDateString());
@@ -223,6 +283,9 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         }
     }
 
+    /**
+     * Confirm the end date on iOS.
+     */
     const confirmIOSEndDate = () => {
         if (endDate >= startDate || !pickedStart) {
             setEndDateString(endDate.toLocaleDateString());
@@ -234,6 +297,9 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
         }
     }
 
+    /**
+     * Add a trip to the database.
+     */
     const addTrip = async () => {
         if (title && comment && startDate && endDate && image && startDateString !== 'Departure date' && endDateString !== 'Return date') {
             try {

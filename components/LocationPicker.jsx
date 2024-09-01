@@ -6,6 +6,14 @@ import { FontAwesome6 } from '@expo/vector-icons';
 import COLORS from '../styles/COLORS';
 import { Button, ButtonText } from '@/components/ui/button';
 
+/**
+ * Location picker component that allows the user to pick a location on the map. 
+ * The user can confirm the selected location or cancel the operation. 
+ * @param {function} props.onConfirm - The function to call when the user confirms the location.
+ * @param {function} props.onCancel - The function to call when the user cancels the operation.
+ * @param {number} props.defaultLongitude - The default longitude value.
+ * @param {number} props.defaultLatitude - The default latitude value.
+ */
 export default function LocationPicker({ onConfirm, onCancel, defaultLongitude, defaultLatitude }) {
     const [region, setRegion] = useState({
         latitude: defaultLatitude || 46.99763183905308,
@@ -14,6 +22,9 @@ export default function LocationPicker({ onConfirm, onCancel, defaultLongitude, 
         longitudeDelta: 10,
     });
 
+    /**
+     * Requests location permission and sets the current location as the default region.
+     */
     useEffect(() => {
         if (!defaultLatitude) {
             (async () => {
@@ -34,6 +45,9 @@ export default function LocationPicker({ onConfirm, onCancel, defaultLongitude, 
         }
     }, [defaultLatitude]);
 
+    /**
+     * Handles the confirm button press event.
+     */
     const handleConfirm = () => {
         if (region) {
             const { latitude, longitude } = region;
@@ -41,6 +55,9 @@ export default function LocationPicker({ onConfirm, onCancel, defaultLongitude, 
         }
     };
 
+    /**
+     * Handles the cancel button press event.
+     */
     const handleCancel = () => {
         onCancel();
     }

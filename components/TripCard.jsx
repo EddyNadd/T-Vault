@@ -5,10 +5,26 @@ import { auth, db } from '../firebase';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
+/**
+ * Trip card component that displays a trip.
+ * @param {string} imageSource - The source of the image.
+ * @param {string} title - The title of the trip.
+ * @param {string} owner - The owner of the trip.
+ * @param {string} startDate - The start date of the trip.
+ * @param {string} endDate - The end date of the trip.
+ * @param {string} shared - Indicates if the trip is shared.
+ * @param {boolean} isInvitation - Indicates if the trip is an invitation.
+ * @param {string} tripCode - The code of the trip.
+ * @param {boolean} editableTrip - Indicates if the user can edit the trip.
+ */
+
 const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInvitation, tripCode, editableTrip }) => {
 
     const router = useRouter();
     const [opacity, setOpacity] = useState(1);
+    /**
+     * Change the opacity of the card if it is an invitation.
+     */
     useEffect(() => {
         if (isInvitation) {
             setOpacity(0.3);
@@ -17,6 +33,10 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
         }
     }, [isInvitation]);
 
+    /**
+     * Handle the press on the tick button.
+     * @param {string} tripCode - The code of the trip.
+     */ 
     const handleTickPress = async (tripCode) => {
         try {
             const tripRef = doc(db, "Trips", tripCode);
@@ -36,6 +56,10 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
         }
     };
 
+    /**
+     * Handle the press on the cross button.
+     * @param {string} tripCode 
+     */
     const handleCrossPress = async (tripCode) => {
         try {
             const tripRef = doc(db, "Trips", tripCode);
@@ -53,6 +77,10 @@ const TripCard = ({ imageSource, title, owner, startDate, endDate, shared, isInv
         }
     };
 
+    /**
+     * Handle the press on the card.
+     * Redirect to the trip page.
+     */ 
     const handleCardPress = () => {
         if (!isInvitation) {
             router.push(`/(auth)/trip/${tripCode}`);

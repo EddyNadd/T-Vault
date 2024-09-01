@@ -4,6 +4,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Modal, ModalBackdrop, ModalContent } from "@/components/ui/modal";
 import { Button, ButtonText } from "@/components/ui/button";
 
+/**
+ * Date picker modal component for IOS.
+ */
 export default function DatePickerModal({
     isOpen,
     onClose,

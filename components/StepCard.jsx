@@ -3,6 +3,16 @@ import { MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 import COLORS from '../styles/COLORS';
 import { useRouter } from 'expo-router';
 
+/**
+ * Step card component that displays a step in a trip.
+ * @param {string} title - The title of the step.
+ * @param {string} startDate - The start date of the step.
+ * @param {string} endDate - The end date of the step.
+ * @param {boolean} isLast - Indicates if the step is the last one.
+ * @param {string} destination - The destination of the step.
+ * @param {string} stepCode - The code of the step.
+ * @param {string} tripCode - The code of the trip.
+ */
 const StepCard = ({ title, startDate, endDate, isLast, destination, stepCode, tripCode }) => {
     const router = useRouter();
     const handleCardPress = () => {

@@ -2,6 +2,10 @@ import React, { createContext, useRef, useContext } from 'react';
 
 const FirestoreListenersContext = createContext();
 
+/**
+ * Provider component to manage Firestore listeners.
+ * @param {*} children - The children of the component.
+ */
 export const FirestoreListenersProvider = ({ children }) => {
   const listenersRef = useRef([]);
 

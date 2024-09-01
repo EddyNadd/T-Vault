@@ -13,6 +13,9 @@ import * as Clipboard from 'expo-clipboard';
 import { useFirestoreListeners } from '@/components/FirestoreListenerContext';
 import { FormControl, FormControlErrorText, FormControlError } from '@/components/ui/form-control';
 
+/**
+ * Modal component for sharing a trip with other users.
+ */
 export default function ShareTripModal({
     isOpen,
     tripCode,
@@ -36,9 +39,17 @@ export default function ShareTripModal({
 
     const scrollViewMaxHeight = height * 0.3;
 
+    /**
+     * Fetch the users from the database.
+     */
     useEffect(() => {
         let unsubscribe;
 
+        /**
+         * Fetch the users from the database.
+         * @param {*} uids
+         * @returns users
+         */ 
         const fetchUsers = async (uids) => {
             if (uids.length === 0) return {};
             let users = {};
@@ -63,6 +74,9 @@ export default function ShareTripModal({
             setError(false);
             setErrorText("");
         } else {
+            /**
+             * Fetch the trip from the database.
+             */
             const tripRef = doc(db, "Trips", tripCode.toLowerCase());
 
             unsubscribe = onSnapshot(tripRef, async (snapshot) => {
@@ -124,6 +138,9 @@ export default function ShareTripModal({
         };
     }, [isOpen, tripCode]);
 
+    /**
+     * Copy the trip code to the clipboard.
+     */
     const copyCode = async () => {
         setCopyAction("positive");
         setCopyVariant("solid");
@@ -134,6 +151,10 @@ export default function ShareTripModal({
         }, 2000);
     };
 
+    /**
+     * Toggle the shared state of the trip.
+     * Update the trip in the database.
+     */ 
     const handleShareToggle = () => {
         setShared(!shared);
         const tripRef = doc(db, "Trips", tripCode.toLowerCase());
@@ -143,6 +164,9 @@ export default function ShareTripModal({
         }, { merge: true });
     };
 
+    /**
+     * Add a user to the trip. 
+     */
     const handleAddUser = async () => {
         try {
             if (username === "") return;
@@ -183,6 +207,11 @@ export default function ShareTripModal({
         }
     };
 
+    /**
+     * Remove a user from the trip.
+     * @param {*} uid 
+     * @param {*} id 
+     */
     const handleRemoveUser = async (uid, id) => {
         try {
             const user = users.find(user => user.id === id);
@@ -210,6 +239,11 @@ export default function ShareTripModal({
         }
     };
 
+    /**
+     * Handle the permission change for a user. 
+     * @param {*} id 
+     * @param {*} permission 
+     */
     const handlePermissionChange = async (id, permission) => {
         const user = users.find(user => user.id === id);
         if (permission === true && user.pending === false) {
@@ -235,6 +269,9 @@ export default function ShareTripModal({
         }
     };
 
+    /**
+     * Reset the username when the modal is closed.
+     */
     useEffect(() => {
         if (!isOpen) {
             setUsername("");

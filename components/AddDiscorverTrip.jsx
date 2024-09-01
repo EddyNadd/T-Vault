@@ -7,6 +7,11 @@ import { auth, db } from '../firebase';
 import { updateDoc, arrayUnion, doc, getDoc } from 'firebase/firestore';
 import { FormControl, FormControlLabel, FormControlLabelText, FormControlError, FormControlErrorText, FormControlHelper } from '@/components/ui/form-control';
 
+/**
+ * Component for adding a discover trip by entering a trip code.
+ * @param {boolean} isOpen - The state of the actionsheet.
+ * @param {function} onClose - The function to close the actionsheet.
+ */ 
 export default function AddDiscoverTrip({ isOpen, onClose }) {
     const [value, setValue] = useState('');
     const [loading, setLoading] = useState(false);
@@ -17,6 +22,9 @@ export default function AddDiscoverTrip({ isOpen, onClose }) {
     });
     const ref = useBlurOnFulfill({ value, cellCount: 6 });
 
+    /**
+     * Resets the value and error state when the actionsheet is opened.
+     */
     useEffect(() => {
         if (isOpen) {
             setValue('');
@@ -24,6 +32,9 @@ export default function AddDiscoverTrip({ isOpen, onClose }) {
         }
     }, [isOpen]);
 
+    /**
+     * Adds a discover trip by entering a trip code.  
+     */
     const addDiscoverTrip = async () => {
         setLoading(true);
         try {
@@ -46,12 +57,21 @@ export default function AddDiscoverTrip({ isOpen, onClose }) {
         }
     };
 
+    /**
+     * Animated margin for the actionsheet content.
+     */
     const animatedMargin = useRef(new Animated.Value(0)).current;
 
+    /**
+     * Dismisses the keyboard.
+     */
     const dismissKeyboard = () => {
         Keyboard.dismiss();
     };
 
+    /**
+     * Listen for keyboard events
+     */
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', handleKeyboardDidShow);
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', handleKeyboardDidHide);
@@ -62,6 +82,10 @@ export default function AddDiscoverTrip({ isOpen, onClose }) {
         };
     }, []);
 
+    /**
+     * Handles the keyboard did show event.
+     * @param {*} event - The event object
+     */
     const handleKeyboardDidShow = (event) => {
         if (Platform.OS === 'android') {
             return;
@@ -75,6 +99,9 @@ export default function AddDiscoverTrip({ isOpen, onClose }) {
         }).start();
     };
 
+    /**
+     * Handles the keyboard did hide event.
+     */ 
     const handleKeyboardDidHide = () => {
         if (Platform.OS === 'android') {
             return;
