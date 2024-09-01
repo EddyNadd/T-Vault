@@ -26,6 +26,11 @@ import LocationPicker from "../../../components/LocationPicker";
 
 const generateUniqueId = () => "_" + Math.random().toString(36).substr(2, 9);
 
+/**
+ * Component for updating a specific step of a trip.
+ * @param {boolean} isOpen - Determines if the component is open.
+ * @param {function} onClose - Callback function to close the component.
+ */
 const UpdateStep = (isOpen, onClose) => {
   const { id } = useLocalSearchParams();
   const [tripId, stepId, isNew] = id.split("-");
@@ -56,10 +61,16 @@ const UpdateStep = (isOpen, onClose) => {
   const useRefReact = useRef();
   const listRef = useRef();
 
+   /**
+   * Updates address text in GooglePlacesAutocomplete when destination changes.
+   */
   useEffect(() => {
     useRefReact.current?.setAddressText(destination);
   }, [destination]);
 
+   /**
+   * Fetches trip data and initializes state with existing data.
+   */
   useEffect(() => {
     const getTripData = async () => {
       try {
@@ -178,19 +189,34 @@ const UpdateStep = (isOpen, onClose) => {
     }
   }, [isOpen]);
 
+  /**
+   * Handles layout change to get the width of the title input field.
+   * @param {Object} event - The layout event.
+   */
   const handleTitleLayout = (event) => {
     const { width } = event.nativeEvent.layout;
     setInputWidth(width);
   };
 
+   /**
+   * Toggles the visibility of the start date picker.
+   */
   const toggleStartDatePicker = () => {
     setShowStartPicker(!showStartPicker);
   };
 
+  /**
+   * Toggles the visibility of the end date picker.
+   */
   const toggleEndDatePicker = () => {
     setShowEndPicker(!showEndPicker);
   };
 
+  /**
+   * Handles the change event for the start date picker (Android).
+   * @param {Object} event - The event object.
+   * @param {Date} selectedDate - The selected date.
+   */
   const onChangeStart = ({ type }, selectedDate) => {
     if (type == "set") {
       const currentDate = selectedDate;
@@ -215,6 +241,11 @@ const UpdateStep = (isOpen, onClose) => {
     }
   };
 
+   /**
+   * Handles the change event for the end date picker (Android).
+   * @param {Object} event - The event object.
+   * @param {Date} selectedDate - The selected date.
+   */
   const onChangeEnd = ({ type }, selectedDate) => {
     if (type == "set") {
       const currentDate = selectedDate;
@@ -239,6 +270,10 @@ const UpdateStep = (isOpen, onClose) => {
     }
   };
 
+  
+  /**
+   * Handles the confirmation of the start date picker (iOS).
+   */
   const confirmIOSStartDate = () => {
     if (startDate <= endDate || !pickedEnd) {
       setStartDateString(startDate.toLocaleDateString());
@@ -253,6 +288,9 @@ const UpdateStep = (isOpen, onClose) => {
     }
   };
 
+  /**
+   * Handles the confirmation of the end date picker (iOS).
+   */ 
   const confirmIOSEndDate = () => {
     if (endDate >= startDate || !pickedStart) {
       setEndDateString(endDate.toLocaleDateString());
@@ -267,6 +305,9 @@ const UpdateStep = (isOpen, onClose) => {
     }
   };
 
+  /**
+   * Adds a new component to the list of components.
+   */
   const addComponent = () => {
     setComponents([
       ...components,
@@ -279,6 +320,9 @@ const UpdateStep = (isOpen, onClose) => {
     }, 100);
   };
 
+  /**
+   * Takes a photo with the camera and adds it to the list of components.
+   */
   const takePhoto = async () => {
     try {
       await ImagePicker.requestCameraPermissionsAsync();
@@ -306,6 +350,9 @@ const UpdateStep = (isOpen, onClose) => {
     }
   };
 
+  /**
+   * Picks an image from the gallery and adds it to the list of components.
+   */
   const pickImage = async () => {
     await ImagePicker.requestMediaLibraryPermissionsAsync();
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -332,6 +379,9 @@ const UpdateStep = (isOpen, onClose) => {
     }
   };
 
+  /**
+   * Selects a method to add a photo.
+   */
   const selectImage = () => {
     Alert.alert(
       "Select Image",
@@ -354,6 +404,11 @@ const UpdateStep = (isOpen, onClose) => {
     );
   };
 
+  /**
+   * Uploads an image to Firebase Storage and returns the URL.
+   * @param {uri} imageUri 
+   * @returns {url}
+   */
   const uploadImageToStorage = async (imageUri) => {
     try {
       const response = await fetch(imageUri);
@@ -370,14 +425,25 @@ const UpdateStep = (isOpen, onClose) => {
     }
   };
 
+  /**
+   * Handles the focus event of the destination input.
+   */
   const handleDestinationFocus = () => {
     setIsInputActive(true);
   };
 
+  /**
+   * Handles the blur event of the destination input.
+   */
   const handleDestinationBlur = () => {
     setIsInputActive(false);
   };
 
+  /**
+   * Handles the selection of a destination from the Google Places Autocomplete and create a geopoint.
+   * @param {*} data 
+   * @param {*} details 
+   */
   const handleDestinationSelect = (data, details = null) => {
     if (!data || !details) {
       console.error("Invalid destination data.");
@@ -390,6 +456,9 @@ const UpdateStep = (isOpen, onClose) => {
     );
   };
 
+  /**
+   * Updates the step in the database.
+   */
   const updateStep = async () => {
     if (!id) {
       console.error("Trip ID is missing.");
@@ -469,6 +538,11 @@ const UpdateStep = (isOpen, onClose) => {
     }
   };
 
+  /**
+   * Handles the change of a comment.
+   * @param {string} text 
+   * @param {*} id 
+   */
   const handleCommentChange = (text, id) => {
     setComponents((prevComponents) =>
       prevComponents.map((component) =>
@@ -477,6 +551,10 @@ const UpdateStep = (isOpen, onClose) => {
     );
   };
 
+  /**
+   * Removes a component from the list of components.
+   * @param {*} id
+   */ 
   const removeComponent = (id) => {
     setComponents((prevComponents) =>
       prevComponents.filter((component) => component.id !== id)
@@ -486,6 +564,10 @@ const UpdateStep = (isOpen, onClose) => {
     );
   };
 
+  /**
+   * Handles the click event of an image component.
+   * @param {*} id
+   */ 
   const handleImageClick = async (id) => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -510,11 +592,20 @@ const UpdateStep = (isOpen, onClose) => {
     }
   };
 
+  /**
+   * Handles the drag end event of the DraggableFlatList.
+   * @param {*} data
+   */
   const handleDragEnd = ({ data }) => {
     setComponents(data);
     setTabOrder(data.map(item => item.type));
   };
 
+  /**
+   * Handles the selection of an address from the LocationPicker.
+   * @param {*} latitude 
+   * @param {*} longitude 
+   */
   const handlePickerAddress = (latitude, longitude) => {
     setPicker(false);
     if (latitude && longitude) {
@@ -547,6 +638,9 @@ const UpdateStep = (isOpen, onClose) => {
     }
   }
 
+  /**
+   * Handles the back event of the LocationPicker.
+   */ 
   const handlePickerAddressBack = () => {
     setPicker(false);
   }

@@ -27,26 +27,41 @@ const Account = () => {
 
   const { unsubscribeAllListeners } = useFirestoreListeners();
 
+ /**
+  * Initialize the username and email fields with the current user's data
+  */
   useEffect(() => {
     setUsername(auth.currentUser.displayName);
     setOldUsername(auth.currentUser.displayName);
     setEmail(auth.currentUser.email);
   }, []);
 
+  /**
+   * Enable the update button when the username is different from the current one
+   */
   useEffect(() => {
     setIsUsernameButtonEnabled(username !== auth.currentUser.displayName);
   }, [username]);
 
+  /**
+   * Enable the update button when the email is different from the current one
+   */
   useEffect(() => {
     setIsEmailButtonEnabled(email !== auth.currentUser.email);
   }, [email]);
 
+  /**
+   * Enable the update button when the old password, new password or confirm password fields are not empty
+   */
   useEffect(() => {
     setIsPasswordButtonEnabled(
       oldPassword !== '' || newPassword !== '' || confirmPassword !== ''
     );
   }, [oldPassword, newPassword, confirmPassword]);
 
+  /**
+   * Handle the username update
+   */
   const updateUsername = async () => {
     try {
       requestedUser = await getDocs(query(collection(db, "Users"), where(documentId(), "==", username)));
@@ -74,6 +89,9 @@ const Account = () => {
     }
   };
 
+  /**
+   * Handle the email update
+   */
   const updateEmail = async () => {
     try {
       const user = auth.currentUser;
@@ -92,6 +110,9 @@ const Account = () => {
     }
   };
 
+  /**
+   * Handle the password update
+   */
   const updatePassword = async () => {
     try {
       const user = auth.currentUser;
@@ -124,16 +145,26 @@ const Account = () => {
   }
     ;
 
+  /**
+   * Function to return the button style based on the isEnabled parameter
+   * @param {boolean} isEnabled 
+   */
   const getButtonStyle = (isEnabled) => ({
     ...styles.button,
     ...(isEnabled ? styles.buttonShadow : {}),
   });
 
+  /**
+   * Function to sign out the user
+   */
   const signOut = () => {
     unsubscribeAllListeners();
     auth.signOut();
   };
 
+  /**
+   * Custom button component for the header
+   */
   const CustomButton = () => (
     <TouchableOpacity style={styles.addButton} onPress={() => signOut()}>
       <MaterialCommunityIcons name="logout" size={50} color={COLORS.blue} />

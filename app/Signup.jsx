@@ -10,6 +10,10 @@ import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
 import colors from "@/styles/COLORS.jsx";
 import AndroidSafeArea from '../styles/AndroidSafeArea';
 
+/**
+ * Handles user registration and manages UI for signing up.
+ */
+
 export default function Signup() {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
@@ -25,6 +29,10 @@ export default function Signup() {
     const signInMargin = useRef(new Animated.Value(0)).current;
     const inputMargin = useRef(new Animated.Value(20)).current;
 
+    /**
+     * Handles focus event for the input fields.
+     * Animates the logo and adjusts margins for better UI on focus.
+     */
     const handleFocus = () => {
         Animated.parallel([
             Animated.timing(imageFlex, {
@@ -50,6 +58,10 @@ export default function Signup() {
         ]).start();
     };
 
+    /**
+     * Handles blur event for the input fields.
+     * Resets the logo size and margins to their original values.
+     */
     const handleBlur = () => {
         Animated.parallel([
             Animated.timing(imageFlex, {
@@ -75,6 +87,10 @@ export default function Signup() {
         ]).start();
     };
 
+    /**
+     * Handles user registration.
+     * Validates input, creates a new user, and stores user data in Firestore.
+     */
     const signUp = async () => {
         setLoading(true);
         try {
@@ -113,6 +129,9 @@ export default function Signup() {
         }
     }
 
+    /**
+     * Navigates to the sign-in screen.
+     */
     const signIn = async () => {
         router.replace('/');
     }

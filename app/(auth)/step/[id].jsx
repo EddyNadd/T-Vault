@@ -13,7 +13,9 @@ import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 import COLORS from '../../../styles/COLORS'
 import CustomBubble from '../../../components/CustomBubble';
 
-
+/**
+ * DetailsScreen component to display and manage details of a trip step.
+ */
 export default function DetailsScreen() {
     const { id } = useLocalSearchParams();
     const [tripId, stepId] = id.split('-');
@@ -36,8 +38,15 @@ export default function DetailsScreen() {
     const unsubscribeRef = useRef(null);
     const permissionsUnsubscribeRef = useRef(null);
 
+    /**
+    * Function to generate a unique id for components
+    * @returns {string} - Unique id
+    */
     const generateUniqueId = () => '_' + Math.random().toString(36).substr(2, 9);
 
+    /**
+   * Function to fetch trip data and set state accordingly
+   */
     const getTripData = useCallback(() => {
 
         const stepDocRef = doc(db, "Trips", tripId, "Steps", stepId);
@@ -93,6 +102,9 @@ export default function DetailsScreen() {
         });
     }, [tripId, stepId]);
 
+    /**
+   * Effect to fetch data when screen is focused and clean up on unmount
+   */
     useFocusEffect(
         React.useCallback(() => {
             getTripData();
@@ -107,11 +119,18 @@ export default function DetailsScreen() {
         }, [getTripData])
     );
 
+    /**
+   * Handler for image press to show in modal
+   * @param {string} uri - URI of the selected image
+   */
     const handleImagePress = (uri) => {
         setSelectedImageUri(uri);
         setModalVisible(true);
     };
 
+    /**
+   * Function to delete the step from Firestore and storage
+   */
     const deleteStep = async () => {
         try {
             const stepRef = doc(db, 'Trips', tripId, 'Steps', stepId);

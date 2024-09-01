@@ -11,6 +11,9 @@ import { useFirestoreListeners } from '../../../components/FirestoreListenerCont
 import {useRouter } from "expo-router";
 import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 
+/**
+ *  Trips view component that displays a list of trips owned, shared, or invited to by the user.
+ */
 const Trips = () => {
   const [trips, setTrips] = useState([]);
   const [showActionsheet, setShowActionsheet] = useState(false);
@@ -21,32 +24,51 @@ const Trips = () => {
   const tripsInvitMap = useRef(new Map());
 
   const router = useRouter();
+  /**
+   * Toggle the action sheet
+   */
   const toggleActionSheet = () => {
     setShowActionsheet(!showActionsheet);
   };
 
+  /**
+   * Custom button component for the header
+   */
   const CustomButton = () => (
     <TouchableOpacity style={styles.addButton} onPress={toggleActionSheet}>
       <FontAwesome5 name="plus" size={20} color="white" />
     </TouchableOpacity>
   );
 
+  /**
+   * Fetch the trips from the database 
+   */
   useEffect(() => {
     const ownerQuery = query(
       collection(db, "Trips"),
       where('uid', '==', auth.currentUser.uid)
     );
 
+    /**
+     *  Query to fetch the trips where the user can write
+     */
     const sharedQuery = query(
       collection(db, "Trips"),
       where('canWrite', 'array-contains', auth.currentUser.uid)
     );
 
+    /**
+     * Query to fetch the trips where the user is invited
+     */
     const invitQuery = query(
       collection(db, "Trips"),
       where('invitWrite', 'array-contains', auth.currentUser.uid)
-    );
+    ); 
 
+    /**
+     * Fetch the users from the database by their uids
+     * @param {string} uids 
+     */
     const fetchUsers = async (uids) => {
       if (uids.length === 0) return {};
       let users = {};
@@ -58,6 +80,11 @@ const Trips = () => {
       return users;
     };
 
+    /**
+     * Update the trips map
+     * @param {*} snapshot - The snapshot of the trips
+     * @param {*} type - The type of the trip
+     */ 
     const updateTripsMap = (snapshot, type) => {
       snapshot.docChanges().forEach((change) => {
         const tripData = change.doc.data();
@@ -83,6 +110,9 @@ const Trips = () => {
       });
     };
 
+    /**
+     * Process the trips and sort them by start date
+     */
     const processTrips = async () => {
       const invitArray = Array.from(tripsInvitMap.current.values());
       const writeArray = Array.from(tripsSharedMap.current.values()).concat(Array.from(tripsOwnedMap.current.values()));
@@ -100,24 +130,41 @@ const Trips = () => {
       setTrips(enrichedTrips);
     };
 
+    /**
+     * Listen for changes in the owner trips
+     * @param {*} snapshot - The snapshot of the owner trips
+     * @param {*} type - The type of the trip
+     */
     const unsubscribeOwner = onSnapshot(ownerQuery, (snapshot) => {
       updateTripsMap(snapshot, 'owner');
       processTrips();
     });
 
+    /**
+     *  Listen for changes in the shared trips
+     * @param {*} snapshot - The snapshot of the shared trips
+     * @param {*} type - The type of the trip
+     */
     const unsubscribeShared = onSnapshot(sharedQuery, (snapshot) => {
       updateTripsMap(snapshot, 'shared');
       processTrips();
     });
 
+    /**
+     * Listen for changes in the invited trips
+     * @param {*} snapshot - The snapshot of the invited trips
+     * @param {*} type - The type of the trip
+    */
     const unsubscribeInvit = onSnapshot(invitQuery, (snapshot) => {
       updateTripsMap(snapshot, 'invit');
       processTrips();
     });
 
+    // Add the listeners to the listenersRef and currentListeners
     listenersRef.current.push(unsubscribeOwner, unsubscribeShared, unsubscribeInvit);
     currentListeners.current.push(unsubscribeOwner, unsubscribeShared, unsubscribeInvit);
 
+    // Remove the listeners when the component is unmounted
     return () => {
       currentListeners.current.forEach((unsubscribe) => unsubscribe());
       currentListeners.current = [];

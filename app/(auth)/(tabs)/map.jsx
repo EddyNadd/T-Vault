@@ -29,6 +29,10 @@ const MapScreen = () => {
   const currentListeners = useRef([]);
   const router = useRouter();
 
+
+  /**
+   * Request location permission and get the current location
+   */
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -48,6 +52,9 @@ const MapScreen = () => {
     })();
   }, []);
 
+  /**
+   * Setup listeners for fetching trips data based on user's id
+   */
   useEffect(() => {
     const userId = auth.currentUser.uid;
 
@@ -70,6 +77,12 @@ const MapScreen = () => {
       });
     };
 
+    /**
+     * Update the trips map based on the snapshot
+     * Attach or detach step listeners based on the changes
+     * @param {*} snapshot - Firestore snapshot of the trips
+     * @param {*} type - The type of the trips (myTrips or discover)
+     */
     const updateTripsMap = (snapshot, type) => {
       snapshot.docChanges().forEach((change) => {
         const tripId = change.doc.id;
@@ -93,21 +106,29 @@ const MapScreen = () => {
       });
     };
 
+    /**
+     * Firestore listeners for myTrips
+     */
     const unsubscribeMyTripsQuery = onSnapshot(myTripsQuery, (snapshot) => {
       updateTripsMap(snapshot, "myTrips");
       processTrips();
       fetchTripsToShow();
     });
 
+    /**
+     * Firestore listeners for discover trips
+     */
     const unsubscribeDiscoverQuery = onSnapshot(discoverQuery, (snapshot) => {
       updateTripsMap(snapshot, "discover");
       processTrips();
       fetchTripsToShow();
     });
 
+    // Store the listeners to unsubscribe later
     listenersRef.current.push(unsubscribeMyTripsQuery, unsubscribeDiscoverQuery);
     currentListeners.current.push(unsubscribeMyTripsQuery, unsubscribeDiscoverQuery);
 
+    // Cleanup
     return () => {
       currentListeners.current.forEach((unsubscribe) => unsubscribe());
       currentListeners.current = [];
@@ -116,6 +137,10 @@ const MapScreen = () => {
     };
   }, [myTripsSelected, discoverSelected]);
 
+  /**
+   * Attach a listener to the steps collection of a trip
+   * @param {string} tripId - The id of the trip
+   */
   const attachStepListener = (tripId) => {
     if (stepListeners.current.has(tripId)) return;
 
@@ -127,6 +152,10 @@ const MapScreen = () => {
     stepListeners.current.set(tripId, unsubscribe);
   };
 
+  /**
+   * Detach a listener from the steps collection of a trip
+   * @param {string} tripId - The id of the trip
+   */ 
   const detachStepListener = (tripId) => {
     const unsubscribe = stepListeners.current.get(tripId);
     if (unsubscribe) {
@@ -135,6 +164,9 @@ const MapScreen = () => {
     }
   };
 
+  /**
+   * Fetches the trips to display on the map, including associated steps.
+   */
   const fetchTripsToShow = async () => {
     const trips = [];
 
@@ -161,21 +193,34 @@ const MapScreen = () => {
     }
 
     setTripsToShow(trips);
-  };
+  }; 
 
+   /**
+   * Handles marker press events, navigating to the specific step.
+   * @param {string} stepCode - The code of the step.
+   * @param {string} tripCode - The code of the trip.
+   */
   const handleMarkerPress = (stepCode, tripCode) => {
     router.push(`/(auth)/step/${tripCode}-${stepCode}`);
   };
 
+   /**
+   * Handles polyline press events, navigating to the specific trip.
+   * @param {string} tripCode - The code of the trip.
+   */
   const handleLinePress = (tripCode) => {
     router.push(`/(auth)/trip/${tripCode}`);
   };
 
+    /**
+   * Renders the markers and polylines for the trips on the map.
+   * Sorts the steps by start date before rendering.
+   */
   const renderMarkersAndPolylines = () => {
     return tripsToShow.map(({ trip, tripId, steps }) => {
       if (steps.length === 0) return null;
       const sortedSteps = steps.sort((a, b) => a.startDate.toMillis() - b.startDate.toMillis());
-
+      
       const markers = sortedSteps.map((step, index) => {
         const imageMarker = step.images.length > 0 ? { uri: step.images[Math.floor(Math.random() * step.images.length)] } : require('../../../assets/defaultMarker.png');;
         return (

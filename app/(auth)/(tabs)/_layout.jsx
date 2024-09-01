@@ -3,9 +3,20 @@ import { Keyboard } from 'react-native';
 import { Tabs } from 'expo-router';
 import TabBar from '../../../components/TabBar';
 
+/**
+ *  Main layout for the tabs view
+ * @returns 
+ */
 const _layout = () => {
+    /**
+     * State to check if the keyboard is visible
+     */
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
+    /**
+     * Listen for keyboard events
+     * Show the tab bar only when the keyboard is not visible
+     */
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
             setKeyboardVisible(true);

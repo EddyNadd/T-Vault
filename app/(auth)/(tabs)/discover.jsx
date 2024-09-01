@@ -10,6 +10,10 @@ import { auth, db } from '../../../firebase';
 import { useFirestoreListeners } from '@/components/FirestoreListenerContext';
 import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 
+/**
+ * Discover view component that displays a list of trips shared or invited to the user.
+ */
+
 const discover = () => {
   const [showActionsheet, setShowActionsheet] = useState(false);
   const [trips, setTrips] = useState([]);
@@ -18,21 +22,35 @@ const discover = () => {
   const tripsSharedMap = useRef(new Map());
   const tripsInvitMap = useRef(new Map());
 
+  /**
+   * Toggle the action sheet
+   */
   const toggleActionSheet = () => {
     setShowActionsheet(!showActionsheet);
   };
 
+  /**
+   * Fetch the trips from the database
+   */
   useEffect(() => {
     const sharedQuery = query(
       collection(db, "Trips"),
       where('canRead', 'array-contains', auth.currentUser.uid)
     );
 
+    /**
+     * Query to fetch the trips where the user is invited
+     */
     const invitQuery = query(
       collection(db, "Trips"),
       where('invitRead', 'array-contains', auth.currentUser.uid)
     );
 
+    /**
+     * Fetch the users from the database
+     * @param {*} uids 
+     * @returns users
+     */
     const fetchUsers = async (uids) => {
       if (uids.length === 0) return {};
       let users = {};
@@ -44,6 +62,11 @@ const discover = () => {
       return users;
     };
 
+    /**
+     * Update the trips map
+     * @param {*} snapshot
+     * @param {*} type
+     */
     const updateTripsMap = (snapshot, type) => {
       snapshot.docChanges().forEach((change) => {
         const tripData = change.doc.data();
@@ -65,6 +88,10 @@ const discover = () => {
       });
     };
 
+ /**
+ * Processes and sorts trips based on invitation and sharing status,
+ * enriches trip data with usernames, and updates the state.
+ */
     const processTrips = async () => {
       const invitArray = Array.from(tripsInvitMap.current.values());
       const readArray = Array.from(tripsSharedMap.current.values());
@@ -87,6 +114,10 @@ const discover = () => {
       setTrips(enrichedTrips);
     };
 
+   /**
+ * Sets up listeners for shared and invited trips using Firebase Firestore's onSnapshot.
+ * Updates the trips map and processes trips whenever a snapshot changes.
+ */
     const unsubscribeShared = onSnapshot(sharedQuery, (snapshot) => {
       updateTripsMap(snapshot, 'shared');
       processTrips();
@@ -106,6 +137,9 @@ const discover = () => {
     };
   }, []);
 
+  /**
+   * Custpm button component for the header
+   */
   const CustomButton = () => (
     <TouchableOpacity style={styles.addButton} onPress={toggleActionSheet}>
       <FontAwesome5 name="plus" size={20} color="white" />

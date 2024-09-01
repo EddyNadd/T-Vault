@@ -9,6 +9,9 @@ import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
 import colors from "@/styles/COLORS.jsx";
 import AndroidSafeArea from '../styles/AndroidSafeArea';
 
+/**
+ * Handles user authentication and manages UI for signing in.
+ */
 export default function Signin() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -19,6 +22,10 @@ export default function Signin() {
     const imageScale = useRef(new Animated.Value(1)).current;
     const signInMargin = useRef(new Animated.Value(0)).current;
 
+     /**
+     * Handles focus event for the input fields.
+     * Animates the image scale down and shifts the sign-in button margin.
+     */
     const handleFocus = () => {
         Animated.parallel([
             Animated.timing(imageScale, {
@@ -34,6 +41,10 @@ export default function Signin() {
         ]).start();
     };
 
+     /**
+     * Handles blur event for the input fields.
+     * Resets the image scale and sign-in button margin to original values.
+     */
     const handleBlur = () => {
         Animated.parallel([
             Animated.timing(imageScale, {
@@ -49,21 +60,36 @@ export default function Signin() {
         ]).start();
     };
 
+
+    /**
+     * Callback function for authentication state changes.
+     * Updates the initializing state once authentication is set up.
+     */
     const onAuthStateChanged = () => {
         if (initializing) {
             setInitializing(false);
         }
     }
-
+    
+    /**
+     * Adds an authentication state change listener when the component mounts.
+     */
     useEffect(() => {
         const subscriber = auth.onAuthStateChanged(onAuthStateChanged);
         return subscriber; // unsubscribe on unmount
     }, []);
 
+     /**
+     * Redirects to the sign-up screen.
+     */
     const signUp = async () => {
         router.replace('/Signup');
     }
 
+      /**
+     * Handles user sign-in with email and password.
+     * Shows loading state and handles authentication errors.
+     */
     const signIn = async () => {
         setLoading(true);
         try {

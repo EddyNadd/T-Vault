@@ -6,12 +6,18 @@ import { ActivityIndicator, View } from "react-native";
 import { auth } from "../firebase.jsx";
 import { FirestoreListenersProvider } from "../components/FirestoreListenerContext.jsx";
 
+// Layout component for the root route
 export default function RootLayout() {
     const [initializing, setInitializing] = useState(true);
     const [user, setUser] = useState(null);
     const router = useRouter();
     const segments = useSegments();
 
+     /**
+     * Handles changes to the authentication state.
+     * Updates user state and stops initializing process.
+     * @param {Object} user - The authenticated user object.
+     */
     const onAuthStateChanged = (user) => {
         setUser(user);
         if (initializing) {
@@ -19,11 +25,17 @@ export default function RootLayout() {
         }
     }
 
+    /**
+     * Adds an authentication state change listener when the component mounts.
+     */
     useEffect(() => {
         const subscriber = auth.onAuthStateChanged(onAuthStateChanged);
         return subscriber; // unsubscribe on unmount
     }, []);
 
+    /**
+     * Redirects the user based on their authentication status.
+     */
     useEffect(() => {
         if (initializing) {
             return;

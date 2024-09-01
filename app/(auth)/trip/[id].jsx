@@ -14,6 +14,9 @@ import TripModal from '@/components/TripModal';
 import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 
 
+/**
+ * Details screen component that displays the details of a trip.
+ */
 export default function DetailsScreen() {
   const { id } = useLocalSearchParams();
   const [openShare, setOpenShare] = useState(false);
@@ -38,6 +41,9 @@ export default function DetailsScreen() {
   const unsubscribeRef = useRef(null);
   const stepsUnsubscribeRef = useRef(null);
 
+  /**
+   * Effect to fetch trip details and steps
+   */
   useEffect(() => {
     const fetchTripDetails = async () => {
       if (isLoadingStep) return;
@@ -77,6 +83,9 @@ export default function DetailsScreen() {
       });
     };
 
+    /**
+     * Fetch the steps of the trip 
+     */
     const fetchTripSteps = async () => {
       if (isLoadingStep) return;
       try {
@@ -94,6 +103,7 @@ export default function DetailsScreen() {
       }
     };
 
+
     if (id && !isLoadingStep) {
       fetchTripDetails();
     }
@@ -107,7 +117,10 @@ export default function DetailsScreen() {
       }
     };
   }, [id, isLoadingStep]);
-
+  
+  /**
+   *  Function to quit a shared trip
+   */ 
   const quitTrip = async () => {
     try {
       const tripRef = doc(db, 'Trips', id);
@@ -128,6 +141,9 @@ export default function DetailsScreen() {
     }
   };
 
+  /**
+   * Function to delete a trip
+   */
   const deleteTrip = async () => {
     try {
       const allStepsRef = collection(db, 'Trips', id, 'Steps');
@@ -180,6 +196,9 @@ export default function DetailsScreen() {
     );
   }
 
+  /**
+   * Function to add a step to the trip 
+   */
   const handleAddStep = async () => {
     try {
       setIsLoadingStep(true);
