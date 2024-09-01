@@ -5,6 +5,11 @@ import { Button, ButtonText } from "@/components/ui/button";
 import Carousel from 'react-native-reanimated-carousel';
 import colors from '@/styles/COLORS';
 
+/**
+ * Welcome modal component that show on the first user login.
+ * @param {boolean} isOpen - Indicates if the modal is open.
+ * @param {function} onClose - The function to call when the modal is closed.
+ */
 export default function WelcomeModal({
     isOpen,
     onClose
@@ -18,16 +23,22 @@ export default function WelcomeModal({
         { title: "Explore the World", description: "Discover new places by viewing trips shared by others.", image: require('../assets/welcome/4.gif') },
         { title: "Show Trips on Map", description: "Visualize your trips or shared trips on a map for a better perspective.", image: require('../assets/welcome/5.gif') },
         { title: "Start the Adventure!", description: "Create your first trip and embark on your adventure today!", image: require('../assets/welcome/6.gif') }
-    ];    
+    ];
     const carouselRef = useRef(null);
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const [gifKey, setGifKey] = useState(0);
 
+    /*
+    * Closes the modal.
+    */
     const closeModal = () => {
         onClose();
     }
 
+    /*
+    * Scrolls to the next slide in the carousel.
+    */
     const handleNext = () => {
         if (currentIndex < data.length - 1) {
             carouselRef.current?.scrollTo({ index: currentIndex + 1, animated: true });
@@ -36,13 +47,16 @@ export default function WelcomeModal({
             closeModal();
         }
     };
-    
+
+    /*
+    * Scrolls to the previous slide in the carousel.
+    */
     const handlePrevious = () => {
         if (currentIndex > 0) {
             carouselRef.current?.scrollTo({ index: currentIndex - 1, animated: true });
             setCurrentIndex(currentIndex - 1);
         }
-    };     
+    };
 
     return (
         <Modal isOpen={isOpen} onClose={closeModal}>
@@ -55,8 +69,8 @@ export default function WelcomeModal({
                         data={data}
                         renderItem={({ index }) => (
                             <View style={styles.carouselItem}>
-                                <Image 
-                                    source={data[index].image} 
+                                <Image
+                                    source={data[index].image}
                                     style={styles.image}
                                     resizeMode='contain'
                                     key={`image-${gifKey}`}
@@ -71,7 +85,7 @@ export default function WelcomeModal({
                             setCurrentIndex(index);
 
                             // This will update the key of the GIF to force it to re-render
-                            setGifKey(prevKey => prevKey + 1); 
+                            setGifKey(prevKey => prevKey + 1);
                         }}
                         loop={false}
                         pagingEnabled
