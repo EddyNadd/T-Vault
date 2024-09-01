@@ -12,12 +12,12 @@ export default function WelcomeModal({
     const { width, height } = Dimensions.get('window');
     const data = [
         { title: "Welcome to T-Vault!", description: "The ultimate app for storing and sharing your trips!", image: require('../assets/logo_transparent_bg.png') },
-        { title: "Create Your Trips", description: "Document all your adventures and memories with ease!", image: require('../assets/welcome/0.gif') },
-        { title: "Store Your Stories", description: "Edit your trips and add details to remember every moment.", image: require('../assets/welcome/0.gif') },
-        { title: "Share Your Trips", description: "Share your adventures with friends or collaborate on them with loved ones.", image: require('../assets/welcome/0.gif') },
-        { title: "Explore the World", description: "Discover new places by viewing trips shared by others.", image: require('../assets/welcome/0.gif') },
-        { title: "Show Trips on Map", description: "Visualize your trips or shared trips on a map for a better perspective.", image: require('../assets/welcome/0.gif') },
-        { title: "Start the Adventure!", description: "Create your first trip and embark on your adventure today!", image: require('../assets/welcome/0.gif') }
+        { title: "Create Your Trips", description: "Document all your adventures and memories with ease!", image: require('../assets/welcome/1.gif') },
+        { title: "Store Your Stories", description: "Edit your trips and add details to remember every moment.", image: require('../assets/welcome/2.gif') },
+        { title: "Share Your Trips", description: "Share your adventures with friends or collaborate on them with loved ones.", image: require('../assets/welcome/3.gif') },
+        { title: "Explore the World", description: "Discover new places by viewing trips shared by others.", image: require('../assets/welcome/4.gif') },
+        { title: "Show Trips on Map", description: "Visualize your trips or shared trips on a map for a better perspective.", image: require('../assets/welcome/5.gif') },
+        { title: "Start the Adventure!", description: "Create your first trip and embark on your adventure today!", image: require('../assets/welcome/6.gif') }
     ];    
     const carouselRef = useRef(null);
 

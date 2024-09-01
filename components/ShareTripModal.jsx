@@ -73,6 +73,7 @@ export default function ShareTripModal({
             setCopyVariant("outline");
             setError(false);
             setErrorText("");
+            setValues(false);
         } else {
             /**
              * Fetch the trip from the database.

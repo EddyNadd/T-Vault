@@ -19,7 +19,7 @@ import WelcomeModal from '../../../components/WelcomeModal';
 const Trips = () => {
   const [trips, setTrips] = useState([]);
   const [showActionsheet, setShowActionsheet] = useState(false);
-  const [isModalVisible, setModalVisible] = useState(true);
+  const [isModalVisible, setModalVisible] = useState(false);
   const { listenersRef } = useFirestoreListeners();
   const currentListeners = useRef([]);
   const tripsOwnedMap = useRef(new Map());
