@@ -26,6 +26,7 @@
         "googleMaps": {
           "apiKey" : "yourapikey"
         }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
