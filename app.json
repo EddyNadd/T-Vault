@@ -21,7 +21,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "ch.hearc.tvault"
+      "package": "ch.hearc.tvault",
+      "config": {
+        "googleMaps": {
+          "apiKey" : "YOUR API KEY"
+        }
     },
     "web": {
       "favicon": "./assets/favicon.png"
