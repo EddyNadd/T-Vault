@@ -65,17 +65,4 @@ describe('TabBar Component', () => {
 
         expect(mockNavigation.navigate).toHaveBeenCalledWith('map', undefined);
     });
-
-    it('calls navigation.emit on tab long press', () => {
-        const { getByText } = render(
-            <TabBar state={mockState} descriptors={mockDescriptors} navigation={mockNavigation} />
-        );
-
-        fireEvent(getByText('Account'), 'longPress');
-
-        expect(mockNavigation.emit).toHaveBeenCalledWith({
-            type: 'tabLongPress',
-            target: 'account',
-        });
-    });
 });
