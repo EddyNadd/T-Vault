@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, View } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../../../components/Header';
 import TripModal from '../../../components/TripModal';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -10,6 +11,7 @@ import { auth, db } from '../../../firebase';
 import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
 import {useRouter } from "expo-router";
 import AndroidSafeArea from '../../../styles/AndroidSafeArea';
+import WelcomeModal from '../../../components/WelcomeModal';
 
 /**
  *  Trips view component that displays a list of trips owned, shared, or invited to by the user.
@@ -17,6 +19,7 @@ import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 const Trips = () => {
   const [trips, setTrips] = useState([]);
   const [showActionsheet, setShowActionsheet] = useState(false);
+  const [isModalVisible, setModalVisible] = useState(true);
   const { listenersRef } = useFirestoreListeners();
   const currentListeners = useRef([]);
   const tripsOwnedMap = useRef(new Map());
@@ -44,6 +47,15 @@ const Trips = () => {
    * Fetch the trips from the database 
    */
   useEffect(() => {
+    const checkFirstVisit = async () => {
+      const hasVisited = await AsyncStorage.getItem('hasVisited');
+      if (!hasVisited) {
+        setModalVisible(true);
+      }
+    };
+
+    checkFirstVisit();
+
     const ownerQuery = query(
       collection(db, "Trips"),
       where('uid', '==', auth.currentUser.uid)
@@ -171,8 +183,14 @@ const Trips = () => {
     };
   }, []);
 
+  const handleClose = async () => {
+    await AsyncStorage.setItem('hasVisited', 'true');
+    setModalVisible(false);
+  }
+
   return (
     <View style={styles.safeArea}>
+      <WelcomeModal isOpen={isModalVisible} onClose={handleClose} />
       <SafeAreaView style={AndroidSafeArea.AndroidSafeArea}>
       <Header
         logoSource={require('../../../assets/logo_transparent_bg.png')}

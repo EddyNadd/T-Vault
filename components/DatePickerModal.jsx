@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Platform } from 'react-native';
+import { View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Modal, ModalBackdrop, ModalContent } from "@/components/ui/modal";
 import { Button, ButtonText } from "@/components/ui/button";
