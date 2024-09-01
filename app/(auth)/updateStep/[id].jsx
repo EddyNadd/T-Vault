@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, StyleSheet, TouchableOpacity, Image, Platform, ActivityIndicator, KeyboardAvoidingView, Alert, } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Image, Platform, ActivityIndicator, KeyboardAvoidingView, Alert, Keyboard } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import DatePickerModal from "../../../components/DatePickerModal";
 import * as ImagePicker from "expo-image-picker";
@@ -618,7 +618,7 @@ const UpdateStep = (isOpen, onClose) => {
                         description: { color: "white" },
                       }}
                     />
-                    <Button size="xl" variant="outline" action="primary" style={[styles.buttonStyle, { width: 'auto', marginLeft: 10 }]} onPress={() => setPicker(true)}>
+                    <Button size="xl" variant="outline" action="primary" style={[styles.buttonStyle, { width: 'auto', marginLeft: 10 }]} onPress={() => {setPicker(true); Keyboard.dismiss();}}>
                       <FontAwesome6 name="map-location-dot" size={24} color="black" />
                     </Button>
                   </View>
