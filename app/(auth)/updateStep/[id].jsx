@@ -623,7 +623,7 @@ const UpdateStep = (isOpen, onClose) => {
                     </Button>
                   </View>
 
-                  <View style={[styles.dateContainer, { marginBottom: Platform.OS === "android" ? 40 : 0 },]}>
+                  <View style={[styles.dateContainer, { marginBottom: Platform.OS === "android" ? 40 : 10 },]}>
                     <TouchableOpacity onPress={toggleStartDatePicker} style={[styles.dateInput, { marginRight: 20 }]}>
                       <Input variant="rounded" size="xl" pointerEvents="none">
                         <InputSlot>
