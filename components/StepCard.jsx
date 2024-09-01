@@ -10,10 +10,9 @@ const StepCard = ({ title, startDate, endDate, isLast, destination, stepCode, tr
     };
 
     return (
-        <View style={styles.container}>
+        <Pressable style={styles.container} onPress={handleCardPress}>
             {!isLast && <View style={styles.line} />}
             <View style={styles.cardContainer}>
-                <Pressable onPress={handleCardPress}>
                     <View style={styles.cardContent}>
                         <Text style={styles.tripTitle} ellipsizeMode='tail' numberOfLines={1}>{title}</Text>
                         <View style={styles.destinationContainer}>
@@ -27,9 +26,8 @@ const StepCard = ({ title, startDate, endDate, isLast, destination, stepCode, tr
                             <Text style={styles.tripDates}> {endDate}</Text>
                         </View>
                     </View>
-                </Pressable>
             </View>
-        </View>
+        </Pressable>
     );
 };
 
@@ -97,11 +95,11 @@ const styles = StyleSheet.create({
     line: {
         width: 3,
         flex: 1,
-        backgroundColor: COLORS.light_grey, // Couleur de la ligne
+        backgroundColor: COLORS.light_grey,
         position: 'absolute',
         top: 0,
         bottom: 0,
-        zIndex: 0, // S'assurer que la ligne est en arrière-plan
+        zIndex: 0,
     },
 });
 
