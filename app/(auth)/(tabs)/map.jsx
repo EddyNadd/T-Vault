@@ -9,7 +9,6 @@ import { collection, query, where, onSnapshot, or, getDocs } from 'firebase/fire
 import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
 import { useRouter } from 'expo-router';
 import AndroidSafeArea from '../../../styles/AndroidSafeArea';
-import * as Location from 'expo-location';
 
 const MapScreen = () => {
   const [myTripsSelected, setMyTripsSelected] = useState(true);
@@ -28,29 +27,6 @@ const MapScreen = () => {
   const { listenersRef } = useFirestoreListeners();
   const currentListeners = useRef([]);
   const router = useRouter();
-
-
-  /**
-   * Request location permission and get the current location
-   */
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission denied', 'You need to grant location permission to use this feature.');
-        return;
-      }
-
-      let currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation.coords);
-      setRegion({
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
-        latitudeDelta: 10,
-        longitudeDelta: 10,
-      });
-    })();
-  }, []);
 
   /**
    * Setup listeners for fetching trips data based on user's id

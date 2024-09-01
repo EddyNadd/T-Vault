@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import MapView from 'react-native-maps';
-import * as Location from 'expo-location';
 import { FontAwesome6 } from '@expo/vector-icons';
 import COLORS from '../styles/COLORS';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -21,29 +20,6 @@ export default function LocationPicker({ onConfirm, onCancel, defaultLongitude, 
         latitudeDelta: 10,
         longitudeDelta: 10,
     });
-
-    /**
-     * Requests location permission and sets the current location as the default region.
-     */
-    useEffect(() => {
-        if (!defaultLatitude) {
-            (async () => {
-                let { status } = await Location.requestForegroundPermissionsAsync();
-                if (status !== 'granted') {
-                    Alert.alert('Permission denied', 'You need to grant location permission to use this feature.');
-                    return;
-                }
-
-                let currentLocation = await Location.getCurrentPositionAsync({});
-                setRegion({
-                    latitude: currentLocation.coords.latitude,
-                    longitude: currentLocation.coords.longitude,
-                    latitudeDelta: 0.05,
-                    longitudeDelta: 0.05,
-                });
-            })();
-        }
-    }, [defaultLatitude]);
 
     /**
      * Handles the confirm button press event.
