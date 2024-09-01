@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TouchableOpacity, StyleSheet, SafeAreaView, View, Alert, KeyboardAvoidingView, ScrollView } from "react-native";
+import { TouchableOpacity, StyleSheet, SafeAreaView, View, Alert, KeyboardAvoidingView, ScrollView, Dimensions, Text } from "react-native";
 import Header from '../../../components/Header';
 import { getAuth, updateProfile, updateEmail as updateFirebaseEmail, updatePassword as updateFirebasePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,6 +10,8 @@ import { doc, deleteDoc, setDoc, getDocs, query, collection, where, documentId }
 import { db } from "../../../firebase.jsx";
 import { useFirestoreListeners } from '../../../components/FirestoreListenerContext';
 import AndroidSafeArea from '../../../styles/AndroidSafeArea';
+import { router } from 'expo-router';
+
 
 const Account = () => {
   const auth = getAuth();
@@ -27,41 +29,26 @@ const Account = () => {
 
   const { unsubscribeAllListeners } = useFirestoreListeners();
 
- /**
-  * Initialize the username and email fields with the current user's data
-  */
   useEffect(() => {
     setUsername(auth.currentUser.displayName);
     setOldUsername(auth.currentUser.displayName);
     setEmail(auth.currentUser.email);
   }, []);
 
-  /**
-   * Enable the update button when the username is different from the current one
-   */
   useEffect(() => {
     setIsUsernameButtonEnabled(username !== auth.currentUser.displayName);
   }, [username]);
 
-  /**
-   * Enable the update button when the email is different from the current one
-   */
   useEffect(() => {
     setIsEmailButtonEnabled(email !== auth.currentUser.email);
   }, [email]);
 
-  /**
-   * Enable the update button when the old password, new password or confirm password fields are not empty
-   */
   useEffect(() => {
     setIsPasswordButtonEnabled(
       oldPassword !== '' || newPassword !== '' || confirmPassword !== ''
     );
   }, [oldPassword, newPassword, confirmPassword]);
 
-  /**
-   * Handle the username update
-   */
   const updateUsername = async () => {
     try {
       requestedUser = await getDocs(query(collection(db, "Users"), where(documentId(), "==", username)));
@@ -89,9 +76,6 @@ const Account = () => {
     }
   };
 
-  /**
-   * Handle the email update
-   */
   const updateEmail = async () => {
     try {
       const user = auth.currentUser;
@@ -110,9 +94,6 @@ const Account = () => {
     }
   };
 
-  /**
-   * Handle the password update
-   */
   const updatePassword = async () => {
     try {
       const user = auth.currentUser;
@@ -137,34 +118,24 @@ const Account = () => {
       } else {
         Alert.alert('Error', error.message);
       }
-    }finally{ 
+    } finally {
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setIsPasswordButtonEnabled(false)}
-  }
-    ;
+      setIsPasswordButtonEnabled(false)
+    }
+  };
 
-  /**
-   * Function to return the button style based on the isEnabled parameter
-   * @param {boolean} isEnabled 
-   */
   const getButtonStyle = (isEnabled) => ({
     ...styles.button,
     ...(isEnabled ? styles.buttonShadow : {}),
   });
 
-  /**
-   * Function to sign out the user
-   */
   const signOut = () => {
     unsubscribeAllListeners();
     auth.signOut();
   };
 
-  /**
-   * Custom button component for the header
-   */
   const CustomButton = () => (
     <TouchableOpacity style={styles.addButton} onPress={() => signOut()}>
       <MaterialCommunityIcons name="logout" size={50} color={COLORS.blue} />
@@ -179,105 +150,116 @@ const Account = () => {
         ButtonComponent={CustomButton}
       />
       <KeyboardAvoidingView behavior='padding'>
-      <ScrollView 
-          contentContainerStyle={styles.scrollViewContent}>
+        <ScrollView style={styles.scrollView}>
           <View style={styles.info}>
-            <View style={styles.input}>
-              <Input variant='rounded'>
-                <InputField
-                  label="UserName"
-                  value={username}
-                  onChangeText={setUsername}
-                />
-              </Input>
+            <View style={styles.aboutUsButtonContainer}>
+              <View style={styles.aboutUsButtonShadow} />
+              <TouchableOpacity style={styles.aboutUsButton} onPress={() => router.push(`/aboutus`)}>
+                <Text style={styles.aboutUsButtonText}> ABOUT US</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.groupInput}>
+              <View style={styles.input}>
+                <Input variant='rounded'>
+                  <InputField
+                    label="UserName"
+                    value={username}
+                    onChangeText={setUsername}
+                  />
+                </Input>
+              </View>
+
+              <View style={getButtonStyle(isUsernameButtonEnabled)}>
+                <Button
+                  size="md"
+                  variant="link"
+                  action="primary"
+                  isDisabled={!isUsernameButtonEnabled}
+                  onPress={updateUsername}
+                >
+                  <ButtonText style={styles.buttonText}>Edit Username</ButtonText>
+                </Button>
+              </View>
             </View>
 
-            <View style={getButtonStyle(isUsernameButtonEnabled)}>
-              <Button
-                size="md"
-                variant="link"
-                action="primary"
-                isDisabled={!isUsernameButtonEnabled}
-                onPress={updateUsername}
-              >
-                <ButtonText style={styles.buttonText}>Edit Username</ButtonText>
-              </Button>
+            <View style={styles.groupInput}>
+              <View style={styles.input}>
+                <Input variant='rounded'>
+                  <InputField
+                    label="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                  />
+                </Input>
+              </View>
+
+              <View style={getButtonStyle(isEmailButtonEnabled)}>
+                <Button
+                  size="md"
+                  variant="link"
+                  action="primary"
+                  isDisabled={!isEmailButtonEnabled}
+                  onPress={() => {
+                    if (email) {
+                      updateEmail();
+                    } else {
+                      Alert.alert('Error', 'Please fill in all fields.');
+                    }
+                  }}
+                >
+                  <ButtonText style={styles.buttonText}>Edit Email</ButtonText>
+                </Button>
+              </View>
             </View>
 
-            <View style={styles.input}>
-              <Input variant='rounded'>
-                <InputField
-                  label="Email"
-                  value={email}
-                  onChangeText={setEmail}
-                />
-              </Input>
-            </View>
+            <View style={styles.groupInput}>
+              <View style={styles.input}>
+                <Input variant='rounded'>
+                  <InputField
+                    label="Old Password"
+                    placeholder='Old Password'
+                    value={oldPassword}
+                    onChangeText={setOldPassword}
+                    secureTextEntry={true}
+                  />
+                </Input>
+              </View>
 
-            <View style={getButtonStyle(isEmailButtonEnabled)}>
-              <Button
-                size="md"
-                variant="link"
-                action="primary"
-                isDisabled={!isEmailButtonEnabled}
-                onPress={() => {
-                  if (email) {
-                    updateEmail();
-                  } else {
-                    Alert.alert('Error', 'Please fill in all fields.');
-                  }
-                }}
-              >
-                <ButtonText style={styles.buttonText}>Edit Email</ButtonText>
-              </Button>
-            </View>
+              <View style={styles.input}>
+                <Input variant='rounded'>
+                  <InputField
+                    label="New Password"
+                    placeholder='New Password'
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    secureTextEntry={true}
+                  />
+                </Input>
+              </View>
 
-            <View style={styles.input}>
-              <Input variant='rounded'>
-                <InputField
-                  label="Old Password"
-                  placeholder='Old Password'
-                  value={oldPassword}
-                  onChangeText={setOldPassword}
-                  secureTextEntry={true}
-                />
-              </Input>
-            </View>
+              <View style={styles.input}>
+                <Input variant='rounded'>
+                  <InputField
+                    label="Confirm Password"
+                    placeholder='Confirm Password'
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={true}
+                  />
+                </Input>
+              </View>
 
-            <View style={styles.input}>
-              <Input variant='rounded'>
-                <InputField
-                  label="New Password"
-                  placeholder='New Password'
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  secureTextEntry={true}
-                />
-              </Input>
-            </View>
-
-            <View style={styles.input}>
-              <Input variant='rounded'>
-                <InputField
-                  label="Confirm Password"
-                  placeholder='Confirm Password'
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry={true}
-                />
-              </Input>
-            </View>
-
-            <View style={getButtonStyle(isPasswordButtonEnabled)}>
-              <Button
-                size="md"
-                variant="link"
-                action="primary"
-                isDisabled={!isPasswordButtonEnabled}
-                onPress={updatePassword}
-              >
-                <ButtonText style={styles.buttonText}>Edit Password</ButtonText>
-              </Button>
+              <View style={getButtonStyle(isPasswordButtonEnabled)}>
+                <Button
+                  size="md"
+                  variant="link"
+                  action="primary"
+                  isDisabled={!isPasswordButtonEnabled}
+                  onPress={updatePassword}
+                >
+                  <ButtonText style={styles.buttonText}>Edit Password</ButtonText>
+                </Button>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -291,24 +273,48 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background_dark,
   },
-  info: {
-    marginTop: 30,
+
+  groupInput: {
     width: '100%',
     alignItems: 'center',
+    paddingTop: 20,
+    paddingBottom: 20,
+    margin: 20,
+    backgroundColor: COLORS.background_light,
+    borderRadius: 10,
+    elevation: 5,
+    shadowColor: 'black',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
   },
+
+  info: {
+    marginTop: 30,
+    alignItems: 'center',
+    marginBottom: Dimensions.get('window').height / 3,
+  },
+
+  scrollView: {
+    width: '90%',
+    alignSelf: 'center',
+  },
+
   button: {
     width: '90%',
-    marginBottom: 30,
     backgroundColor: COLORS.blue_dark,
     borderRadius: 25,
   },
+
   buttonText: {
     color: 'white',
   },
+
   input: {
     width: '90%',
     marginBottom: 10,
   },
+
   buttonShadow: {
     elevation: 5,
     shadowColor: 'black',
@@ -316,6 +322,42 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 10,
     backgroundColor: COLORS.blue,
+  },
+
+  aboutUsButtonContainer: {
+    position: 'relative',
+    width: '50%',
+    alignSelf: 'center',
+  },
+
+  aboutUsButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+    width: '100%',
+    backgroundColor: COLORS.background_light,
+    paddingVertical: 10,
+    borderRadius: 15,
+    elevation: 5,
+  },
+
+  aboutUsButtonShadow: {
+    position: 'absolute',
+    top: 5,
+    left: 5,
+    width: '100%',
+    height: '100%',
+    backgroundColor: COLORS.blue_dark,
+    borderRadius: 15,
+    zIndex: -1,
+  },
+
+  aboutUsButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   }
 });
 
