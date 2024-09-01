@@ -11,6 +11,7 @@ import { MenuProvider, Menu, MenuTrigger, MenuOptions, MenuOption } from 'react-
 import { MaterialCommunityIcons, Feather, MaterialIcons } from '@expo/vector-icons';
 import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 import COLORS from '../../../styles/COLORS'
+import CustomBubble from '../../../components/CustomBubble';
 
 
 export default function DetailsScreen() {
@@ -192,8 +193,8 @@ export default function DetailsScreen() {
                 </SafeAreaView>
             </ImageBackground>
 
-            <ScrollView style={{marginTop: 20}}>
-                <View>
+            <ScrollView style={styles.scrollView}>
+                <View style={{marginBottom: Dimensions.get('window').height / 10}}>
                     {components.map((component) => {
                         if (component.type === 'image') {
                             return (
@@ -203,9 +204,7 @@ export default function DetailsScreen() {
                             );
                         } else if (component.type === 'comment') {
                             return (
-                                <View key={component.id} style={styles.commentContainer}>
-                                    <Text style={styles.comment}>{component.value}</Text>
-                                </View>
+                                <CustomBubble key={component.id} text={component.value} />
                             );
                         }
                         return null;
@@ -298,8 +297,12 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
 
+    scrollView: {
+        paddingHorizontal: 20,
+        paddingTop : 20,
+    },
+
     imageContainer: {
-        marginBottom: 16,
         backgroundColor: COLORS.background_dark,
         borderRadius: 10,
         overflow: 'hidden',
@@ -308,28 +311,29 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.8,
         shadowRadius: 5,
         elevation: 5,
+        borderWidth: 3,
+        borderColor: COLORS.blue_dark,
+        marginBottom: 20,
     },
 
     image: {
         width: '100%',
         height: 200,
         resizeMode: 'cover',
+        borderRadius: 10,
     },
     commentContainer: {
-        marginBottom: 16,
         padding: 16,
-        backgroundColor: '#282828',
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 5,
-        elevation: 5,
+        borderRadius: 20,
+        alignSelf: 'flex-start',
+        backgroundColor: COLORS.blue_dark,
+        marginBottom: 20,
     },
+    
     comment: {
         fontSize: 16,
-        color: '#fff',
-        textAlign: 'center',
+        color: 'white',
+        textAlign: 'left',
     },
     modalContainer: {
         flex: 1,

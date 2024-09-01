@@ -35,6 +35,7 @@
     "expo-file-system": "^17.0.1",
     "expo-image-picker": "~15.0.7",
     "expo-linking": "~6.3.1",
+    "expo-location": "~17.0.1",
     "expo-router": "~3.5.23",
     "expo-status-bar": "~1.12.1",
     "expo-system-ui": "~3.0.7",
@@ -47,6 +48,8 @@
     "react-native-date-picker": "^5.0.4",
     "react-native-draggable-flatlist": "^4.0.1",
     "react-native-gesture-handler": "^2.18.1",
+    "react-native-get-random-values": "~1.11.0",
+    "react-native-gifted-chat": "^2.6.2",
     "react-native-google-places-autocomplete": "^2.5.6",
     "react-native-maps": "1.14.0",
     "react-native-popup-menu": "^0.16.1",
@@ -56,8 +59,7 @@
     "react-native-svg": "15.2.0",
     "tailwindcss": "^3.4.10",
     "typescript": "~5.3.3",
-    "uuid": "^10.0.0",
-    "expo-location": "~17.0.1"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
