@@ -4,6 +4,7 @@ import { auth } from '../firebase.jsx';
 import Signin from '../app/index.jsx';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
+// Mocking the firebase/auth module to avoid calling the actual Firebase SDK
 jest.mock('firebase/auth', () => {
     return {
         signInWithEmailAndPassword: jest.fn(),
@@ -27,6 +28,7 @@ describe('Signin Component', () => {
     });
 
     it('should handle sign-in with valid credentials', async () => {
+        // Mock the signInWithEmailAndPassword function to return a user object
         signInWithEmailAndPassword.mockResolvedValueOnce({ user: {} });
 
         const { getByPlaceholderText, getByText } = render(<Signin />);
@@ -41,6 +43,7 @@ describe('Signin Component', () => {
     });
 
     it('should display error message on failed sign-in', async () => {
+        // Mock the signInWithEmailAndPassword function to throw an error
         signInWithEmailAndPassword.mockRejectedValueOnce(new Error('Auth Error'));
 
         const { getByPlaceholderText, getByText, findByText } = render(<Signin />);

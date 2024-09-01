@@ -17,7 +17,7 @@ describe('Header Component', () => {
     expect(logo.props.source).toEqual(logoSource);
   });
 
-  it('renders the ButtonComponent if provided', () => {
+  it('renders correctly the button component if provided', () => {
     const MockButton = () => <Text>Mock Button</Text>;
     const logoSource = { uri: '../assets/icon.png' };
     const title = 'Test Title';
@@ -29,7 +29,7 @@ describe('Header Component', () => {
     expect(getByText('Mock Button')).toBeTruthy();
   });
 
-  it('does not render ButtonComponent if not provided', () => {
+  it('does not render button component if not provided', () => {
     const logoSource = { uri: '../assets/icon.png' };
     const title = 'No Button';
 

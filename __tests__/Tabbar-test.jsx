@@ -3,6 +3,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import TabBar from '../components/TabBar';
 
 describe('TabBar Component', () => {
+    // Mock the state
     const mockState = {
         index: 0,
         routes: [
@@ -13,6 +14,7 @@ describe('TabBar Component', () => {
         ],
     };
 
+    // Mock the descriptors
     const mockDescriptors = {
         trips: { options: { tabBarLabel: 'Trips' } },
         map: { options: { tabBarLabel: 'Map' } },
@@ -20,6 +22,7 @@ describe('TabBar Component', () => {
         account: { options: { tabBarLabel: 'Account' } },
     };
 
+    // Mock the navigation object with emit and navigate functions to track calls to the navigator
     const mockNavigation = {
         emit: jest.fn(() => ({
             defaultPrevented: false
@@ -27,6 +30,7 @@ describe('TabBar Component', () => {
         navigate: jest.fn(),
     };
 
+    // Clear all mocks before each test
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -57,12 +61,14 @@ describe('TabBar Component', () => {
 
         fireEvent.press(getByText('Map'));
 
+        // Check if the tabPress event was emitted
         expect(mockNavigation.emit).toHaveBeenCalledWith({
             type: 'tabPress',
             target: 'map',
             canPreventDefault: true,
         });
 
+        // Check if the navigation.navigate function was called with the correct arguments
         expect(mockNavigation.navigate).toHaveBeenCalledWith('map', undefined);
     });
 });
