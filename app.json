@@ -24,7 +24,7 @@
       "package": "ch.hearc.tvault",
       "config": {
         "googleMaps": {
-          "apiKey" : "YOUR API KEY"
+          "apiKey" : "yourapikey"
         }
     },
     "web": {
