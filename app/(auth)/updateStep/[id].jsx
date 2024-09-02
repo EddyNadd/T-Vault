@@ -578,11 +578,11 @@ const UpdateStep = (isOpen, onClose) => {
     if (!result.canceled) {
       const newImageUri = result.assets[0].uri;
 
-      // Ajout d'un cache buster
+      // cache buster
       const timestamp = new Date().getTime();
       const imageWithCacheBuster = `${newImageUri}?${timestamp}`;
 
-      // Mettre à jour l'état avec la nouvelle URI
+      // Update state with new URI
       setComponents((prevComponents) =>
         prevComponents.map((component) =>
           component.id === id
