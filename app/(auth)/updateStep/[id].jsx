@@ -100,11 +100,11 @@ const UpdateStep = (isOpen, onClose) => {
 
           setTabOrder(data.tabOrder);
 
-          // Télécharger les images à partir des URLs Firebase
+          // Download images in local storage
           const localImages = await Promise.all(
             data.images.map(async (url) => {
               try {
-                // Télécharger l'image depuis Firebase
+                // Download images from firebase
                 const localUri = `${FileSystem.documentDirectory}${generateUniqueId()}.jpg`;
                 await FileSystem.downloadAsync(url, localUri);
                 return localUri;
@@ -489,7 +489,8 @@ const UpdateStep = (isOpen, onClose) => {
           const data = docSnap.data();
           const currentImages = data.images;
 
-          //  Delete all images in currentImages
+          // Delete all images in currentImages, this delete is here to avoid conflict during sharing trip editing
+          // It is done to override the trip in the database
           await Promise.all(
             currentImages.map(async (url) => {
               try {

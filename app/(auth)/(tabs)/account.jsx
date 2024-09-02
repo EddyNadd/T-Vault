@@ -107,6 +107,7 @@ const Account = () => {
     try {
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(user.email, emailPassword);
+      //Need the user to authenticate before changing email adress
       await reauthenticateWithCredential(user, credential);
       await updateFirebaseEmail(user, email);
       setIsEmailButtonEnabled(false);
@@ -135,6 +136,7 @@ const Account = () => {
     try {
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(user.email, oldPassword);
+      //Need the user to authenticate before changing the password
       await reauthenticateWithCredential(user, credential);
       if (newPassword !== confirmPassword) {
         throw new Error("Passwords do not match");
