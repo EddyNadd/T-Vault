@@ -4,7 +4,7 @@ import Header from '../../../components/Header';
 import { getAuth, updateProfile, updateEmail as updateFirebaseEmail, updatePassword as updateFirebasePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import COLORS from '../../../styles/COLORS';
-import { Button, ButtonText } from '@/components/ui/button';
+import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
 import { Input, InputField } from '@/components/ui/input';
 import { doc, deleteDoc, setDoc, getDocs, query, collection, where, documentId } from 'firebase/firestore';
 import { db } from "../../../firebase.jsx";
@@ -22,6 +22,10 @@ const Account = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorText, setErrorText] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
+  const [loadingUsername, setLoadingUsername] = useState(false);
+  const [loadingEmail, setLoadingEmail] = useState(false);
+  const [loadingPassword, setLoadingPassword] = useState(false);
 
   const [isUsernameButtonEnabled, setIsUsernameButtonEnabled] = useState(false);
   const [isEmailButtonEnabled, setIsEmailButtonEnabled] = useState(false);
@@ -40,8 +44,8 @@ const Account = () => {
   }, [username]);
 
   useEffect(() => {
-    setIsEmailButtonEnabled(email !== auth.currentUser.email);
-  }, [email]);
+    setIsEmailButtonEnabled(email !== auth.currentUser.email && emailPassword != "");
+  }, [email, emailPassword]);
 
   useEffect(() => {
     setIsPasswordButtonEnabled(
@@ -50,6 +54,7 @@ const Account = () => {
   }, [oldPassword, newPassword, confirmPassword]);
 
   const updateUsername = async () => {
+    setLoadingUsername(true);
     try {
       requestedUser = await getDocs(query(collection(db, "Users"), where(documentId(), "==", username)));
       if (!requestedUser.empty) {
@@ -74,11 +79,15 @@ const Account = () => {
         Alert.alert('Error', error.message);
       }
     }
+    setLoadingUsername(false);
   };
 
   const updateEmail = async () => {
+    setLoadingEmail(true)
     try {
       const user = auth.currentUser;
+      const credential = EmailAuthProvider.credential(user.email, emailPassword);
+      await reauthenticateWithCredential(user, credential);
       await updateFirebaseEmail(user, email);
       setIsEmailButtonEnabled(false);
       Alert.alert('Success', 'Email updated successfully');
@@ -87,14 +96,19 @@ const Account = () => {
         setErrorText("The email address is already in use by another account.");
       } else if (error.code === 'auth/invalid-email') {
         setErrorText("The email address is badly formatted.");
+      } else if (error.code === 'auth/wrong-password') {
+        setErrorText("Wrong password");
       }
       else {
         Alert.alert('Error', error.message);
       }
     }
+    setEmailPassword("")
+    setLoadingEmail(false)
   };
 
   const updatePassword = async () => {
+    setLoadingPassword(true);
     try {
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(user.email, oldPassword);
@@ -124,6 +138,7 @@ const Account = () => {
       setConfirmPassword('');
       setIsPasswordButtonEnabled(false)
     }
+    setLoadingPassword(false);
   };
 
   const getButtonStyle = (isEnabled) => ({
@@ -170,45 +185,73 @@ const Account = () => {
               </View>
 
               <View style={getButtonStyle(isUsernameButtonEnabled)}>
-                <Button
-                  size="md"
-                  variant="link"
-                  action="primary"
-                  isDisabled={!isUsernameButtonEnabled}
-                  onPress={updateUsername}
-                >
-                  <ButtonText style={styles.buttonText}>Edit Username</ButtonText>
-                </Button>
+                {loadingUsername ? (
+                  <Button disabled={true} size="md" variant="link" action="primary">
+                    <ButtonSpinner />
+                    <ButtonText style={styles.buttonText}> Please wait...</ButtonText>
+                  </Button>
+                ) : (
+                  <Button
+                    size="md"
+                    variant="link"
+                    action="primary"
+                    isDisabled={!isUsernameButtonEnabled}
+                    onPress={updateUsername}
+                  >
+                    <ButtonText style={styles.buttonText}>Edit Username</ButtonText>
+                  </Button>
+                )}
               </View>
             </View>
 
             <View style={styles.groupInput}>
               <View style={styles.input}>
-                <Input variant='rounded'>
+                <Input variant='rounded' style={{ marginBottom: 10 }}>
                   <InputField
                     label="Email"
                     value={email}
                     onChangeText={setEmail}
                   />
                 </Input>
+                <Input variant='rounded'>
+                  <InputField
+                    label="Password"
+                    placeholder='Password'
+                    value={emailPassword}
+                    onChangeText={setEmailPassword}
+                    secureTextEntry={true}
+                    autoCapitalize='none'
+                    textContentType='none'
+                    autoCompleteType='off'
+                    autoComplete='off' />
+
+                </Input>
               </View>
 
               <View style={getButtonStyle(isEmailButtonEnabled)}>
-                <Button
-                  size="md"
-                  variant="link"
-                  action="primary"
-                  isDisabled={!isEmailButtonEnabled}
-                  onPress={() => {
-                    if (email) {
-                      updateEmail();
-                    } else {
-                      Alert.alert('Error', 'Please fill in all fields.');
-                    }
-                  }}
-                >
-                  <ButtonText style={styles.buttonText}>Edit Email</ButtonText>
-                </Button>
+
+                {loadingEmail ? (
+                  <Button disabled={true} size="md" variant="link" action="primary">
+                    <ButtonSpinner />
+                    <ButtonText style={styles.buttonText}> Please wait...</ButtonText>
+                  </Button>
+                ) : (
+                  <Button
+                    size="md"
+                    variant="link"
+                    action="primary"
+                    isDisabled={!isEmailButtonEnabled}
+                    onPress={() => {
+                      if (email) {
+                        updateEmail();
+                      } else {
+                        Alert.alert('Error', 'Please fill in all fields.');
+                      }
+                    }}
+                  >
+                    <ButtonText style={styles.buttonText}>Edit Email</ButtonText>
+                  </Button>
+                )}
               </View>
             </View>
 
@@ -221,6 +264,10 @@ const Account = () => {
                     value={oldPassword}
                     onChangeText={setOldPassword}
                     secureTextEntry={true}
+                    autoCapitalize='none'
+                    textContentType="none"
+                    autoCompleteType='off'
+                    autoComplete='off'
                   />
                 </Input>
               </View>
@@ -233,6 +280,10 @@ const Account = () => {
                     value={newPassword}
                     onChangeText={setNewPassword}
                     secureTextEntry={true}
+                    autoCapitalize='none'
+                    textContentType="none"
+                    autoCompleteType='off'
+                    autoComplete='off'
                   />
                 </Input>
               </View>
@@ -245,11 +296,21 @@ const Account = () => {
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry={true}
+                    autoCapitalize='none'
+                    textContentType="none"
+                    autoCompleteType='off'
+                    autoComplete='off'
                   />
                 </Input>
               </View>
 
               <View style={getButtonStyle(isPasswordButtonEnabled)}>
+              {loadingPassword ? (
+                  <Button disabled={true} size="md" variant="link" action="primary">
+                    <ButtonSpinner />
+                    <ButtonText style={styles.buttonText}> Please wait...</ButtonText>
+                  </Button>
+                ) : (
                 <Button
                   size="md"
                   variant="link"
@@ -259,6 +320,7 @@ const Account = () => {
                 >
                   <ButtonText style={styles.buttonText}>Edit Password</ButtonText>
                 </Button>
+              )}
               </View>
             </View>
           </View>
@@ -290,7 +352,6 @@ const styles = StyleSheet.create({
   },
 
   info: {
-    marginTop: 30,
     alignItems: 'center',
     marginBottom: Dimensions.get('window').height / 3,
   },
