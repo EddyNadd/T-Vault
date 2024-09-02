@@ -12,7 +12,9 @@ import { useFirestoreListeners } from '../../../components/FirestoreListenerCont
 import AndroidSafeArea from '../../../styles/AndroidSafeArea';
 import { router } from 'expo-router';
 
-
+/**
+ * Account view component that displays the user's account information and allows them to update it.
+ */
 const Account = () => {
   const auth = getAuth();
   const [username, setUsername] = useState('');
@@ -33,26 +35,41 @@ const Account = () => {
 
   const { unsubscribeAllListeners } = useFirestoreListeners();
 
+  /*
+  * Fetch current user's data and set the state
+  */
   useEffect(() => {
     setUsername(auth.currentUser.displayName);
     setOldUsername(auth.currentUser.displayName);
     setEmail(auth.currentUser.email);
   }, []);
 
+  /*
+  * Check if the username has been changed and enable the button
+  */
   useEffect(() => {
     setIsUsernameButtonEnabled(username !== auth.currentUser.displayName);
   }, [username]);
 
+  /*
+  * Check if the email has been changed and enable the button
+  */
   useEffect(() => {
     setIsEmailButtonEnabled(email !== auth.currentUser.email && emailPassword != "");
   }, [email, emailPassword]);
 
+  /*
+  * Check if the passwords has been changed and enable the button
+  */
   useEffect(() => {
     setIsPasswordButtonEnabled(
       oldPassword !== '' || newPassword !== '' || confirmPassword !== ''
     );
   }, [oldPassword, newPassword, confirmPassword]);
 
+  /* 
+  * Update the username in the database
+  */
   const updateUsername = async () => {
     setLoadingUsername(true);
     try {
@@ -82,6 +99,9 @@ const Account = () => {
     setLoadingUsername(false);
   };
 
+  /*
+  * Update the email in the database
+  */
   const updateEmail = async () => {
     setLoadingEmail(true)
     try {
@@ -107,6 +127,9 @@ const Account = () => {
     setLoadingEmail(false)
   };
 
+  /* 
+  * Update the password in the database
+  */
   const updatePassword = async () => {
     setLoadingPassword(true);
     try {
@@ -141,16 +164,25 @@ const Account = () => {
     setLoadingPassword(false);
   };
 
+  /* 
+  * Get the style of the button
+  */
   const getButtonStyle = (isEnabled) => ({
     ...styles.button,
     ...(isEnabled ? styles.buttonShadow : {}),
   });
 
+  /*
+  * Sign out the user
+  */
   const signOut = () => {
     unsubscribeAllListeners();
     auth.signOut();
   };
 
+  /*
+  * Custom button component for the header
+  */
   const CustomButton = () => (
     <TouchableOpacity style={styles.addButton} onPress={() => signOut()}>
       <MaterialCommunityIcons name="logout" size={50} color={COLORS.blue} />
