@@ -233,7 +233,6 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                 } else {
                     toggleStartDatePicker();
                     Alert.alert("Back to the Future", "Departure date must be before or in the same day as return date.");
-                    toggleStartDatePicker();
                 }
             }
         }
@@ -260,7 +259,6 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                 } else {
                     toggleEndDatePicker();
                     Alert.alert("Back to the Future", "Return date must be after or in the same day as departure date.");
-                    toggleEndDatePicker();
                 }
             }
         }
