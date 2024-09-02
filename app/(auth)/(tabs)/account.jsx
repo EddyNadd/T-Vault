@@ -23,7 +23,6 @@ const Account = () => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [errorText, setErrorText] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
   const [loadingUsername, setLoadingUsername] = useState(false);
   const [loadingEmail, setLoadingEmail] = useState(false);
@@ -75,7 +74,7 @@ const Account = () => {
     try {
       requestedUser = await getDocs(query(collection(db, "Users"), where(documentId(), "==", username)));
       if (!requestedUser.empty) {
-        throw new Error("Username already exists!");
+        throw new Error("Username already taken!");
       }
 
       await updateProfile(auth.currentUser, { displayName: username });
@@ -91,7 +90,7 @@ const Account = () => {
       setIsUsernameButtonEnabled(false);
     } catch (error) {
       if (error.message === "Username already taken!") {
-        setErrorText("Username already exists!");
+        Alert.alert('Error', 'Username already taken!');
       } else {
         Alert.alert('Error', error.message);
       }
@@ -113,19 +112,20 @@ const Account = () => {
       setIsEmailButtonEnabled(false);
       Alert.alert('Success', 'Email updated successfully');
     } catch (error) {
+      console.log(error);
       if (error.code === 'auth/email-already-in-use') {
-        setErrorText("The email address is already in use by another account.");
+        Alert.alert('Error', 'The email address is already in use by another account.');
       } else if (error.code === 'auth/invalid-email') {
-        setErrorText("The email address is badly formatted.");
+        Alert.alert('Error', 'Invalid email address');
       } else if (error.code === 'auth/wrong-password') {
-        setErrorText("Wrong password");
-      }
-      else {
+        Alert.alert('Error', 'Wrong password');
+      } else {
         Alert.alert('Error', error.message);
       }
+    } finally {
+      setEmailPassword("")
+      setLoadingEmail(false)
     }
-    setEmailPassword("")
-    setLoadingEmail(false)
   };
 
   /* 
@@ -151,9 +151,9 @@ const Account = () => {
       setIsPasswordButtonEnabled(false);
     } catch (error) {
       if (error.code === 'auth/weak-password') {
-        setErrorText("Password must be at least 6 characters long.");
+        Alert.alert('Error', 'Password must be at least 6 characters long.');
       } else if (error.message === "Passwords do not match") {
-        setErrorText("Passwords do not match.");
+        Alert.alert('Error', 'Passwords do not match.');
       } else {
         Alert.alert('Error', error.message);
       }
@@ -339,22 +339,22 @@ const Account = () => {
               </View>
 
               <View style={getButtonStyle(isPasswordButtonEnabled)}>
-              {loadingPassword ? (
+                {loadingPassword ? (
                   <Button disabled={true} size="md" variant="link" action="primary">
                     <ButtonSpinner />
                     <ButtonText style={styles.buttonText}> Please wait...</ButtonText>
                   </Button>
                 ) : (
-                <Button
-                  size="md"
-                  variant="link"
-                  action="primary"
-                  isDisabled={!isPasswordButtonEnabled}
-                  onPress={updatePassword}
-                >
-                  <ButtonText style={styles.buttonText}>Edit Password</ButtonText>
-                </Button>
-              )}
+                  <Button
+                    size="md"
+                    variant="link"
+                    action="primary"
+                    isDisabled={!isPasswordButtonEnabled}
+                    onPress={updatePassword}
+                  >
+                    <ButtonText style={styles.buttonText}>Edit Password</ButtonText>
+                  </Button>
+                )}
               </View>
             </View>
           </View>
