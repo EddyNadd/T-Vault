@@ -230,9 +230,6 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                     setStartDateString(currentDate.toLocaleDateString());
                     setOldStartDate(currentDate);
                     setPickedStart(true);
-                } else {
-                    toggleStartDatePicker();
-                    Alert.alert("Back to the Future", "Departure date must be before or in the same day as return date.");
                 }
             }
         }
@@ -256,9 +253,6 @@ export default function TripModal({ isOpen, onClose, currentTitle, currentCommen
                     setEndDateString(currentDate.toLocaleDateString());
                     setOldEndDate(currentDate);
                     setPickedEnd(true);
-                } else {
-                    toggleEndDatePicker();
-                    Alert.alert("Back to the Future", "Return date must be after or in the same day as departure date.");
                 }
             }
         }
